@@ -9,10 +9,10 @@ const gameRoutes = require('./routes/game');
 const app = express();
 
 // --- ATENÇÃO: CONFIGURAÇÃO CORS ---
-// Substitua 'https://stalwart-sunflower-xxxxx.netlify.app' pelo URL EXATO do seu jogo no Netlify.
+// Substitua 'https://sweet-praline-ee4bd7.netlify.app' pelo URL EXATO do seu jogo no Netlify.
 // Você pode encontrar o URL na sua dashboard do Netlify, logo que você entra no site do seu projeto.
 const allowedOrigins = [
-    'https://sweet-praline-ee4bd7.netlify.app/', // <-- O SEU URL DO NETLIFY AQUI!
+    'https://sweet-praline-ee4bd7.netlify.app', // <-- ESTA LINHA FOI CORRIGIDA (adicionado 'https://' e removida '/' final)
     'http://localhost:3000', // Para desenvolvimento local, se você usar esta porta
     // Adicione outros URLs se tiver mais frontends ou ferramentas que precisam acessar
 ];
