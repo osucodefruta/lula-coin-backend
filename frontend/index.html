@@ -1,0 +1,95 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Jogo de Mineração Online</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      text-align: center;
+      margin-top: 100px;
+    }
+    .login-box {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      display: inline-block;
+      box-shadow: 0 0 10px #aaa;
+    }
+    input {
+      margin: 10px;
+      padding: 10px;
+      width: 200px;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 10px;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-box">
+    <h2>Jogo de Mineração Online</h2>
+    <h3>Login / Registrar</h3>
+    <input id="email" placeholder="Usuário">
+    <input id="senha" type="password" placeholder="Senha">
+    <br>
+    <button onclick="login()">Login</button>
+    <button onclick="register()">Registrar</button>
+    <p id="erro" class="error"></p>
+  </div>
+
+  <script>
+    async function register() {
+      const username = document.getElementById('email').value;
+      const password = document.getElementById('senha').value;
+
+      try {
+        const res = await fetch('https://lula-coin-backend.onrender.com/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          localStorage.setItem('token', data.token);
+          alert("Registrado com sucesso!");
+        } else {
+          document.getElementById('erro').innerText = data.message || "Erro no registro";
+        }
+      } catch (err) {
+        document.getElementById('erro').innerText = "Erro de conexão com o servidor.";
+      }
+    }
+
+    async function login() {
+      const username = document.getElementById('email').value;
+      const password = document.getElementById('senha').value;
+
+      try {
+        const res = await fetch('https://lula-coin-backend.onrender.com/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          localStorage.setItem('token', data.token);
+          alert("Login realizado!");
+        } else {
+          document.getElementById('erro').innerText = data.message || "Erro no login";
+        }
+      } catch (err) {
+        document.getElementById('erro').innerText = "Erro de conexão com o servidor.";
+      }
+    }
+  </script>
+</body>
+</html>
