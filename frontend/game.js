@@ -1,9 +1,38 @@
 // frontend/game.js
 
 // Definindo a URL base da sua API do backend no Render
-// ESTA URL É CRÍTICA! Certifique-se de que está exata.
-// Substitua 'https://lula-coin-backend.onrender.com' pela URL REAL do seu backend no Render.
+// ESTA URL É CRÍTICA! Substitua 'https://lula-coin-backend.onrender.com' pela URL REAL do seu backend no Render.
 const API_BASE_URL = 'https://lula-coin-backend.onrender.com';
+
+// --- Funções de utilidade para Cookies (Adicionadas para resolver o ReferenceError) ---
+// Embora seja preferível usar localStorage para tokens JWT,
+// estas funções são incluídas caso o código as utilize em outros contextos.
+function getCookie(name) {
+    const nameEQ = name + "=";
+    const ca = document.cookie.split(';');
+    for(let i=0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+    }
+    return null;
+}
+
+function setCookie(name, value, days) {
+    let expires = "";
+    if (days) {
+        const date = new Date();
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+        expires = "; expires=" + date.toUTCString();
+    }
+    document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+}
+
+function deleteCookie(name) {
+    document.cookie = name + '=; Max-Age=-99999999;';
+}
+// --- Fim das Funções de utilidade para Cookies ---
+
 
 // Variáveis de estado do jogo (carregadas do localStorage e do backend)
 let userToken = localStorage.getItem('token'); // Pegar o token do localStorage após o login
@@ -46,7 +75,7 @@ const inventoryCategoryBtns = document.querySelectorAll('.inventory-category-btn
 
 const minerSelectionBar = document.getElementById('miner-selection-bar'); // Certifique-se que existe
 const cancelSelectionBtn = document.getElementById('cancel-selection-btn'); // Certifique-se que existe
-const minerOptions = document.querySelectorAll('.miner-option'); // Botões de seleção de GPUs
+// const minerOptions = document.querySelectorAll('.miner-option'); // Removido, pois não vi uso direto aqui
 
 const miningRoom = document.getElementById('mining-room'); // Div principal do layout do galpão
 
@@ -103,15 +132,16 @@ function formatNumber(num) {
 // Função para atualizar a UI do jogo com dados do usuário
 function updateGameUI(userData) {
     if (!userData) {
-        console.error("Dados do usuário são nulos ao tentar atualizar a UI.");
+        console.error("[FRONTEND] Dados do usuário são nulos ao tentar atualizar a UI.");
         return;
     }
 
     // Carregar dados do usuário, garantindo valores padrão
     lulaCoins = userData.lulaCoins || 0;
     minerValue = userData.miningPower || 1; // Assumindo que 'miningPower' é o 'minerValue' base
-    placedGpus = userData.upgrades ? (userData.upgrades.placedGpus || {}) : {}; // Assumindo GPUs estão dentro de 'upgrades.placedGpus'
-    inventory = userData.upgrades ? (userData.upgrades.inventory || {}) : {}; // Assumindo inventory está dentro de 'upgrades.inventory'
+    // userData.upgrades deve ser um objeto, com inventory e placedGpus dentro
+    placedGpus = (userData.upgrades && userData.upgrades.placedGpus) ? userData.upgrades.placedGpus : {};
+    inventory = (userData.upgrades && userData.upgrades.inventory) ? userData.upgrades.inventory : {};
 
     lulaCoinsDisplay.textContent = formatNumber(lulaCoins);
     usernameDisplay.textContent = currentUsername; // Exibir o nome de usuário atual
@@ -158,7 +188,9 @@ function updateRackDisplay() {
 
         if (gpuData) {
             // Se houver uma GPU, mostra a imagem e marca como ocupado
-            slot.innerHTML = `<img src="assets/gpu/${gpuData.type.toLowerCase().replace(/\s/g, '')}.png" alt="${gpuData.type}" class="placed-gpu">`;
+            // Assumindo que o nome do arquivo da imagem é gpuData.type em minúsculas e sem espaços
+            const imageUrl = `assets/gpu/${gpuData.type.toLowerCase().replace(/\s/g, '')}.png`;
+            slot.innerHTML = `<img src="${imageUrl}" alt="${gpuData.type}" class="placed-gpu">`;
             slot.classList.add('occupied');
         } else {
             // Se não houver GPU, limpa o slot e remove a classe de ocupado
@@ -174,7 +206,9 @@ function updateRackDisplay() {
 function addEventListenersToRackSlots() {
     const rackSlots = document.querySelectorAll('.rack-slot');
     rackSlots.forEach(slot => {
-        slot.onclick = handleSlotClick; // Usa onclick para simplificar, mas addEventListener é melhor para múltiplos handlers
+        // Remover listeners anteriores para evitar duplicação (se necessário)
+        slot.removeEventListener('click', handleSlotClick);
+        slot.addEventListener('click', handleSlotClick);
     });
 }
 
@@ -223,7 +257,7 @@ async function handleSlotClick(event) {
                 showOverlayMessage(data.message || 'Erro ao colocar a GPU.', 'error');
             }
         } catch (error) {
-            console.error('Erro de rede ao colocar GPU:', error);
+            console.error('[FRONTEND] Erro de rede ao colocar GPU:', error);
             showOverlayMessage('Erro de conexão com o servidor ao colocar GPU.', 'error');
         }
     } else if (placedGpus[slotId]) {
@@ -237,7 +271,7 @@ async function handleSlotClick(event) {
 // Inicia o modo de seleção de GPU para colocação
 function startPlacingGpu(gpuTypeData) {
     placingItem = gpuTypeData; // Armazena os dados da GPU a ser colocada
-    minerSelectionBar.style.display = 'block'; // Mostra a barra de seleção
+    if (minerSelectionBar) minerSelectionBar.style.display = 'block'; // Mostra a barra de seleção
     showOverlayMessage(`Selecione um slot vazio no rack para colocar a ${gpuTypeData.name}.`);
 }
 
@@ -245,7 +279,7 @@ function startPlacingGpu(gpuTypeData) {
 function cancelPlacement() {
     placingItem = null;
     selectedItemForPlacement = null;
-    minerSelectionBar.style.display = 'none';
+    if (minerSelectionBar) minerSelectionBar.style.display = 'none';
     showOverlayMessage('Modo de colocação cancelado.');
 }
 
@@ -277,7 +311,7 @@ async function mineLulaCoins() {
             showOverlayMessage(data.message || 'Erro ao minerar.', 'error');
         }
     } catch (error) {
-        console.error('Erro de rede ao minerar:', error);
+        console.error('[FRONTEND] Erro de rede ao minerar:', error);
         showOverlayMessage('Erro de conexão com o servidor ao minerar.', 'error');
     }
 }
@@ -307,7 +341,7 @@ async function upgradeMiner() {
             showOverlayMessage(data.message || 'Erro ao fazer upgrade.', 'error');
         }
     } catch (error) {
-        console.error('Erro de rede ao fazer upgrade:', error);
+        console.error('[FRONTEND] Erro de rede ao fazer upgrade:', error);
         showOverlayMessage('Erro de conexão com o servidor ao fazer upgrade.', 'error');
     }
 }
@@ -344,15 +378,19 @@ async function saqueLulaCoins() {
             showOverlayMessage(data.message || 'Erro ao sacar.', 'error');
         }
     } catch (error) {
-        console.error('Erro de rede ao sacar:', error);
+        console.error('[FRONTEND] Erro de rede ao sacar:', error);
         showOverlayMessage('Erro de conexão com o servidor ao sacar.', 'error');
     }
 }
 
 // Função para carregar o estado do jogo do backend (ao iniciar a página do jogo)
 async function loadGameData() {
+    // Tenta obter o token e username do localStorage novamente, para garantir
+    userToken = localStorage.getItem('token');
+    currentUsername = localStorage.getItem('username');
+
     if (!userToken) {
-        console.log("Nenhum token encontrado, redirecionando para login...");
+        console.log("[FRONTEND] Nenhum token encontrado no localStorage, redirecionando para login...");
         window.location.href = 'index.html'; // Redireciona para a página de login
         return;
     }
@@ -372,10 +410,11 @@ async function loadGameData() {
             updateGameUI(data); // Atualiza a UI com os dados do jogo recebidos do backend
             showOverlayMessage('Jogo carregado com sucesso!', 'success');
             updateMonitorText('Dados do jogo carregados.');
+            usernameDisplay.textContent = currentUsername; // Atualiza o nome de usuário na UI
         } else {
             // Se o token for inválido/expirado, ou erro no backend, redirecionar para login
             showOverlayMessage(data.message || 'Falha ao carregar o jogo. Por favor, faça login novamente.', 'error');
-            console.error('Erro ao carregar jogo:', data.message);
+            console.error('[FRONTEND] Erro ao carregar jogo:', data.message);
             localStorage.clear(); // Limpa dados de login
             userToken = null;
             currentUsername = null;
@@ -384,7 +423,7 @@ async function loadGameData() {
             }, 2000); // Redireciona após 2 segundos
         }
     } catch (error) {
-        console.error('Erro de rede ao carregar o jogo:', error);
+        console.error('[FRONTEND] Erro de rede ao carregar o jogo:', error);
         showOverlayMessage('Erro de conexão com o servidor ao carregar o jogo.', 'error');
         localStorage.clear();
         userToken = null;
@@ -402,6 +441,11 @@ async function loadGameData() {
 function renderShopItems(category) {
     shopItemsContainer.innerHTML = ''; // Limpa o container
     const itemsToRender = shopItems[category] || [];
+
+    if (itemsToRender.length === 0) {
+        shopItemsContainer.innerHTML = '<p>Nenhum item nesta categoria.</p>';
+        return;
+    }
 
     itemsToRender.forEach(item => {
         const itemDiv = document.createElement('div');
@@ -459,7 +503,7 @@ async function handleBuyItem(event) {
             showOverlayMessage(data.message || 'Erro ao comprar item.', 'error');
         }
     } catch (error) {
-        console.error('Erro de rede ao comprar item:', error);
+        console.error('[FRONTEND] Erro de rede ao comprar item:', error);
         showOverlayMessage('Erro de conexão com o servidor ao comprar item.', 'error');
     }
 }
@@ -467,32 +511,35 @@ async function handleBuyItem(event) {
 // --- Funções do Inventário ---
 
 // Renderizar itens do inventário
-function renderInventoryItems(category) {
+function renderInventoryItems(category) { // Categoria pode ser usada para filtrar se seu inventário tiver categorias
     inventoryItemsContainer.innerHTML = ''; // Limpa o container
 
-    // No seu backend, o inventário deve estar em user.upgrades.inventory
-    const itemsToRender = inventory;
+    const itemsToRender = inventory; // Seu objeto de inventário global
 
-    if (Object.keys(itemsToRender).length === 0) {
+    if (Object.keys(itemsToRender).length === 0 || Object.values(itemsToRender).every(qty => qty === 0)) {
         inventoryItemsContainer.innerHTML = '<p>Seu inventário está vazio.</p>';
         return;
     }
 
-    // Filtra por categoria, se necessário, ou exibe tudo
     for (const type in itemsToRender) {
         if (itemsToRender[type] > 0) {
             // Tenta encontrar a definição do item na loja para obter hashrate e imagem
             const itemDef = shopItems.gpus.find(gpu => gpu.type === type) ||
                             shopItems.upgrades.find(upg => upg.type === type);
 
+            if (!itemDef) {
+                console.warn(`[FRONTEND] Definição de item não encontrada para o tipo: ${type}.`);
+                continue; // Pular este item se não houver definição
+            }
+
             const itemDiv = document.createElement('div');
             itemDiv.classList.add('inventory-item');
             itemDiv.innerHTML = `
-                <img src="${itemDef ? itemDef.imageUrl : 'assets/default.png'}" alt="${type}">
-                <h3>${type}</h3>
+                <img src="${itemDef.imageUrl}" alt="${type}">
+                <h3>${itemDef.name || type}</h3>
                 <p>Quantidade: ${itemsToRender[type]}</p>
-                ${itemDef && itemDef.hashrate ? `<p>Hashrate: ${itemDef.hashrate}</p>` : ''}
-                <button class="place-btn" data-item-type="${type}" data-item-hashrate="${itemDef ? itemDef.hashrate : 0}" data-item-name="${itemDef ? itemDef.name : type}">Colocar</button>
+                ${itemDef.hashrate ? `<p>Hashrate: ${itemDef.hashrate}</p>` : ''}
+                <button class="place-btn" data-item-type="${type}" data-item-hashrate="${itemDef.hashrate || 0}" data-item-name="${itemDef.name || type}">Colocar</button>
             `;
             inventoryItemsContainer.appendChild(itemDiv);
         }
@@ -505,7 +552,7 @@ function renderInventoryItems(category) {
             const hashrate = parseInt(event.target.dataset.itemHashrate);
             const name = event.target.dataset.itemName;
             // Fecha o inventário e inicia o modo de colocação
-            inventoryModal.style.display = 'none';
+            if (inventoryModal) inventoryModal.style.display = 'none';
             startPlacingGpu({ type: gpuType, hashrate: hashrate, name: name });
         };
     });
@@ -515,12 +562,16 @@ function renderInventoryItems(category) {
 // --- Event Listeners Globais ---
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Carrega o token e username do localStorage ao iniciar
+    userToken = localStorage.getItem('token');
+    currentUsername = localStorage.getItem('username');
+
     // Verifica se o usuário está logado e carrega os dados do jogo
     if (userToken && currentUsername) {
-        loadGameData();
-        usernameDisplay.textContent = currentUsername;
+        loadGameData(); // Tenta carregar os dados do jogo do backend
     } else {
         // Se não houver token, redireciona para a tela de login/registro
+        console.log("[FRONTEND] Usuário não logado, redirecionando para index.html");
         window.location.href = 'index.html';
     }
 
@@ -544,10 +595,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Botões da loja
     if (openShopBtn) openShopBtn.onclick = () => {
-        shopModal.style.display = 'block';
+        if (shopModal) shopModal.style.display = 'block';
         renderShopItems('gpus'); // Renderiza a categoria inicial (ex: GPUs)
     };
-    if (closeShopBtn) closeShopBtn.onclick = () => shopModal.style.display = 'none';
+    if (closeShopBtn) closeShopBtn.onclick = () => {
+        if (shopModal) shopModal.style.display = 'none';
+    };
 
     shopCategoryBtns.forEach(btn => {
         btn.onclick = () => {
@@ -558,10 +611,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Botões do inventário
     if (openInventoryBtn) openInventoryBtn.onclick = () => {
-        inventoryModal.style.display = 'block';
+        if (inventoryModal) inventoryModal.style.display = 'block';
         renderInventoryItems('gpus'); // Renderiza a categoria inicial
     };
-    if (closeInventoryBtn) closeInventoryBtn.onclick = () => inventoryModal.style.display = 'none';
+    if (closeInventoryBtn) closeInventoryBtn.onclick = () => {
+        if (inventoryModal) inventoryModal.style.display = 'none';
+    };
 
     inventoryCategoryBtns.forEach(btn => {
         btn.onclick = () => {
@@ -573,16 +628,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Botão de cancelar colocação de GPU
     if (cancelSelectionBtn) cancelSelectionBtn.onclick = cancelPlacement;
 
-    // Inicializa a exibição dos slots dos racks
+    // Inicializa a exibição dos slots dos racks (chame isso para que os slots tenham listeners)
     updateRackDisplay();
 });
 
 // Fechar modais ao clicar fora
 window.onclick = function(event) {
-    if (event.target == shopModal) {
+    if (shopModal && event.target == shopModal) {
         shopModal.style.display = "none";
     }
-    if (event.target == inventoryModal) {
+    if (inventoryModal && event.target == inventoryModal) {
         inventoryModal.style.display = "none";
     }
 }
