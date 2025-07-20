@@ -1,11 +1,11 @@
 // auth.js
 
-// Certifique-se de que esta URL base está CORRETA para o seu backend no Render
+// Definindo a URL base da sua API do backend no Render
+// ESTA URL É CRÍTICA! Certifique-se de que está exata.
 const API_BASE_URL = 'https://lula-coin-backend.onrender.com';
 
-// Função para exibir mensagens de erro/sucesso na UI (do script.js principal, ou onde você a definiu)
-// Assumindo que showOverlayMessage é uma função global ou importada
-// Se você não tiver esta função, pode substituí-la por console.error ou alert()
+// Função para exibir mensagens na UI (assumindo que há um overlay de mensagem no index.htm)
+// Esta função é vital para dar feedback ao usuário sobre o que está acontecendo.
 function showOverlayMessage(message, type) {
     const overlayMessage = document.getElementById('overlay-message');
     const overlayMessageText = document.getElementById('overlay-message-text');
@@ -14,6 +14,15 @@ function showOverlayMessage(message, type) {
     if (overlayMessage && overlayMessageText && overlayMessageOkButton) {
         overlayMessageText.textContent = message;
         overlayMessage.style.display = 'flex'; // Mostra o overlay
+
+        // Define a cor de fundo do overlay com base no tipo de mensagem
+        if (type === 'error') {
+            overlayMessage.style.backgroundColor = 'rgba(255, 0, 0, 0.7)';
+        } else if (type === 'success') {
+            overlayMessage.style.backgroundColor = 'rgba(0, 128, 0, 0.7)';
+        } else {
+            overlayMessage.style.backgroundColor = 'rgba(0, 0, 0, 0.7)'; // Padrão
+        }
 
         // Oculta o overlay ao clicar no botão OK
         overlayMessageOkButton.onclick = () => {
@@ -25,11 +34,39 @@ function showOverlayMessage(message, type) {
     }
 }
 
+// Função auxiliar para definir cookies (usada para armazenar o token e username)
+function setCookie(name, value, days) {
+    let expires = "";
+    if (days) {
+        let date = new Date();
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+        expires = "; expires=" + date.toUTCString();
+    }
+    document.cookie = name + "=" + (value || "") + expires + "; path=/; SameSite=Lax"; // SameSite=Lax é recomendado para segurança
+}
+
+// Função auxiliar para obter cookies
+function getCookie(name) {
+    let nameEQ = name + "=";
+    let ca = document.cookie.split(';');
+    for (let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+    }
+    return null;
+}
+
+// Função auxiliar para apagar cookies
+function eraseCookie(name) {
+    document.cookie = name + '=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+}
+
 
 // Função para registrar um novo usuário
 async function registrarUsuario(username, password) {
     try {
-        console.log(`[AUTH] Tentando registrar: ${username} na URL: ${API_BASE_URL}/api/auth/register`); // Log para depuração
+        console.log(`[AUTH] Tentando registrar: ${username} na URL: ${API_BASE_URL}/api/auth/register`);
         const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
             method: 'POST',
             headers: {
@@ -45,11 +82,11 @@ async function registrarUsuario(username, password) {
 
         const data = await response.json();
         console.log(`[AUTH] Registro bem-sucedido para ${username}:`, data);
-        return data; // Deve conter o usuário registrado ou mensagem de sucesso
+        showOverlayMessage(data.message || 'Registro realizado com sucesso! Agora você pode fazer login.', 'success');
+        return data;
     } catch (error) {
         console.error('[AUTH] Erro no registro:', error);
-        // Exibe a mensagem de erro para o usuário
-        showOverlayMessage(error.message || 'Não foi possível registrar a conta. Tente novamente.', 'error');
+        showOverlayMessage(error.message || 'Não foi possível registrar a conta. Verifique os dados e tente novamente.', 'error');
         throw error;
     }
 }
@@ -57,7 +94,7 @@ async function registrarUsuario(username, password) {
 // Função para fazer login
 async function loginUsuario(username, password) {
     try {
-        console.log(`[AUTH] Tentando login: ${username} na URL: ${API_BASE_URL}/api/auth/login`); // Log para depuração
+        console.log(`[AUTH] Tentando login: ${username} na URL: ${API_BASE_URL}/api/auth/login`);
         const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
             method: 'POST',
             headers: {
@@ -73,43 +110,15 @@ async function loginUsuario(username, password) {
 
         const data = await response.json();
         console.log(`[AUTH] Login bem-sucedido para ${username}:`, data);
-        return data; // Deve conter o token e informações do usuário
+        return data;
     } catch (error) {
         console.error('[AUTH] Erro no login:', error);
-        // Exibe a mensagem de erro para o usuário
         showOverlayMessage(error.message || 'Não foi possível fazer login. Verifique seu nome de usuário e senha.', 'error');
         throw error;
     }
 }
 
-// Funções utilitárias (se estiverem neste arquivo)
-function setCookie(name, value, days) {
-    let expires = "";
-    if (days) {
-        let date = new Date();
-        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-        expires = "; expires=" + date.toUTCString();
-    }
-    document.cookie = name + "=" + (value || "") + expires + "; path=/; SameSite=Lax"; // Adicionado SameSite=Lax
-}
-
-function getCookie(name) {
-    let nameEQ = name + "=";
-    let ca = document.cookie.split(';');
-    for (let i = 0; i < ca.length; i++) {
-        let c = ca[i];
-        while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-        if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
-    }
-    return null;
-}
-
-function eraseCookie(name) {
-    document.cookie = name + '=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-}
-
-// Se você tiver a lógica de UI do login/registro aqui, adapte conforme necessário.
-// Exemplo (adapte para o seu HTML e eventos):
+// Lógica para lidar com os formulários e transição de tela
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('login-form');
     const registerForm = document.getElementById('register-form');
@@ -124,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const authScreen = document.getElementById('auth-screen');
     const gameScreen = document.getElementById('game-screen');
 
-
+    // Event listener para o formulário de login
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -137,22 +146,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     setCookie('userToken', data.token, 7); // Salva o token por 7 dias
                     setCookie('username', data.username, 7); // Salva o username
                     
-                    // Atualiza a UI com os dados do usuário logado
-                    if (typeof updateGameUI === 'function') { // Verifica se a função existe
-                        updateGameUI(data); // Assume que `data` tem lulaCoins, level, etc.
-                        updateMonitorText(data); // Se você tiver essa função em game.js
+                    // Se o login for bem-sucedido, tenta carregar os dados do jogo
+                    if (typeof loadUserData === 'function') { // Verifica se loadUserData existe em game.js
+                        loadUserData(); // Esta função transicionará para a tela do jogo
+                    } else {
+                        // Fallback se loadUserData não estiver disponível
+                        authScreen.style.display = 'none';
+                        gameScreen.style.display = 'flex'; // ou 'block'
+                        console.warn('Função loadUserData não encontrada. Exibindo tela de jogo diretamente.');
                     }
-
-                    authScreen.style.display = 'none';
-                    gameScreen.style.display = 'flex'; // ou 'block', 'grid' dependendo do seu layout
-                    console.log('Login bem-sucedido. Jogo carregado.');
                 }
             } catch (error) {
-                // A mensagem de erro já é tratada por showOverlayMessage dentro de loginUsuario
+                // Erro já tratado e exibido por loginUsuario
             }
         });
     }
 
+    // Event listener para o formulário de registro
     if (registerForm) {
         registerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -160,17 +170,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const password = registerPasswordInput.value;
 
             try {
-                const data = await registrarUsuario(username, password);
-                showOverlayMessage(data.message || 'Registro realizado com sucesso!', 'success');
-                // Após o registro, pode redirecionar para a tela de login ou fazer login automático
-                loginForm.style.display = 'block'; // Mostra o formulário de login
-                registerForm.style.display = 'none'; // Esconde o de registro
+                await registrarUsuario(username, password);
+                // Após o registro bem-sucedido, volta para a tela de login
+                loginForm.style.display = 'block';
+                registerForm.style.display = 'none';
+                loginUsernameInput.value = username; // Preenche o username para facilitar o login
+                loginPasswordInput.value = ''; // Limpa a senha
             } catch (error) {
-                // A mensagem de erro já é tratada por showOverlayMessage dentro de registrarUsuario
+                // Erro já tratado e exibido por registrarUsuario
             }
         });
     }
 
+    // Event listeners para alternar entre formulários de login/registro
     if (showRegisterLink) {
         showRegisterLink.addEventListener('click', (e) => {
             e.preventDefault();
