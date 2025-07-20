@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
-const cors = require('cors'); // Certifique-se que 'cors' está instalado e importado
+const cors = require('cors'); // <-- Já está aqui, mas é crucial ter!
 
 const authRoutes = require('./routes/auth');
 const gameRoutes = require('./routes/game');
@@ -9,33 +9,45 @@ const gameRoutes = require('./routes/game');
 const app = express();
 
 // --- INÍCIO DA CONFIGURAÇÃO CORS ATUALIZADA ---
-// Lista de origens permitidas (seu frontend no Netlify e, opcionalmente, seu ambiente de desenvolvimento local)
+// Lista de origens permitidas (seu frontend no Netlify)
 const allowedOrigins = [
-    'https://sweet-praline-ee4bd7.netlify.app', // URL do seu jogo no Netlify
-    // Se você estiver desenvolvendo ou testando localmente, pode adicionar:
-    // 'http://localhost:3000', // Se o seu frontend estiver rodando localmente na porta 3000
-    // 'http://127.0.0.1:5500' // Exemplo: se estiver usando o Live Server do VS Code, ele roda nessa porta
+    'https://sweet-praline-ee4bd7.netlify.app', // <-- ESTA É A URL DO SEU JOGO NO NETLIFY
+    // Se você estiver testando o frontend localmente (por exemplo, com Live Server ou Vite dev server),
+    // você pode adicionar as URLs locais aqui. Ex:
+    // 'http://localhost:5500', // Exemplo para Live Server do VS Code
+    // 'http://localhost:5173'  // Exemplo para um ambiente de desenvolvimento com Vite
 ];
 
 app.use(cors({
-    origin: allowedOrigins, // Usa a array de origens permitidas diretamente (mais simples e robusto)
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], // Inclua todos os métodos HTTP que seu frontend pode usar (incluí PATCH por segurança)
-    allowedHeaders: ['Content-Type', 'Authorization'], // Importante: Permite cabeçalhos comuns, incluindo o token de autenticação
-    credentials: true // Permite que o navegador envie cookies/cabeçalhos de autenticação (se necessário)
+    origin: function (origin, callback) {
+        // Se a origem não for definida (ex: requisições do mesmo servidor ou de ferramentas como Postman), permite.
+        if (!origin) return callback(null, true);
+        // Se a origem estiver na lista de permitidas, permite.
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            // Caso contrário, bloqueia e retorna o erro CORS.
+            const msg = 'A política CORS para este site não permite acesso da origem especificada: ' + origin;
+            callback(new Error(msg), false);
+        }
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], // Inclui os métodos HTTP que seu frontend e backend usarão
+    allowedHeaders: ['Content-Type', 'Authorization'], // Permite que o frontend envie esses cabeçalhos (importante para tokens de autenticação)
+    credentials: true // Permite o envio de cookies de sessão, se você os usar
 }));
 // --- FIM DA CONFIGURAÇÃO CORS ATUALIZADA ---
 
-// Middleware para JSON (permite que o Express entenda JSON nas requisições)
+// Middleware para JSON (permite que o Express entenda o corpo das requisições em formato JSON)
 app.use(express.json());
 
-// Rota raiz para teste (quando você acessa a URL do backend diretamente)
+// Rota raiz para teste (quando você acessa a URL do backend diretamente no navegador)
 app.get("/", (req, res) => {
     res.send("Lula Coin Backend online!");
 });
 
 // Rotas da API
-app.use('/api/auth', authRoutes); // Rotas de autenticação (login, registro)
-app.use('/api/game', gameRoutes); // Rotas específicas do jogo
+app.use('/api/auth', authRoutes); // Rotas de autenticação (registro, login)
+app.use('/api/game', gameRoutes); // Rotas do jogo (minerar, comprar mineradores)
 
 // Conexão com MongoDB
 mongoose.connect(process.env.MONGO_URI)
