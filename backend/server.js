@@ -8,7 +8,7 @@ const { Server } = require("socket.io"); // Importa Server do socket.io
 // Importar rotas e middleware
 const authRoutes = require('./routes/auth');
 const gameRoutes = require('./routes/game');
-const authMiddleware = require('./middleware/auth'); // Certifique-se de que o caminho está correto
+const authMiddleware = require('./middleware/authMiddleware'); // Certifique-se de que o caminho está correto
 
 const app = express();
 const server = http.createServer(app); // Cria um servidor HTTP a partir da aplicação Express
