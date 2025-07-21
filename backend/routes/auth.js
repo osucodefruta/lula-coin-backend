@@ -4,75 +4,79 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const jwtSecret = process.env.JWT_SECRET;
 
-// Rota de Registro
+// ROTA: POST /api/auth/register
+// Função: Registrar um novo usuário.
 router.post('/register', async (req, res) => {
     const { username, password } = req.body;
 
-    if (!username || !password) {
-        return res.status(400).json({ message: 'Preencha usuário e senha.' });
-    }
-
     try {
+        // Verifica se o usuário já existe
         let user = await User.findOne({ username });
         if (user) {
             return res.status(400).json({ message: 'Usuário já existe.' });
         }
 
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-
+        // Cria um novo usuário com base no modelo
         user = new User({
             username,
-            password: hashedPassword,
-            lulaCoins: 0,
-            level: 1,
-            minerValue: 1,
-            totalHashrate: 0,
-            inventory: { gpus: [], upgrades: [] },
-            placedGpus: {}
+            password,
+            // O gameState inicial é definido por padrão no modelo
         });
 
+        // Criptografa a senha antes de salvar
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(password, salt);
+
+        // Salva o usuário no banco de dados
         await user.save();
 
-        // Gera token JWT após registro também
-        const payload = { user: { id: user.id } };
-        const token = jwt.sign(payload, jwtSecret, { expiresIn: '1h' });
+        res.status(201).json({ message: 'Usuário registrado com sucesso!' });
 
-        res.status(201).json({ token, username: user.username });
     } catch (err) {
-        console.error('Erro no registro:', err.message);
-        res.status(500).json({ message: 'Erro no servidor. Tente novamente mais tarde.' });
+        console.error(err.message);
+        res.status(500).send('Erro no servidor');
     }
 });
 
-// Rota de Login
+// ROTA: POST /api/auth/login
+// Função: Autenticar um usuário e retornar um token.
 router.post('/login', async (req, res) => {
     const { username, password } = req.body;
 
-    if (!username || !password) {
-        return res.status(400).json({ message: 'Preencha usuário e senha.' });
-    }
-
     try {
+        // Verifica se o usuário existe
         const user = await User.findOne({ username });
         if (!user) {
             return res.status(400).json({ message: 'Credenciais inválidas.' });
         }
 
+        // Compara a senha enviada com a senha criptografada no banco
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return res.status(400).json({ message: 'Credenciais inválidas.' });
         }
 
-        const payload = { user: { id: user.id } };
-        const token = jwt.sign(payload, jwtSecret, { expiresIn: '1h' });
+        // Cria o payload para o token JWT
+        const payload = {
+            id: user.id
+        };
 
-        res.json({ token, username: user.username });
+        // Gera e assina o token JWT
+        jwt.sign(
+            payload,
+            process.env.JWT_SECRET,
+            { expiresIn: '24h' }, // Token expira em 24 horas
+            (err, token) => {
+                if (err) throw err;
+                // Retorna o token para o cliente
+                res.json({ token });
+            }
+        );
+
     } catch (err) {
-        console.error('Erro no login:', err.message);
-        res.status(500).json({ message: 'Erro no servidor. Tente novamente mais tarde.' });
+        console.error(err.message);
+        res.status(500).send('Erro no servidor');
     }
 });
 

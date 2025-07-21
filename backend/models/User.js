@@ -1,39 +1,35 @@
+// backend/models/User.js
 const mongoose = require('mongoose');
 
-const userSchema = new mongoose.Schema({
-    username: { // Mantenha 'username' se é o que está a usar para login nas rotas auth.js
+// Este schema define a estrutura dos dados do usuário no MongoDB.
+const UserSchema = new mongoose.Schema({
+    username: {
         type: String,
         required: true,
-        unique: true
+        unique: true, // Garante que cada nome de usuário seja único
+        trim: true
     },
     password: {
         type: String,
         required: true
     },
-    lulaCoins: { // Campo para o saldo de Lula Coins
-        type: Number,
-        default: 0
-    },
-    miningPower: { // Campo para o poder de mineração
-        type: Number,
-        default: 1
-    },
-    upgrades: { // Campo para armazenar os upgrades do jogador
-        type: Object, // Usar Object para flexibilidade, ou um Schema aninhado se houver estrutura específica
-        default: {} // Objeto vazio por padrão, pode armazenar { pickaxeLevel: 1, drillLevel: 0, etc. }
-    },
-    // Se você tinha um campo 'gameState' genérico, podemos removê-lo ou usá-lo para dados mais complexos
-    // Se decidir manter, o schema ficaria assim:
-    // gameState: {
-    //     coins: { type: Number, default: 0 },
-    //     miningPower: { type: Number, default: 1 },
-    //     upgrades: { type: Object, default: {} }
-    // }
-    // Mas para simplificar e corresponder ao auth.js e game.js já fornecidos, é melhor mantê-los no nível superior.
-    date: { // Data de criação do utilizador, se necessário
-        type: Date,
-        default: Date.now
+    // O estado do jogo é salvo diretamente no documento do usuário.
+    // A estrutura é baseada no seu arquivo jogo.html.
+    gameState: {
+        balance: { type: Number, default: 100 },
+        inventory: {
+            miners: [{ id: String, quantity: Number }],
+            racks: [{ id: String, quantity: Number }]
+        },
+        energy: { type: Number, default: 100 },
+        totalPower: { type: Number, default: 0 },
+        incomeRate: { type: Number, default: 0 },
+        placedRacksPerRoom: {
+            type: [[mongoose.Schema.Types.Mixed]], // Array de arrays, permitindo qualquer estrutura dentro
+            default: [Array(4).fill(null)] // Começa com uma sala com 4 slots de rack vazios
+        }
     }
-});
+}, { timestamps: true }); // `timestamps` adiciona os campos createdAt e updatedAt automaticamente
 
-module.exports = mongoose.model('User', userSchema);
+module.exports = mongoose.model('User', UserSchema);
+
