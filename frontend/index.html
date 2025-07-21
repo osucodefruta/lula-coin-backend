@@ -112,12 +112,10 @@
         .miner-selection { position: absolute; bottom: 0; left: 0; width: 100%; height: 70px; background-color: rgba(0, 0, 0, 0.9); border-top: 1px solid var(--primary-color); display: none; align-items: center; justify-content: center; gap: 15px; padding: 0 20px; z-index: 20; }
         .miner-selection.active { display: flex; }
         .cancel-selection-btn { background-color: var(--red-alert); color: #fff; border: none; border-radius: 5px; padding: 8px 15px; cursor: pointer; font-weight: bold; margin-left: 20px; }
-        /* Adicione outros estilos do jogo.html aqui para economizar espaço */
     </style>
 </head>
 <body>
 
-    <!-- Seção de Autenticação -->
     <div id="auth-container">
         <div class="auth-box">
             <div id="login-form">
@@ -138,7 +136,6 @@
         </div>
     </div>
 
-    <!-- Seção Principal do Jogo -->
     <div id="app">
         <header>
             <div class="logo"><h1>Lula Coin Miner</h1></div>
@@ -270,7 +267,8 @@
         // --- Funções de API ---
         const apiRequest = async (endpoint, method = 'GET', body = null) => {
             const token = localStorage.getItem('token');
-            if (!token && endpoint !== '/auth/login' && endpoint !== '/auth/register') {
+            // Ajustado para permitir rotas sem token
+            if (!token && !endpoint.startsWith('/api/auth')) {
                 showAuthMessage('Sessão expirada. Faça login novamente.');
                 handleLogout();
                 return null;
@@ -303,8 +301,14 @@
                 return data;
             } catch (error) {
                 console.error(`Erro na API [${method} ${endpoint}]:`, error);
+                // A mensagem de erro da sintaxe JSON é um sintoma, o erro real é a resposta não ser JSON.
                 const messageArea = appContainer.style.display === 'flex' ? terminalTextElement : authMessage;
-                messageArea.textContent = error.message;
+                // Exibe uma mensagem mais clara para o usuário.
+                if (error instanceof SyntaxError) {
+                     messageArea.textContent = 'Erro de comunicação com o servidor. A rota pode estar incorreta.';
+                } else {
+                     messageArea.textContent = error.message;
+                }
                 messageArea.style.color = 'var(--red-alert)';
                 return null;
             }
@@ -316,7 +320,8 @@
             const password = document.getElementById('login-password').value;
             if (!username || !password) return showAuthMessage('Preencha todos os campos.');
             
-            const data = await apiRequest('/auth/login', 'POST', { username, password });
+            // CORREÇÃO: Adicionado /api/ ao caminho
+            const data = await apiRequest('/api/auth/login', 'POST', { username, password });
             if (data && data.token) {
                 localStorage.setItem('token', data.token);
                 await initializeGame();
@@ -327,8 +332,9 @@
             const username = document.getElementById('register-username').value;
             const password = document.getElementById('register-password').value;
             if (!username || !password) return showAuthMessage('Preencha todos os campos.');
-
-            const data = await apiRequest('/auth/register', 'POST', { username, password });
+            
+            // CORREÇÃO: Adicionado /api/ ao caminho
+            const data = await apiRequest('/api/auth/register', 'POST', { username, password });
             if (data) {
                 showAuthMessage(data.message, 'lime');
                 toggleForms(); // Volta para o login
@@ -356,7 +362,8 @@
 
         // --- Funções do Jogo ---
         const initializeGame = async () => {
-            const data = await apiRequest('/game/state');
+            // CORREÇÃO: Adicionado /api/ ao caminho
+            const data = await apiRequest('/api/game/state');
             if (data && data.gameState) {
                 gameState = data.gameState;
                 authContainer.style.display = 'none';
@@ -370,7 +377,8 @@
         const saveGame = async () => {
             if (!gameState) return;
             displayTerminalMessage('Salvando jogo...', 'yellow');
-            const data = await apiRequest('/game/update', 'POST', { gameState });
+            // CORREÇÃO: Adicionado /api/ ao caminho
+            const data = await apiRequest('/api/game/update', 'POST', { gameState });
             if (data) {
                 displayTerminalMessage(data.message, 'lime');
             }
@@ -378,7 +386,8 @@
         
         const buyItem = async (itemId, category) => {
             displayTerminalMessage('Processando compra...', 'yellow');
-            const data = await apiRequest('/game/buy-item', 'POST', { itemId, category });
+            // CORREÇÃO: Adicionado /api/ ao caminho
+            const data = await apiRequest('/api/game/buy-item', 'POST', { itemId, category });
             if (data) {
                 gameState = data.gameState;
                 displayTerminalMessage(data.message, 'lime');
@@ -622,4 +631,3 @@
     </script>
 </body>
 </html>
-
