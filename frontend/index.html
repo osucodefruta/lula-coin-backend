@@ -1257,6 +1257,7 @@
 
                     if (response.ok) {
                         const data = await response.json();
+                        // Certifica-se de que 'data' é um objeto válido antes de prosseguir
                         if (!data || typeof data !== 'object') {
                             console.error('Dados do estado do jogo recebidos são inválidos (não é um objeto):', data);
                             showOverlayMessage('Erro: Dados do jogo inválidos. Faça login novamente.', 'error');
@@ -1292,13 +1293,13 @@
             level = data.level || 1;
             totalHashrate = data.totalHashrate || 0;
             
-            // Garante que inventory e placedGpus são objetos/arrays válidos
+            // Garante que inventory e placedGpus são objetos/arrays válidos,
+            // e se não forem fornecidos, inicializa como objetos/arrays vazios.
             inventory = data.inventory && typeof data.inventory === 'object' ? data.inventory : { gpus: [], upgrades: [] };
             inventory.gpus = Array.isArray(inventory.gpus) ? inventory.gpus : [];
             inventory.upgrades = Array.isArray(inventory.upgrades) ? inventory.upgrades : [];
             
             placedGpus = data.placedGpus && typeof data.placedGpus === 'object' ? data.placedGpus : {};
-
 
             usernameDisplay.textContent = localStorage.getItem('username') || 'Visitante';
             lulaCoinsDisplay.textContent = lulaCoins.toFixed(2);
@@ -1326,6 +1327,7 @@
 
                 if (response.ok) {
                     const data = await response.json();
+                     // Certifica-se de que 'data' é um objeto válido antes de prosseguir
                      if (!data || typeof data !== 'object') {
                         console.error('Dados do estado do jogo recebidos são inválidos (não é um objeto) durante fetchGameState:', data);
                         showOverlayMessage('Erro: Dados do jogo inválidos. Faça login novamente.', 'error');
@@ -1548,7 +1550,12 @@
             }
 
             items.forEach(item => {
-                if (!item) return; // Pula itens nulos
+                // Adiciona uma verificação para garantir que o item não é nulo/undefined
+                if (!item || typeof item !== 'object') {
+                    console.warn("Item inválido encontrado na loja:", item);
+                    return; // Pula este item inválido
+                }
+
                 const itemElement = document.createElement('div');
                 itemElement.classList.add('shop-item');
                 itemElement.innerHTML = `
@@ -1575,7 +1582,12 @@
             }
 
             items.forEach(item => {
-                if (!item) return; // Pula itens nulos
+                // Adiciona uma verificação para garantir que o item não é nulo/undefined
+                if (!item || typeof item !== 'object') {
+                    console.warn("Item inválido encontrado no inventário:", item);
+                    return; // Pula este item inválido
+                }
+
                 const itemElement = document.createElement('div');
                 itemElement.classList.add('inventory-item');
                 itemElement.innerHTML = `
@@ -1620,8 +1632,9 @@
                 const slotId = slot.dataset.slot;
                 const slotKey = `rack-${rackId}-slot-${slotId}`;
 
+                // Adiciona uma verificação para garantir que placedGpus[slotKey] é um objeto válido
                 const gpu = placedGpus[slotKey];
-                if (gpu && typeof gpu === 'object' && gpu.id) { // Verifica se é um objeto válido e tem um ID
+                if (gpu && typeof gpu === 'object' && gpu.id) { 
                     slot.classList.add('occupied');
                     slot.innerHTML = `
                         <div class="gpu-display">
