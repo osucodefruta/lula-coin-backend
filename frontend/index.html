@@ -763,7 +763,7 @@
                     showAuthMessage('Sessão inválida. Faça login novamente.');
                     return null;
                 }
-                // Para POST sem retorno de conteúdo (como update), não tenta fazer .json()
+                
                 if (response.status === 204 || response.headers.get("content-length") === "0") {
                     return { success: true, message: "Operação bem-sucedida." };
                 }
@@ -815,6 +815,7 @@
             appContainer.style.display = 'none';
             gameState = null;
             if (gameLoopInterval) clearInterval(gameLoopInterval);
+            if (terminalLoopInterval) clearInterval(terminalLoopInterval);
         };
 
         const showAuthMessage = (msg, color = 'var(--red-alert)') => {
@@ -833,9 +834,8 @@
             const data = await apiRequest('/api/game/state');
             if (data && data.gameState) {
                 gameState = data.gameState;
-                currentRoomIndex = data.currentRoomIndex || 0; // Carrega a sala atual
+                currentRoomIndex = data.currentRoomIndex || 0; 
                 
-                // Validação para garantir que o estado do jogo carregado é válido
                 if (!gameState.placedRacksPerRoom || gameState.placedRacksPerRoom.length === 0) {
                     gameState.placedRacksPerRoom = [Array(NUM_RACK_PLACEMENT_SLOTS).fill(null)];
                     currentRoomIndex = 0;
@@ -846,9 +846,9 @@
                 userAvatar.textContent = data.username.charAt(0).toUpperCase();
                 
                 updateUI();
-                startLoops(); // Inicia os loops do jogo
+                startLoops();
             } else {
-                handleLogout(); // Se não conseguir carregar o estado, desloga.
+                handleLogout();
             }
         };
 
@@ -857,13 +857,11 @@
             displayTerminalMessage('Salvando progresso no servidor...', 'yellow');
             const data = await apiRequest('/api/game/update', 'POST', { gameState, currentRoomIndex });
             if (data) {
-                displayTerminalMessage('Jogo salvo com sucesso!', 'lime');
+                setTimeout(() => displayTerminalMessage('Jogo salvo com sucesso!', 'lime'), 500);
             }
         };
 
-        // --- FUNÇÕES DE UI E RENDERIZAÇÃO (DO SEU 'jogo.html') ---
-
-        // Funções de Sprite (mantidas do seu original)
+        // --- FUNÇÕES DE UI E RENDERIZAÇÃO ---
         function createGpuSprite(miner, size = 'normal') {
             const gpu = document.createElement('div');
             gpu.className = 'miner-gpu';
@@ -915,7 +913,6 @@
             terminalTextElement.style.color = color;
         }
 
-        // Funções de Sala (mantidas do seu original)
         function renderRoomControls() {
             roomControls.innerHTML = '';
             gameState.placedRacksPerRoom.forEach((room, index) => {
@@ -923,9 +920,7 @@
                 roomBtn.id = `room-${index + 1}`;
                 roomBtn.className = 'room-btn';
                 roomBtn.textContent = (index + 1).toString();
-                if (index === currentRoomIndex) {
-                    roomBtn.classList.add('active');
-                }
+                if (index === currentRoomIndex) roomBtn.classList.add('active');
                 roomBtn.addEventListener('click', () => switchRoom(index));
                 roomControls.appendChild(roomBtn);
             });
@@ -948,7 +943,6 @@
         async function buyRoom() {
             const nextRoomIndex = gameState.placedRacksPerRoom.length;
             const roomCost = ROOM_PRICES[nextRoomIndex - 1];
-
             if (roomCost === undefined) {
                 displayTerminalMessage("Todas as salas já foram compradas!", "yellow");
                 return;
@@ -956,10 +950,10 @@
             if (gameState.balance >= roomCost) {
                 const data = await apiRequest('/api/game/buy-room', 'POST', { cost: roomCost });
                 if (data && data.gameState) {
-                    gameState = data.gameState; // Atualiza o estado com a resposta do servidor
+                    gameState = data.gameState;
                     currentRoomIndex = gameState.placedRacksPerRoom.length - 1;
                     displayTerminalMessage(`Sala ${currentRoomIndex + 1} comprada!`, "lime");
-                    updateUI(); // Atualiza toda a UI
+                    updateUI();
                 }
             } else {
                 displayTerminalMessage(`LCO insuficiente! Necessário ${roomCost} LCO.`, "red");
@@ -1014,6 +1008,7 @@
                     slotDiv.appendChild(rackElement);
                 } else {
                     slotDiv.classList.add('available');
+                    // BUG FIX: Adicionando o event listener que faltava para os slots de rack vazios.
                     slotDiv.addEventListener('click', handleSlotClick);
                 }
                 rackPlacementArea.appendChild(slotDiv);
@@ -1023,7 +1018,7 @@
         async function buyItem(itemId, category) {
             displayTerminalMessage('Processando compra...', 'yellow');
             const itemData = (category === 'miners' ? MINERS : RACKS).find(i => i.id === itemId);
-            if(gameState.balance < itemData.price) {
+            if (gameState.balance < itemData.price) {
                 displayTerminalMessage('Saldo insuficiente!', 'red');
                 return;
             }
@@ -1031,7 +1026,7 @@
             if (data && data.gameState) {
                 gameState = data.gameState;
                 displayTerminalMessage(data.message, 'lime');
-                updateUI();
+                updateBalance();
                 renderShop(category);
                 renderInventory(category);
             }
@@ -1068,7 +1063,6 @@
             const itemsToRender = category === 'miners' ? gameState.inventory.miners : gameState.inventory.racks;
             contentArea.style.display = 'grid';
             contentArea.innerHTML = '';
-
             if (!itemsToRender || itemsToRender.length === 0) {
                 contentArea.innerHTML = '<p style="grid-column: 1 / -1; text-align: center;">Vazio</p>';
                 return;
@@ -1100,7 +1094,6 @@
         function openInventory() { inventoryModal.style.display = 'flex'; renderInventory('miners'); }
         function closeInventory() { inventoryModal.style.display = 'none'; }
         
-        // Funções de posicionamento
         function startPlacement(item, type) {
             placingItem = { item, type };
             miningRoom.classList.add('placing-item');
@@ -1127,11 +1120,11 @@
                 endpoint = '/api/game/place-miner';
                 body = { minerId: placingItem.item.id, rackSlotIndex: parseInt(target.dataset.rackSlotIndex), minerSlotIndex: parseInt(target.dataset.minerSlotIndex), roomIndex: currentRoomIndex };
             } else {
-                return; // Não faz nada se o clique for inválido
+                return;
             }
 
             const data = await apiRequest(endpoint, 'POST', body);
-            if(data && data.gameState) {
+            if (data && data.gameState) {
                 gameState = data.gameState;
                 displayTerminalMessage(data.message, 'lime');
                 updateUI();
@@ -1143,12 +1136,12 @@
         // --- LOOPS DO JOGO ---
         let gameLoopInterval;
         let terminalLoopInterval;
+        let lastUpdateTime;
+
         function startLoops() {
-            // Limpa loops antigos para evitar duplicação
             if (gameLoopInterval) clearInterval(gameLoopInterval);
             if (terminalLoopInterval) clearInterval(terminalLoopInterval);
 
-            // Loop principal para ganhos
             lastUpdateTime = Date.now();
             gameLoopInterval = setInterval(() => {
                 if (!gameState) return;
@@ -1159,14 +1152,13 @@
                 updateBalance();
             }, 1000);
 
-            // Loop para mensagens do terminal
             let terminalMessageIndex = 0;
             const terminalMessages = ["Conectando ao núcleo...", "Minerando blocos...", "Sincronizando...", "Verificando integridade...", "Aguardando transações..."];
             const updateTerminal = () => {
                 displayTerminalMessage(terminalMessages[terminalMessageIndex]);
                 terminalMessageIndex = (terminalMessageIndex + 1) % terminalMessages.length;
             };
-            updateTerminal(); // Chama uma vez imediatamente
+            updateTerminal();
             terminalLoopInterval = setInterval(updateTerminal, 5000);
         }
 
