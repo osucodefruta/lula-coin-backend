@@ -1,398 +1,415 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lula Coin Miner - Acesso</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <style>
-        /* Variáveis CSS para fácil tematização */
-        :root {
-            --primary-color: #ff3b3b; /* Vermelho Neon */
-            --secondary-color: #2e008a; /* Azul Escuro */
-            --tertiary-color: #0a0e2a; /* Azul Quase Preto */
-            --text-color: #e0e0e0;
-            --dark-gray: #1a1a1a;
-            --medium-gray: #333;
-            --light-gray: #555;
-            --red-alert: #ff4500;
-            --border-color: rgba(255, 59, 59, 0.3);
-            --glow-color: rgba(255, 59, 59, 0.6);
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lula Coin Miner - Acesso</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <style>
+    /* Variáveis CSS para fácil tematização */
+    :root {
+        --primary-color: #ff3b3b; /* Vermelho Neon */
+        --secondary-color: #2e008a; /* Azul Escuro */
+        --tertiary-color: #0a0e2a; /* Azul Quase Preto */
+        --text-color: #e0e0e0;
+        --dark-gray: #1a1a1a;
+        --medium-gray: #333;
+        --light-gray: #555;
+        --red-alert: #ff4500;
+        --border-color: rgba(255, 59, 59, 0.3);
+        --glow-color: rgba(255, 59, 59, 0.6);
+    }
 
-        body {
-            font-family: 'Share Tech Mono', monospace;
-            background-color: var(--tertiary-color);
-            color: var(--text-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            overflow: hidden; /* Para garantir que o corpo não tenha scroll */
-            flex-direction: column;
-        }
+    body {
+        font-family: 'Share Tech Mono', monospace;
+        background-color: var(--dark-gray);
+        color: var(--text-color);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        overflow: hidden;
+        position: relative;
+    }
 
-        .container {
-            background-color: var(--dark-gray);
-            border: 2px solid var(--border-color);
-            box-shadow: 0 0 15px var(--glow-color);
-            padding: 30px;
-            border-radius: 10px;
-            text-align: center;
-            max-width: 400px;
-            width: 90%;
-            box-sizing: border-box;
-            position: relative;
-            z-index: 10; /* Garante que o container esteja acima do fundo animado */
-        }
+    /* Estilos para o background de partículas - Opcional, do seu jogo.html */
+    #animation-container {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        overflow: hidden;
+        z-index: 0;
+    }
 
-        h1, h2, h3 {
-            font-family: 'Orbitron', sans-serif;
-            color: var(--primary-color);
-            text-shadow: 0 0 5px var(--glow-color);
-            margin-bottom: 20px;
-        }
+    .particle {
+        position: absolute;
+        background-color: var(--primary-color);
+        border-radius: 50%;
+        opacity: 0.6;
+        filter: blur(2px);
+        animation: floatAndFade 15s infinite ease-in-out;
+        box-shadow: 0 0 5px var(--primary-color), 0 0 10px var(--glow-color);
+    }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
+    @keyframes floatAndFade {
+        0% { transform: translate(0, 0) scale(1); opacity: 0.6; }
+        50% { transform: translate(var(--x), var(--y)) scale(1.1); opacity: 0.8; }
+        100% { transform: translate(0, 0) scale(1); opacity: 0.6; }
+    }
 
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 1.1em;
-            color: var(--text-color);
-        }
 
-        input[type="text"],
-        input[type="password"] {
-            width: calc(100% - 20px);
-            padding: 10px;
-            margin: 0 auto; /* Centraliza o input */
-            background-color: var(--medium-gray);
-            border: 1px solid var(--border-color);
-            border-radius: 5px;
-            color: var(--text-color);
-            font-size: 1em;
-            box-sizing: border-box;
-            outline: none;
-        }
+    /* Box de Login/Registro */
+    .auth-container {
+        background: var(--medium-gray);
+        padding: 40px;
+        border-radius: 15px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+        text-align: center;
+        position: relative;
+        z-index: 1; /* Para ficar acima das partículas de fundo */
+        border: 1px solid var(--border-color);
+    }
 
-        input[type="text"]:focus,
-        input[type="password"]:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 8px var(--glow-color);
-        }
+    .auth-container h2 {
+        color: var(--primary-color);
+        margin-bottom: 25px;
+        font-family: 'Orbitron', sans-serif;
+        text-shadow: 0 0 5px var(--primary-color);
+    }
 
-        button {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 12px 25px;
-            border: none;
-            border-radius: 5px;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.1em;
-            cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
-            margin: 5px;
-            box-shadow: 0 0 8px rgba(255, 59, 59, 0.4);
-            text-transform: uppercase;
-        }
+    .form-group {
+        margin-bottom: 20px;
+    }
 
-        button:hover {
-            background-color: #ff6347; /* Tom um pouco mais claro de vermelho */
-            transform: translateY(-2px);
-            box-shadow: 0 0 12px rgba(255, 59, 59, 0.7);
-        }
+    input[type="text"],
+    input[type="password"] {
+        width: calc(100% - 20px);
+        padding: 12px;
+        margin-top: 5px;
+        border: 1px solid var(--light-gray);
+        border-radius: 8px;
+        background-color: var(--dark-gray);
+        color: var(--text-color);
+        font-size: 1em;
+        box-sizing: border-box;
+        outline: none;
+        transition: border-color 0.3s ease;
+    }
 
-        button:active {
-            transform: translateY(0);
-            box-shadow: 0 0 5px rgba(255, 59, 59, 0.3);
-        }
+    input[type="text"]:focus,
+    input[type="password"]:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 5px var(--primary-color);
+    }
 
-        .link {
-            color: var(--primary-color);
-            cursor: pointer;
-            text-decoration: underline;
-            margin-top: 15px;
-            display: block;
-            font-size: 0.9em;
-            transition: color 0.3s ease;
-        }
+    button {
+        background-color: var(--primary-color);
+        color: white;
+        padding: 12px 25px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1.1em;
+        font-weight: bold;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+        margin: 5px;
+    }
 
-        .link:hover {
-            color: #ff6347;
-        }
+    button:hover {
+        background-color: #e60000; /* Um pouco mais escuro */
+        transform: translateY(-2px);
+    }
 
-        .message {
-            margin-top: 20px;
-            padding: 10px;
-            border-radius: 5px;
-            font-weight: bold;
-        }
+    .toggle-link {
+        color: var(--primary-color);
+        cursor: pointer;
+        text-decoration: underline;
+        margin-top: 15px;
+        display: block;
+        font-size: 0.9em;
+    }
 
-        .message.success {
-            background-color: rgba(0, 128, 0, 0.2);
-            color: limegreen;
-        }
+    #authMessage {
+        color: var(--red-alert);
+        margin-top: 15px;
+        font-weight: bold;
+    }
 
-        .message.error {
-            background-color: rgba(255, 0, 0, 0.2);
-            color: var(--red-alert);
-        }
+    /* Estilos para o Overlay de Mensagens (Global) */
+    #overlay-message {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8); /* Fundo semi-transparente */
+        display: none; /* Inicia oculto */
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        font-size: 1.5em;
+        z-index: 1000; /* Garante que fique acima de tudo */
+        text-align: center;
+    }
 
-        #registerForm {
-            display: none; /* Inicia escondido */
-        }
+    #overlay-message-text {
+        padding: 20px;
+        border-radius: 10px;
+        background-color: rgba(255, 255, 255, 0.1);
+        max-width: 80%;
+        box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+    }
 
-        /* Overlay de Mensagem - reutilizado do game.js para consistência */
-        .overlay-message {
-            display: none; /* Hidden by default */
-            position: fixed; /* Stay in place */
-            z-index: 1000; /* Sit on top */
-            left: 0;
-            top: 0;
-            width: 100%; /* Full width */
-            height: 100%; /* Full height */
-            overflow: auto; /* Enable scroll if needed */
-            background-color: rgba(0, 0, 0, 0.8); /* Black w/ opacity */
-            justify-content: center;
-            align-items: center;
-            backdrop-filter: blur(5px); /* Efeito de desfoque */
-        }
+    #overlay-message-ok-button {
+        margin-top: 20px;
+        padding: 10px 30px;
+        font-size: 1.2em;
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
 
-        .overlay-message-content {
-            background-color: var(--dark-gray);
-            border: 2px solid var(--border-color);
-            box-shadow: 0 0 15px var(--glow-color);
-            padding: 30px;
-            border-radius: 10px;
-            text-align: center;
-            max-width: 400px;
-            width: 90%;
-            position: relative;
-        }
-
-        .overlay-message-content h3 {
-            color: var(--primary-color);
-            margin-bottom: 20px;
-        }
-
-        .overlay-message-content p {
-            font-size: 1.1em;
-            margin-bottom: 25px;
-        }
-    </style>
+    #overlay-message-ok-button:hover {
+        background-color: #e60000;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Lula Coin Miner</h1>
-        <div id="loginForm">
-            <h2>Acessar</h2>
-            <div class="form-group">
-                <label for="loginUsername">Email:</label>
-                <input type="text" id="loginUsername" placeholder="Seu email">
-            </div>
-            <div class="form-group">
-                <label for="loginPassword">Senha:</label>
-                <input type="password" id="loginPassword" placeholder="Sua senha">
-            </div>
-            <button id="loginBtn">Entrar</button>
-            <p class="link" id="showRegisterLink">Não tem uma conta? Registre-se</p>
+  <div id="animation-container"></div> <div class="auth-container">
+    <h2>Lula Coin Miner</h2>
+    
+    <form id="loginForm">
+        <h3>Login</h3>
+        <div class="form-group">
+            <input type="text" id="loginUsername" placeholder="Usuário (Email)" required>
         </div>
-
-        <div id="registerForm">
-            <h2>Registrar</h2>
-            <div class="form-group">
-                <label for="registerUsername">Email:</label>
-                <input type="text" id="registerUsername" placeholder="Seu email">
-            </div>
-            <div class="form-group">
-                <label for="registerPassword">Senha:</label>
-                <input type="password" id="registerPassword" placeholder="Crie uma senha">
-            </div>
-            <button id="registerBtn">Criar Conta</button>
-            <p class="link" id="showLoginLink">Já tem uma conta? Faça Login</p>
+        <div class="form-group">
+            <input type="password" id="loginPassword" placeholder="Senha" required>
         </div>
+        <button type="submit" id="loginBtn">Entrar</button>
+        <p id="authMessage" class="error"></p>
+        <a href="#" id="showRegisterLink" class="toggle-link">Não tem uma conta? Registre-se</a>
+    </form>
 
-        <p id="authMessage" class="message"></p>
-    </div>
-
-    <div id="overlay-message" class="overlay-message">
-        <div class="overlay-message-content">
-            <h3>Notificação</h3>
-            <p id="overlay-message-text"></p>
-            <button id="overlay-message-ok-button">OK</button>
+    <form id="registerForm" style="display: none;">
+        <h3>Registrar</h3>
+        <div class="form-group">
+            <input type="text" id="registerUsername" placeholder="Usuário (Email)" required>
         </div>
-    </div>
+        <div class="form-group">
+            <input type="password" id="registerPassword" placeholder="Senha" required>
+        </div>
+        <button type="submit" id="registerBtn">Criar Conta</button>
+        <p id="authMessage" class="error"></p>
+        <a href="#" id="showLoginLink" class="toggle-link">Já tem uma conta? Faça login</a>
+    </form>
+  </div>
 
-    <script>
-        // Definindo a URL base da sua API do backend no Render
-        // ESTA URL É CRÍTICA! Substitua 'https://lula-coin-backend.onrender.com' pela URL REAL do seu backend no Render.
-        const API_BASE_URL = 'https://lula-coin-backend.onrender.com';
+  <div id="overlay-message">
+    <div id="overlay-message-text"></div>
+    <button id="overlay-message-ok-button">OK</button>
+  </div>
 
-        // Referências aos elementos do formulário de login
-        const loginForm = document.getElementById('loginForm');
-        const loginUsernameInput = document.getElementById('loginUsername');
-        const loginPasswordInput = document.getElementById('loginPassword');
-        const loginBtn = document.getElementById('loginBtn');
-        const showRegisterLink = document.getElementById('showRegisterLink');
+  <script>
+    // URL base da sua API do backend no Render
+    const API_BASE_URL = 'https://lula-coin-backend.onrender.com';
 
-        // Referências aos elementos do formulário de registro
-        const registerForm = document.getElementById('registerForm');
-        const registerUsernameInput = document.getElementById('registerUsername');
-        const registerPasswordInput = document.getElementById('registerPassword');
-        const registerBtn = document.getElementById('registerBtn');
-        const showLoginLink = document.getElementById('showLoginLink');
-
-        const authMessageDisplay = document.getElementById('authMessage');
-
-        // Referências aos elementos do overlay de mensagem
+    // --- FUNÇÃO GLOBAL PARA EXIBIR MENSAGENS ---
+    // Esta função será usada tanto pelo login/registro quanto pelo jogo
+    function showOverlayMessage(message, type = 'info') {
         const overlayMessage = document.getElementById('overlay-message');
         const overlayMessageText = document.getElementById('overlay-message-text');
         const overlayMessageOkButton = document.getElementById('overlay-message-ok-button');
 
-        // Função para exibir mensagens na UI usando o overlay
-        function showOverlayMessage(message, type = 'info') {
-            if (overlayMessage && overlayMessageText && overlayMessageOkButton) {
-                overlayMessageText.textContent = message;
-                overlayMessage.style.display = 'flex'; // Mostra o overlay
+        if (overlayMessage && overlayMessageText && overlayMessageOkButton) {
+            overlayMessageText.textContent = message;
+            overlayMessage.style.display = 'flex'; // Mostra o overlay
 
-                if (type === 'error') {
-                    overlayMessage.style.backgroundColor = 'rgba(255, 0, 0, 0.7)';
-                } else if (type === 'success') {
-                    overlayMessage.style.backgroundColor = 'rgba(0, 128, 0, 0.7)';
-                } else {
-                    overlayMessage.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-                }
-
-                overlayMessageOkButton.onclick = () => {
-                    overlayMessage.style.display = 'none';
-                };
+            // Define a cor de fundo do overlay com base no tipo de mensagem
+            if (type === 'error') {
+                overlayMessage.style.backgroundColor = 'rgba(255, 0, 0, 0.7)';
+            } else if (type === 'success') {
+                overlayMessage.style.backgroundColor = 'rgba(0, 128, 0, 0.7)';
             } else {
-                console.warn('Elementos do overlay de mensagem não encontrados. Mensagem: ' + message);
-                alert(message); // Fallback para alert
+                overlayMessage.style.backgroundColor = 'rgba(0, 0, 0, 0.7)'; // Padrão
             }
+
+            // Oculta o overlay ao clicar no botão OK
+            overlayMessageOkButton.onclick = () => {
+                overlayMessage.style.display = 'none';
+            };
+        } else {
+            // Fallback para alert se os elementos não forem encontrados
+            alert(message);
         }
+    }
 
-        // Função para registrar um novo usuário
-        async function registrarUsuario(email, password) {
-            try {
-                const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: email, password }) // O backend espera 'username' para o campo email
+    // --- Funções de Autenticação (adaptadas do seu auth.js anterior) ---
+
+    // Função para registrar um novo usuário
+    async function registrarUsuario(username, password) {
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                showOverlayMessage(data.message || 'Usuário registrado com sucesso!', 'success');
+                // Após o registro bem-sucedido, muda para o formulário de login
+                document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('registerForm').style.display = 'none';
+                document.getElementById('loginUsername').value = username; // Preenche o campo de username para facilitar o login
+                document.getElementById('loginPassword').value = '';
+                document.getElementById('authMessage').innerText = ''; // Limpa mensagens de erro
+            } else {
+                showOverlayMessage(data.message || 'Erro no registro.', 'error');
+                document.getElementById('authMessage').innerText = data.message || 'Erro no registro.';
+            }
+        } catch (error) {
+            console.error('Erro de rede ao registrar:', error);
+            showOverlayMessage('Erro de conexão com o servidor ao registrar. Tente novamente.', 'error');
+            document.getElementById('authMessage').innerText = 'Erro de conexão com o servidor.';
+        }
+    }
+
+    // Função para fazer login de um usuário
+    async function loginUsuario(username, password) {
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                // Armazena o token e o username no localStorage para serem usados no jogo
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('username', data.username); // Assumindo que o backend retorna o username
+                showOverlayMessage('Login realizado com sucesso!', 'success');
+                // Redireciona para a página do jogo após um pequeno atraso
+                setTimeout(() => {
+                    window.location.href = 'jogo.html';
+                }, 1000);
+            } else {
+                showOverlayMessage(data.message || 'Credenciais inválidas.', 'error');
+                document.getElementById('authMessage').innerText = data.message || 'Credenciais inválidas.';
+            }
+        } catch (error) {
+            console.error('Erro de rede ao logar:', error);
+            showOverlayMessage('Erro de conexão com o servidor ao fazer login. Tente novamente.', 'error');
+            document.getElementById('authMessage').innerText = 'Erro de conexão com o servidor.';
+        }
+    }
+
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Obter referências aos elementos do formulário
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        const loginUsernameInput = document.getElementById('loginUsername');
+        const loginPasswordInput = document.getElementById('loginPassword');
+        const registerUsernameInput = document.getElementById('registerUsername');
+        const registerPasswordInput = document.getElementById('registerPassword');
+        const loginBtn = document.getElementById('loginBtn');
+        const registerBtn = document.getElementById('registerBtn');
+        const showRegisterLink = document.getElementById('showRegisterLink');
+        const showLoginLink = document.getElementById('showLoginLink');
+        const authMessageDisplay = document.getElementById('authMessage');
+
+        // Adiciona um container para as partículas de fundo (opcional, do seu jogo.html)
+        const animationContainer = document.getElementById('animation-container');
+        if (animationContainer) {
+            function createParticle() {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                const size = Math.random() * 8 + 2; // Tamanho entre 2px e 10px
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+
+                const startX = Math.random() * window.innerWidth;
+                const startY = Math.random() * window.innerHeight;
+                particle.style.left = `${startX}px`;
+                particle.style.top = `${startY}px`;
+
+                const endX = Math.random() * window.innerWidth;
+                const endY = Math.random() * window.innerHeight;
+
+                particle.style.setProperty('--x', `${endX - startX}px`);
+                particle.style.setProperty('--y', `${endY - startY}px`);
+                particle.style.animationDuration = `${Math.random() * 10 + 5}s`;
+                particle.style.animationDelay = `${Math.random() * 5}s`;
+
+                animationContainer.appendChild(particle);
+
+                particle.addEventListener('animationend', () => {
+                    particle.remove();
                 });
+            }
 
-                const data = await res.json();
-                if (res.ok) {
-                    showOverlayMessage(data.message || "Registrado com sucesso! Faça login.", 'success');
-                    authMessageDisplay.className = 'message success';
-                    authMessageDisplay.innerText = data.message || "Registrado com sucesso! Faça login.";
-                    // Limpar campos de registro após sucesso
-                    registerUsernameInput.value = '';
-                    registerPasswordInput.value = '';
-                } else {
-                    showOverlayMessage(data.message || "Erro no registro.", 'error');
-                    authMessageDisplay.className = 'message error';
-                    authMessageDisplay.innerText = data.message || "Erro no registro";
+            function generateParticles(count) {
+                for (let i = 0; i < count; i++) {
+                    createParticle();
                 }
-            } catch (err) {
-                console.error('Erro no registro:', err);
-                showOverlayMessage("Erro de conexão com o servidor ao registrar.", 'error');
-                authMessageDisplay.className = 'message error';
-                authMessageDisplay.innerText = "Erro de conexão com o servidor.";
             }
+            generateParticles(50);
+            setInterval(() => createParticle(), 1000);
         }
 
-        // Função para fazer login do usuário
-        async function loginUsuario(email, password) {
-            try {
-                const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: email, password }) // O backend espera 'username' para o campo email
-                });
-
-                const data = await res.json();
-                if (res.ok) {
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('username', data.username); // 'data.username' vem do backend como 'user.email'
-                    showOverlayMessage("Login realizado com sucesso!", 'success');
-                    authMessageDisplay.className = 'message success';
-                    authMessageDisplay.innerText = "Login realizado!";
-                    // Limpar campos de login após sucesso
-                    loginUsernameInput.value = '';
-                    loginPasswordInput.value = '';
-                    // Redireciona para a página do jogo
-                    setTimeout(() => {
-                        window.location.href = 'jogo.html'; // Certifique-se que o nome do seu arquivo HTML do jogo é 'jogo.html'
-                    }, 1500); // Dá um tempo para o usuário ver a mensagem de sucesso
-                } else {
-                    showOverlayMessage(data.message || "Nome de usuário ou senha inválidos.", 'error');
-                    authMessageDisplay.className = 'message error';
-                    authMessageDisplay.innerText = data.message || "Nome de usuário ou senha inválidos.";
-                }
-            } catch (err) {
-                console.error('Erro no login:', err);
-                showOverlayMessage("Erro de conexão com o servidor ao fazer login.", 'error');
-                authMessageDisplay.className = 'message error';
-                authMessageDisplay.innerText = "Erro de conexão com o servidor.";
-            }
+        // Event listener para o formulário de login
+        if (loginForm) {
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const username = loginUsernameInput.value;
+                const password = loginPasswordInput.value;
+                await loginUsuario(username, password);
+            });
         }
 
-        // Event Listeners
-        document.addEventListener('DOMContentLoaded', () => {
-            // Se já houver um token, redireciona para o jogo
-            // Isso evita que o usuário logado veja a tela de login/registro
-            if (localStorage.getItem('token') && localStorage.getItem('username')) {
-                window.location.href = 'jogo.html';
-                return; // Impede que o restante do script seja executado
-            }
+        // Event listener para o botão de registro (se o formulário de registro for usado diretamente)
+        if (registerForm) {
+            registerForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const username = registerUsernameInput.value;
+                const password = registerPasswordInput.value;
+                await registrarUsuario(username, password);
+            });
+        }
 
-            // Listener para o botão de login
-            if (loginBtn) {
-                loginBtn.addEventListener('click', async () => {
-                    const email = loginUsernameInput.value;
-                    const password = loginPasswordInput.value;
-                    await loginUsuario(email, password);
-                });
-            }
+        // Listeners para alternar entre formulários de login/registro
+        if (showRegisterLink) {
+            showRegisterLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                loginForm.style.display = 'none';
+                registerForm.style.display = 'block';
+                authMessageDisplay.innerText = ''; // Limpa mensagens
+                loginUsernameInput.value = ''; // Limpa campos de login
+                loginPasswordInput.value = '';
+            });
+        }
 
-            // Listener para o botão de registro
-            if (registerBtn) {
-                registerBtn.addEventListener('click', async () => {
-                    const email = registerUsernameInput.value;
-                    const password = registerPasswordInput.value;
-                    await registrarUsuario(email, password);
-                });
-            }
-
-            // Listeners para alternar entre formulários
-            if (showRegisterLink) {
-                showRegisterLink.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    loginForm.style.display = 'none';
-                    registerForm.style.display = 'block';
-                    authMessageDisplay.innerText = ''; // Limpa mensagens
-                    loginUsernameInput.value = ''; // Limpa campos de login
-                    loginPasswordInput.value = '';
-                });
-            }
-
-            if (showLoginLink) {
-                showLoginLink.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    loginForm.style.display = 'block';
-                    registerForm.style.display = 'none';
-                    authMessageDisplay.innerText = ''; // Limpa mensagens
-                    registerUsernameInput.value = ''; // Limpa campos de registro
-                    registerPasswordInput.value = '';
-                });
-            }
-        });
-    </script>
+        if (showLoginLink) {
+            showLoginLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                loginForm.style.display = 'block';
+                registerForm.style.display = 'none';
+                authMessageDisplay.innerText = ''; // Limpa mensagens
+                registerUsernameInput.value = ''; // Limpa campos de registro
+                registerPasswordInput.value = '';
+            });
+        }
+    });
+  </script>
 </body>
 </html>
