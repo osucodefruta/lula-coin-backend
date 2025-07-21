@@ -1,174 +1,311 @@
-// backend/routes/game.js (ESTE É O ARQUIVO DO BACKEND!)
+// backend/routes/game.js
 const express = require('express');
 const router = express.Router();
-const auth = require('../middleware/authMiddleware'); // OU './middleware/auth' se o arquivo for auth.js
-const User = require('../models/User'); // Importe o modelo de usuário
+const auth = require('../middleware/auth'); // Middleware de autenticação
+const User = require('../models/User'); // Modelo do usuário
 
-// Rota para minerar Lula Coins
-router.post('/mine', auth, async (req, res) => {
+// Mock de itens da loja (deveria vir de um banco de dados ou configuração separada)
+const shopItems = {
+    gpus: [
+        { id: "basic_gpu", name: "GPU Básica", hashrate: 10, cost: 100, img: "https://via.placeholder.com/80x80/FF0000/FFFFFF?text=GPU1" },
+        { id: "mid_gpu", name: "GPU Intermediária", hashrate: 50, cost: 450, img: "https://via.placeholder.com/80x80/00FF00/000000?text=GPU2" },
+        { id: "pro_gpu", name: "GPU Profissional", hashrate: 200, cost: 1500, img: "https://via.placeholder.com/80x80/0000FF/FFFFFF?text=GPU3" }
+    ],
+    upgrades: [
+        { id: "power_supply_1", name: "Fonte de Energia I", effect: "+10% Hashrate", cost: 300, img: "https://via.placeholder.com/80x80/FFFF00/000000?text=PSU1" },
+        { id: "cooling_fan_1", name: "Ventoinha Resfriamento I", effect: "Reduz calor", cost: 150, img: "https://via.placeholder.com/80x80/FF00FF/FFFFFF?text=FAN1" }
+    ]
+};
+
+// @route   GET /api/game/state
+// @desc    Obter o estado atual do jogo do usuário
+// @access  Private
+router.get('/state', auth, async (req, res) => {
     try {
-        const { miningPower } = req.body;
-        const user = await User.findById(req.user.id);
-
+        const user = await User.findById(req.user.id).select('-password'); // Exclui a senha
         if (!user) {
             return res.status(404).json({ message: 'Usuário não encontrado.' });
         }
-
-        // Adiciona as moedas baseadas no poder de mineração
-        user.lulaCoins += miningPower; // Ou alguma lógica mais complexa
-
-        // Assumindo que você tem um sistema de 'level' ou 'xp'
-        // user.level = calculateLevel(user.lulaCoins);
-
-        await user.save();
-        res.json({ message: `Você minerou ${miningPower} Lula Coins! Total: ${user.lulaCoins}`, updatedUser: user });
-    } catch (error) {
-        console.error('[BACKEND] Erro ao minerar:', error);
-        res.status(500).json({ message: 'Erro interno do servidor ao minerar.' });
+        res.json({
+            lulaCoins: user.lulaCoins,
+            level: user.level,
+            minerValue: user.minerValue,
+            totalHashrate: user.totalHashrate,
+            inventory: user.inventory,
+            placedGpus: user.placedGpus
+        });
+    } catch (err) {
+        console.error('Erro ao obter estado do jogo:', err.message);
+        res.status(500).json({ message: 'Erro no servidor.' });
     }
 });
 
-// Rota para fazer upgrade do minerador (base)
-router.post('/upgradeMiner', auth, async (req, res) => {
+// @route   POST /api/game/mine
+// @desc    Minerar Lula Coins
+// @access  Private
+router.post('/mine', auth, async (req, res) => {
     try {
         const user = await User.findById(req.user.id);
         if (!user) {
             return res.status(404).json({ message: 'Usuário não encontrado.' });
         }
 
-        // Lógica de custo e efeito do upgrade
-        const upgradeCost = 100; // Exemplo de custo
-        const powerIncrease = 5; // Exemplo de aumento de poder
+        const minedAmount = user.minerValue + user.totalHashrate; // Exemplo de cálculo
+
+        user.lulaCoins += minedAmount;
+        // Lógica de nível pode ser adicionada aqui, se baseada em moedas ou cliques
+        // Por exemplo: if (user.lulaCoins >= nextLevelRequirement) { user.level++; }
+
+        await user.save(); // Salva as alterações diretamente
+
+        res.json({
+            lulaCoins: user.lulaCoins,
+            level: user.level,
+            minedAmount: minedAmount,
+            message: `Minerou ${minedAmount.toFixed(2)} Lula Coins!`
+        });
+
+    } catch (err) {
+        console.error('Erro na mineração:', err.message);
+        res.status(500).json({ message: 'Erro no servidor.' });
+    }
+});
+
+// @route   POST /api/game/upgrade-miner
+// @desc    Fazer upgrade no minerador de clique
+// @access  Private
+router.post('/upgrade-miner', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({ message: 'Usuário não encontrado.' });
+        }
+
+        // Exemplo: Custo e efeito de upgrade. Ajuste conforme sua lógica.
+        const upgradeCost = user.level * 50; // Custo aumenta com o nível
+        const upgradeValueIncrease = 5; // Aumento do valor por clique
+        const nextLevelThreshold = user.level * 1000; // Limite para o próximo nível
 
         if (user.lulaCoins < upgradeCost) {
-            return res.status(400).json({ message: 'Moedas insuficientes para o upgrade.' });
+            return res.status(400).json({ message: 'Lula Coins insuficientes para o upgrade.' });
         }
 
         user.lulaCoins -= upgradeCost;
-        user.miningPower += powerIncrease; // Aumenta o poder de mineração base
+        user.minerValue += upgradeValueIncrease;
+        user.level++; // Aumenta o nível
 
-        await user.save();
-        res.json({ message: `Upgrade de minerador realizado! Poder atual: ${user.miningPower}`, updatedUser: user });
-    } catch (error) {
-        console.error('[BACKEND] Erro ao fazer upgrade:', error);
-        res.status(500).json({ message: 'Erro interno do servidor ao fazer upgrade.' });
+        await user.save(); // Salva as alterações diretamente
+
+        res.json({
+            lulaCoins: user.lulaCoins,
+            minerValue: user.minerValue,
+            level: user.level,
+            message: 'Minerador de clique atualizado!'
+        });
+
+    } catch (err) {
+        console.error('Erro ao fazer upgrade no minerador:', err.message);
+        res.status(500).json({ message: 'Erro no servidor.' });
     }
 });
 
-// Rota para saque de Lula Coins (exemplo: remover moedas)
-router.post('/saque', auth, async (req, res) => {
-    try {
-        const { amount } = req.body; // O frontend envia o valor a ser sacado
-        const user = await User.findById(req.user.id);
+// @route   POST /api/game/buy-item
+// @desc    Comprar um item da loja
+// @access  Private
+router.post('/buy-item', auth, async (req, res) => {
+    const { itemId, itemType } = req.body;
 
+    try {
+        const user = await User.findById(req.user.id);
         if (!user) {
             return res.status(404).json({ message: 'Usuário não encontrado.' });
         }
-        if (user.lulaCoins < amount || amount <= 0) {
-            return res.status(400).json({ message: 'Valor de saque inválido ou insuficiente.' });
+
+        const itemToBuy = shopItems[itemType]?.find(item => item.id === itemId);
+
+        if (!itemToBuy) {
+            return res.status(404).json({ message: 'Item não encontrado na loja.' });
+        }
+        if (user.lulaCoins < itemToBuy.cost) {
+            return res.status(400).json({ message: 'Lula Coins insuficientes.' });
         }
 
-        user.lulaCoins -= amount; // Remove as moedas do usuário
-        await user.save();
-        res.json({ message: `Você sacou ${amount} Lula Coins! Saldo atual: ${user.lulaCoins}`, updatedUser: user });
-    } catch (error) {
-        console.error('[BACKEND] Erro ao sacar:', error);
-        res.status(500).json({ message: 'Erro interno do servidor ao sacar.' });
-    }
-});
-
-// Rota para comprar itens (GPUs, upgrades)
-router.post('/buyItem', auth, async (req, res) => {
-    try {
-        const { itemId, itemType, itemPrice, hashrate } = req.body;
-        const user = await User.findById(req.user.id);
-
-        if (!user) {
-            return res.status(404).json({ message: 'Usuário não encontrado.' });
-        }
-        if (user.lulaCoins < itemPrice) {
-            return res.status(400).json({ message: 'Moedas insuficientes para comprar este item.' });
-        }
-
-        user.lulaCoins -= itemPrice;
-
-        // Garanta que user.upgrades.inventory e user.upgrades.placedGpus existem
-        if (!user.upgrades) user.upgrades = {};
-        if (!user.upgrades.inventory) user.upgrades.inventory = {};
-        if (!user.upgrades.placedGpus) user.upgrades.placedGpus = {};
+        user.lulaCoins -= itemToBuy.cost;
 
         // Adiciona o item ao inventário
-        if (!user.upgrades.inventory[itemType]) {
-            user.upgrades.inventory[itemType] = 0;
-        }
-        user.upgrades.inventory[itemType]++;
+        const inventoryCategory = user.inventory[itemType];
+        const existingItemIndex = inventoryCategory.findIndex(item => item.id === itemId);
 
-        await user.save();
-        res.json({ message: `${itemType} comprado com sucesso!`, updatedUser: user });
-    } catch (error) {
-        console.error('[BACKEND] Erro ao comprar item:', error);
-        res.status(500).json({ message: 'Erro interno do servidor ao comprar item.' });
+        if (existingItemIndex > -1) {
+            inventoryCategory[existingItemIndex].quantity = (inventoryCategory[existingItemIndex].quantity || 1) + 1;
+        } else {
+            inventoryCategory.push({ ...itemToBuy, quantity: 1 });
+        }
+
+        await user.save(); // Salva as alterações diretamente
+
+        res.json({
+            lulaCoins: user.lulaCoins,
+            inventory: user.inventory,
+            itemName: itemToBuy.name,
+            message: `${itemToBuy.name} comprado com sucesso!`
+        });
+
+    } catch (err) {
+        console.error('Erro ao comprar item:', err.message);
+        res.status(500).json({ message: 'Erro no servidor.' });
     }
 });
 
-// Rota para colocar GPUs em um slot
-router.post('/placeGpu', auth, async (req, res) => {
-    try {
-        const { slotId, gpuType, hashrate } = req.body; // Recebe o ID do slot e tipo da GPU
-        const user = await User.findById(req.user.id);
+// @route   POST /api/game/place-gpu
+// @desc    Colocar uma GPU do inventário em um slot de rack
+// @access  Private
+router.post('/place-gpu', auth, async (req, res) => {
+    const { gpuId, slotId } = req.body;
 
+    try {
+        const user = await User.findById(req.user.id);
         if (!user) {
             return res.status(404).json({ message: 'Usuário não encontrado.' });
-        }
-
-        // Garanta que user.upgrades.inventory e user.upgrades.placedGpus existem
-        if (!user.upgrades) user.upgrades = {};
-        if (!user.upgrades.inventory) user.upgrades.inventory = {};
-        if (!user.upgrades.placedGpus) user.upgrades.placedGpus = {};
-
-        // Verifica se o usuário tem a GPU no inventário
-        if (!user.upgrades.inventory[gpuType] || user.upgrades.inventory[gpuType] <= 0) {
-            return res.status(400).json({ message: `Você não tem ${gpuType} no seu inventário.` });
         }
 
         // Verifica se o slot já está ocupado
-        if (user.upgrades.placedGpus[slotId]) {
+        if (user.placedGpus[slotId]) {
             return res.status(400).json({ message: 'Este slot já está ocupado.' });
         }
 
-        // Remove 1 do inventário e adiciona ao slot
-        user.upgrades.inventory[gpuType]--;
-        user.upgrades.placedGpus[slotId] = { type: gpuType, hashrate: hashrate }; // Armazena a GPU no slot
+        // Encontra a GPU no inventário do usuário
+        const gpuInInventoryIndex = user.inventory.gpus.findIndex(gpu => gpu.id === gpuId);
+        if (gpuInInventoryIndex === -1) {
+            return res.status(404).json({ message: 'GPU não encontrada no seu inventário.' });
+        }
 
-        await user.save();
-        res.json({ message: `${gpuType} colocada no slot ${slotId}!`, updatedUser: user });
-    } catch (error) {
-        console.error('[BACKEND] Erro ao colocar GPU:', error);
-        res.status(500).json({ message: 'Erro interno do servidor ao colocar GPU.' });
+        const gpuToPlace = user.inventory.gpus[gpuInInventoryIndex];
+
+        // Remove a GPU do inventário
+        if (gpuToPlace.quantity && gpuToPlace.quantity > 1) {
+            gpuToPlace.quantity--;
+        } else {
+            user.inventory.gpus.splice(gpuInInventoryIndex, 1);
+        }
+
+        // Adiciona a GPU aos slots colocados
+        user.placedGpus[slotId] = {
+            id: gpuToPlace.id,
+            name: gpuToPlace.name,
+            hashrate: gpuToPlace.hashrate,
+            img: gpuToPlace.img
+        };
+
+        // Atualiza o hashrate total
+        user.totalHashrate += gpuToPlace.hashrate;
+
+        await user.save(); // Salva as alterações diretamente
+
+        res.json({
+            placedGpus: user.placedGpus,
+            inventory: user.inventory,
+            totalHashrate: user.totalHashrate,
+            message: `${gpuToPlace.name} colocada no ${slotId}.`
+        });
+
+    } catch (err) {
+        console.error('Erro ao colocar GPU:', err.message);
+        res.status(500).json({ message: 'Erro no servidor.' });
     }
 });
 
+// @route   POST /api/game/sell-item
+// @desc    Vender um item do inventário
+// @access  Private
+router.post('/sell-item', auth, async (req, res) => {
+    const { itemId, itemType } = req.body; // itemType: 'gpus' ou 'upgrades'
 
-// Rota para carregar o estado do jogo do usuário
-router.get('/loadGame', auth, async (req, res) => {
     try {
-        const user = await User.findById(req.user.id).select('-password'); // Não enviar a senha
-
+        const user = await User.findById(req.user.id);
         if (!user) {
             return res.status(404).json({ message: 'Usuário não encontrado.' });
         }
 
-        // Retorna apenas os dados relevantes para o frontend
+        const inventoryCategory = user.inventory[itemType];
+        const itemToSellIndex = inventoryCategory.findIndex(item => item.id === itemId);
+
+        if (itemToSellIndex === -1) {
+            return res.status(404).json({ message: 'Item não encontrado no seu inventário.' });
+        }
+
+        const itemToSell = inventoryCategory[itemToSellIndex];
+        // Valor de venda (ex: 50% do custo original)
+        const sellValue = (itemToSell.cost || 0) * 0.5;
+
+        user.lulaCoins += sellValue;
+
+        // Remove ou diminui a quantidade do item no inventário
+        if (itemToSell.quantity && itemToSell.quantity > 1) {
+            itemToSell.quantity--;
+        } else {
+            inventoryCategory.splice(itemToSellIndex, 1);
+        }
+
+        // Se for uma GPU, verifique se ela estava colocada e remova-a também
+        if (itemType === 'gpus') {
+            for (const slotId in user.placedGpus) {
+                if (user.placedGpus[slotId].id === itemId) {
+                    user.totalHashrate -= user.placedGpus[slotId].hashrate;
+                    delete user.placedGpus[slotId];
+                    break; // Remove apenas a primeira instância encontrada
+                }
+            }
+        }
+
+        await user.save(); // Salva as alterações diretamente
+
         res.json({
             lulaCoins: user.lulaCoins,
-            miningPower: user.miningPower, // O poder de mineração base do usuário
-            upgrades: user.upgrades || {}, // Inclui inventário e GPUs colocadas
-            // Se tiver, adicione level: user.level, etc.
+            inventory: user.inventory,
+            totalHashrate: user.totalHashrate, // Pode ter mudado se vendeu GPU
+            message: `${itemToSell.name} vendido por ${sellValue.toFixed(2)} Lula Coins.`
         });
-    } catch (error) {
-        console.error('[BACKEND] Erro ao carregar o jogo:', error);
-        res.status(500).json({ message: 'Erro interno do servidor ao carregar o jogo.' });
+
+    } catch (err) {
+        console.error('Erro ao vender item:', err.message);
+        res.status(500).json({ message: 'Erro no servidor.' });
     }
 });
+
+// @route   POST /api/game/withdraw
+// @desc    Sacar Lula Coins (Simulação)
+// @access  Private
+router.post('/withdraw', auth, async (req, res) => {
+    const { amount } = req.body;
+
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({ message: 'Usuário não encontrado.' });
+        }
+
+        if (isNaN(amount) || amount <= 0) {
+            return res.status(400).json({ message: 'Valor inválido para saque.' });
+        }
+        if (user.lulaCoins < amount) {
+            return res.status(400).json({ message: 'Lula Coins insuficientes para saque.' });
+        }
+
+        user.lulaCoins -= amount;
+
+        await user.save(); // Salva as alterações diretamente
+
+        res.json({
+            lulaCoins: user.lulaCoins,
+            message: `Você sacou ${amount.toFixed(2)} Lula Coins com sucesso!`
+        });
+
+    } catch (err) {
+        console.error('Erro ao sacar Lula Coins:', err.message);
+        res.status(500).json({ message: 'Erro no servidor.' });
+    }
+});
+
 
 module.exports = router;
