@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lula Coin Miner - Login</title>
+  <title>Lula Coin Miner</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <style>
@@ -14,121 +14,93 @@
       --text-color: #e0e0e0;
       --dark-gray: #1a1a1a;
       --medium-gray: #333;
+      --light-gray: #555;
+      --border-color: rgba(255, 59, 59, 0.3);
+      --glow-color: rgba(255, 59, 59, 0.6);
     }
 
     body {
       font-family: 'Share Tech Mono', monospace;
       background-color: var(--tertiary-color);
       color: var(--text-color);
+      margin: 0;
+      min-height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 100vh;
-      margin: 0;
-      position: relative;
-      overflow: hidden;
     }
 
-    .animation-container {
-      position: absolute;
+    .login-container {
       width: 100%;
-      height: 100%;
-      overflow: hidden;
-      z-index: 0;
-    }
-
-    .particle {
-      position: absolute;
-      background-color: rgba(255, 59, 59, 0.4);
-      border-radius: 50%;
-      opacity: 0;
-      animation: particle-flow linear infinite;
-    }
-
-    @keyframes particle-flow {
-      0% { transform: translate(0, 0) scale(0); opacity: 0; }
-      10% { opacity: 0.8; }
-      90% { opacity: 0.8; }
-      100% { transform: translate(var(--x), var(--y)) scale(1); opacity: 0; }
-    }
-
-    .container {
+      max-width: 400px;
+      padding: 2rem;
       background-color: var(--dark-gray);
       border: 2px solid var(--border-color);
-      box-shadow: 0 0 20px var(--glow-color);
-      padding: 30px 40px;
       border-radius: 10px;
-      text-align: center;
-      position: relative;
-      z-index: 1;
-      max-width: 400px;
-      width: 90%;
+      box-shadow: 0 0 20px var(--glow-color);
     }
 
     h1 {
       color: var(--primary-color);
-      text-shadow: 0 0 10px var(--glow-color);
-      margin-bottom: 30px;
+      text-align: center;
       font-family: 'Orbitron', sans-serif;
+      text-shadow: 0 0 10px var(--glow-color);
+      margin-bottom: 2rem;
     }
 
     .form-group {
-      margin-bottom: 20px;
-      text-align: left;
+      margin-bottom: 1.5rem;
     }
 
-    .form-group label {
+    label {
       display: block;
-      margin-bottom: 8px;
+      margin-bottom: 0.5rem;
       color: var(--text-color);
     }
 
-    .form-group input {
-      width: calc(100% - 20px);
-      padding: 10px;
-      border: 1px solid var(--border-color);
+    input {
+      width: 100%;
+      padding: 0.8rem;
       background-color: var(--medium-gray);
-      color: var(--text-color);
+      border: 1px solid var(--border-color);
       border-radius: 5px;
+      color: var(--text-color);
       font-family: 'Share Tech Mono', monospace;
     }
 
-    .btn {
+    button {
+      width: 100%;
+      padding: 1rem;
       background-color: var(--primary-color);
       color: white;
-      padding: 12px 25px;
       border: none;
       border-radius: 5px;
-      cursor: pointer;
-      font-size: 1.1em;
       font-family: 'Orbitron', sans-serif;
-      transition: background-color 0.3s ease, transform 0.2s ease;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
       text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-top: 10px;
     }
 
-    .btn:hover {
+    button:hover {
       background-color: #ff6666;
       transform: translateY(-2px);
     }
 
-    .switch-form-link {
-      display: block;
-      margin-top: 20px;
+    .switch-form {
+      text-align: center;
+      margin-top: 1.5rem;
+    }
+
+    .switch-form a {
       color: var(--primary-color);
       text-decoration: none;
-      font-size: 0.9em;
       transition: color 0.3s ease;
     }
 
-    .switch-form-link:hover {
+    .switch-form a:hover {
       color: #ff6666;
       text-decoration: underline;
-    }
-
-    #registerForm {
-      display: none;
     }
 
     .overlay-message {
@@ -146,7 +118,6 @@
       opacity: 0;
       visibility: hidden;
       transition: opacity 0.5s ease, visibility 0.5s ease;
-      text-align: center;
     }
 
     .overlay-message.show {
@@ -166,21 +137,19 @@
       background-color: rgba(0, 123, 255, 0.8);
     }
 
-    /* Estilo do jogo (inicialmente oculto) */
     #gamePage {
       display: none;
+      width: 100%;
+      height: 100vh;
     }
   </style>
 </head>
 <body>
   <!-- Página de Login/Registro -->
   <div id="loginPage">
-    <div class="animation-container"></div>
-    <div class="overlay-message" id="overlayMessage"></div>
-
-    <div class="container">
+    <div class="login-container">
       <h1>Lula Coin Miner</h1>
-
+      
       <form id="loginForm">
         <h2>Login</h2>
         <div class="form-group">
@@ -191,11 +160,13 @@
           <label for="loginPassword">Senha:</label>
           <input type="password" id="loginPassword" required>
         </div>
-        <button type="submit" class="btn">Entrar</button>
-        <a href="#" id="showRegisterLink" class="switch-form-link">Não tem uma conta? Registre-se</a>
+        <button type="submit">Entrar</button>
+        <div class="switch-form">
+          <a href="#" id="showRegisterLink">Não tem uma conta? Registre-se</a>
+        </div>
       </form>
 
-      <form id="registerForm">
+      <form id="registerForm" style="display: none;">
         <h2>Registro</h2>
         <div class="form-group">
           <label for="registerUsername">Nome de Usuário:</label>
@@ -205,206 +176,213 @@
           <label for="registerPassword">Senha:</label>
           <input type="password" id="registerPassword" required>
         </div>
-        <button type="submit" class="btn">Registrar</button>
-        <a href="#" id="showLoginLink" class="switch-form-link">Já tem uma conta? Faça login</a>
+        <button type="submit">Registrar</button>
+        <div class="switch-form">
+          <a href="#" id="showLoginLink">Já tem uma conta? Faça login</a>
+        </div>
       </form>
     </div>
   </div>
 
   <!-- Página do Jogo (inicialmente oculta) -->
   <div id="gamePage">
-    <!-- Conteúdo do jogo será carregado aqui via JavaScript -->
+    <!-- O conteúdo do jogo será carregado aqui via JavaScript -->
   </div>
 
+  <div class="overlay-message" id="overlayMessage"></div>
+
   <script>
-    // Configuração da URL do backend - CORRIGIDA PARA SUA URL REAL
-    const API_BASE_URL = 'https://lula-coin-backend.onrender.com'; // ATUALIZE PARA SUA URL
-    
-    // Função para mostrar mensagens
-    function showOverlayMessage(message, type = 'info', duration = 3000) {
-      const overlay = document.getElementById('overlayMessage');
-      overlay.textContent = message;
-      overlay.className = `overlay-message ${type} show`;
+    // Configurações
+    const API_BASE_URL = 'https://lula-coin-backend.onrender.com'; // Atualize para sua URL real
+    const AUTH_ENDPOINTS = {
+      register: '/api/auth/register',
+      login: '/api/auth/login'
+    };
+
+    // Elementos do DOM
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+    const showRegisterLink = document.getElementById('showRegisterLink');
+    const showLoginLink = document.getElementById('showLoginLink');
+    const overlayMessage = document.getElementById('overlayMessage');
+    const loginPage = document.getElementById('loginPage');
+    const gamePage = document.getElementById('gamePage');
+
+    // Mostrar mensagem na tela
+    function showMessage(message, type = 'info', duration = 3000) {
+      overlayMessage.textContent = message;
+      overlayMessage.className = `overlay-message ${type} show`;
       
       setTimeout(() => {
-        overlay.className = 'overlay-message';
+        overlayMessage.className = 'overlay-message';
       }, duration);
     }
 
-    // Função para criar partículas de fundo
-    function createParticle() {
-      const particle = document.createElement('div');
-      particle.classList.add('particle');
-      const size = Math.random() * 5 + 2;
-      particle.style.width = `${size}px`;
-      particle.style.height = `${size}px`;
+    // Função para fazer requisições à API
+    async function makeRequest(url, method, body = null) {
+      const headers = {
+        'Content-Type': 'application/json'
+      };
 
-      const startX = Math.random() * window.innerWidth;
-      const startY = Math.random() * window.innerHeight;
-      particle.style.left = `${startX}px`;
-      particle.style.top = `${startY}px`;
-
-      const endX = Math.random() * window.innerWidth;
-      const endY = Math.random() * window.innerHeight;
-
-      particle.style.setProperty('--x', `${endX - startX}px`);
-      particle.style.setProperty('--y', `${endY - startY}px`);
-      particle.style.animationDuration = `${Math.random() * 10 + 5}s`;
-      particle.style.animationDelay = `${Math.random() * 5}s`;
-
-      document.querySelector('.animation-container').appendChild(particle);
-
-      particle.addEventListener('animationend', () => {
-        particle.remove();
-      });
-    }
-
-    // Função de registro
-    async function registerUser(username, password) {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ username, password }),
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-          showOverlayMessage('Registro bem-sucedido! Faça login para continuar.', 'success');
-          document.getElementById('loginForm').style.display = 'block';
-          document.getElementById('registerForm').style.display = 'none';
-          document.getElementById('loginUsername').value = username;
-          document.getElementById('loginPassword').value = '';
-        } else {
-          showOverlayMessage(data.message || 'Erro no registro', 'error');
-        }
-      } catch (error) {
-        console.error('Erro ao registrar:', error);
-        showOverlayMessage('Erro de conexão com o servidor', 'error');
-      }
-    }
-
-    // Função de login
-    async function loginUser(username, password) {
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ username, password }),
+        const response = await fetch(`${API_BASE_URL}${url}`, {
+          method,
+          headers,
+          body: body ? JSON.stringify(body) : null
         });
 
         // Verifica se a resposta é JSON válido
         const text = await response.text();
         let data;
         try {
-          data = JSON.parse(text);
+          data = text ? JSON.parse(text) : {};
         } catch (e) {
           console.error('Resposta do servidor não é JSON válido:', text);
           throw new Error('Resposta do servidor inválida');
         }
 
-        if (response.ok) {
-          localStorage.setItem('token', data.token);
-          localStorage.setItem('username', username);
-          
-          showOverlayMessage('Login bem-sucedido! Carregando jogo...', 'success', 2000);
-          
-          setTimeout(() => {
-            document.getElementById('loginPage').style.display = 'none';
-            document.getElementById('gamePage').style.display = 'block';
-            loadGamePage();
-          }, 2000);
-        } else {
-          showOverlayMessage(data.message || 'Erro no login', 'error');
+        if (!response.ok) {
+          throw new Error(data.message || 'Erro na requisição');
         }
+
+        return data;
       } catch (error) {
-        console.error('Erro ao fazer login:', error);
-        showOverlayMessage('Erro de conexão com o servidor. Verifique a URL do backend.', 'error');
+        console.error(`Erro na requisição ${method} ${url}:`, error);
+        throw error;
       }
     }
 
-    // Função para carregar a página do jogo após login
-    async function loadGamePage() {
+    // Registrar novo usuário
+    async function registerUser(username, password) {
       try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          showOverlayMessage('Sessão expirada. Faça login novamente.', 'error');
-          return;
-        }
-
-        // Carrega o conteúdo do jogo
-        const gameContent = await fetch('game.html'); // Ou você pode construir dinamicamente
-        document.getElementById('gamePage').innerHTML = await gameContent.text();
+        showMessage('Registrando...', 'info');
         
-        // Inicializa o jogo
-        initializeGame();
+        const data = await makeRequest(AUTH_ENDPOINTS.register, 'POST', {
+          username,
+          password
+        });
+
+        showMessage('Registro bem-sucedido! Faça login.', 'success');
+        showLoginForm();
       } catch (error) {
-        console.error('Erro ao carregar o jogo:', error);
-        showOverlayMessage('Erro ao carregar o jogo', 'error');
+        showMessage(error.message || 'Erro ao registrar. Tente outro nome de usuário.', 'error');
       }
     }
 
-    // Função para inicializar o jogo
-    function initializeGame() {
-      // Aqui você colocaria toda a lógica de inicialização do jogo
-      console.log('Jogo inicializado!');
+    // Login do usuário
+    async function loginUser(username, password) {
+      try {
+        showMessage('Fazendo login...', 'info');
+        
+        const data = await makeRequest(AUTH_ENDPOINTS.login, 'POST', {
+          username,
+          password
+        });
+
+        // Salva o token e username no localStorage
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('username', username);
+
+        showMessage('Login bem-sucedido! Carregando jogo...', 'success');
+        
+        // Esconde a página de login e carrega o jogo
+        setTimeout(() => {
+          loginPage.style.display = 'none';
+          gamePage.style.display = 'block';
+          loadGame();
+        }, 1500);
+      } catch (error) {
+        showMessage(error.message || 'Erro ao fazer login. Verifique suas credenciais.', 'error');
+      }
+    }
+
+    // Carregar o jogo após login
+    function loadGame() {
+      // Aqui você pode carregar o conteúdo do jogo dinamicamente
+      // ou incluir o HTML do jogo diretamente
+      gamePage.innerHTML = `
+        <div style="padding: 20px; text-align: center;">
+          <h2>Bem-vindo ao Lula Coin Miner, ${localStorage.getItem('username')}!</h2>
+          <p>Jogo carregado com sucesso!</p>
+          <button id="logoutButton" style="margin-top: 20px;">Sair</button>
+        </div>
+      `;
+
+      // Adiciona evento ao botão de logout
+      document.getElementById('logoutButton').addEventListener('click', logout);
+    }
+
+    // Logout do usuário
+    function logout() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('username');
+      gamePage.style.display = 'none';
+      gamePage.innerHTML = '';
+      loginPage.style.display = 'flex';
+      showMessage('Você foi desconectado', 'info');
+    }
+
+    // Mostrar formulário de login
+    function showLoginForm() {
+      loginForm.style.display = 'block';
+      registerForm.style.display = 'none';
+      document.getElementById('loginUsername').value = '';
+      document.getElementById('loginPassword').value = '';
+    }
+
+    // Mostrar formulário de registro
+    function showRegisterForm() {
+      loginForm.style.display = 'none';
+      registerForm.style.display = 'block';
+      document.getElementById('registerUsername').value = '';
+      document.getElementById('registerPassword').value = '';
+    }
+
+    // Event Listeners
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const username = document.getElementById('loginUsername').value.trim();
+      const password = document.getElementById('loginPassword').value.trim();
       
-      // Exemplo: Atualiza o nome do usuário
-      const username = localStorage.getItem('username');
-      if (username) {
-        const usernameDisplay = document.getElementById('username-display');
-        if (usernameDisplay) usernameDisplay.textContent = username;
-      }
-    }
-
-    // Inicialização da página
-    document.addEventListener('DOMContentLoaded', () => {
-      // Gera partículas de fundo
-      for (let i = 0; i < 50; i++) {
-        createParticle();
-      }
-      setInterval(createParticle, 1000);
-
-      // Verifica se já está logado
-      const token = localStorage.getItem('token');
-      if (token) {
-        showOverlayMessage('Carregando jogo...', 'info');
-        document.getElementById('loginPage').style.display = 'none';
-        loadGamePage();
-      }
-
-      // Event listeners para os formulários
-      document.getElementById('loginForm').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const username = document.getElementById('loginUsername').value;
-        const password = document.getElementById('loginPassword').value;
+      if (username && password) {
         loginUser(username, password);
-      });
+      } else {
+        showMessage('Preencha todos os campos', 'error');
+      }
+    });
 
-      document.getElementById('registerForm').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const username = document.getElementById('registerUsername').value;
-        const password = document.getElementById('registerPassword').value;
+    registerForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const username = document.getElementById('registerUsername').value.trim();
+      const password = document.getElementById('registerPassword').value.trim();
+      
+      if (username && password) {
         registerUser(username, password);
-      });
+      } else {
+        showMessage('Preencha todos os campos', 'error');
+      }
+    });
 
-      // Alternar entre login e registro
-      document.getElementById('showRegisterLink').addEventListener('click', (e) => {
-        e.preventDefault();
-        document.getElementById('loginForm').style.display = 'none';
-        document.getElementById('registerForm').style.display = 'block';
-      });
+    showRegisterLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      showRegisterForm();
+    });
 
-      document.getElementById('showLoginLink').addEventListener('click', (e) => {
-        e.preventDefault();
-        document.getElementById('loginForm').style.display = 'block';
-        document.getElementById('registerForm').style.display = 'none';
-      });
+    showLoginLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      showLoginForm();
+    });
+
+    // Verifica se o usuário já está logado ao carregar a página
+    window.addEventListener('DOMContentLoaded', () => {
+      const token = localStorage.getItem('token');
+      const username = localStorage.getItem('username');
+      
+      if (token && username) {
+        loginPage.style.display = 'none';
+        gamePage.style.display = 'block';
+        loadGame();
+      }
     });
   </script>
 </body>
