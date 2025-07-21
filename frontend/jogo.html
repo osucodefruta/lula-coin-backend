@@ -6,8 +6,8 @@
     <title>Lula Coin Miner - Jogo</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <style>
-        /* Variáveis CSS para fácil tematização */
+    <link rel="stylesheet" href="css/style.css"> <style>
+        /* Variáveis e estilos básicos, você pode mover para style.css */
         :root {
             --primary-color: #ff3b3b; /* Vermelho Neon */
             --secondary-color: #2e008a; /* Azul Escuro */
@@ -21,1066 +21,620 @@
             --glow-color: rgba(255, 59, 59, 0.6);
 
             /* Cores para o ambiente do galpão */
-            --wall-color-dark: #3a4754; /* Cinza azulado escuro */
-            --wall-color-light: #52667b; /* Cinza azulado claro */
-            --floor-color: #2c3e50; /* Azul escuro quase preto */
-            --rack-color: #1a2a3a; /* Azul muito escuro para racks */
-            --slot-color: #0d1a2a; /* Quase preto para slots */
-            --gpu-slot-hover: #ff6347; /* Tom de vermelho mais suave no hover */
+            --wall-color-dark: #3a4750;
+            --wall-color-light: #586776;
+            --floor-color: #2c353d;
+            --accent-color: var(--primary-color);
         }
 
         body {
             font-family: 'Share Tech Mono', monospace;
-            background-color: var(--dark-gray);
+            background-color: var(--tertiary-color);
             color: var(--text-color);
             margin: 0;
-            padding: 0;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
-            overflow-x: hidden;
+            overflow: hidden; /* Para garantir que as partículas não causem scroll */
             position: relative;
-        }
-
-        /* Estilos do background de partículas */
-        #animation-container {
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-            overflow: hidden;
-            z-index: 0;
-            pointer-events: none; /* Permite que o usuário interaja com elementos abaixo */
-        }
-
-        .particle {
-            position: absolute;
-            background-color: var(--primary-color);
-            border-radius: 50%;
-            opacity: 0.6;
-            filter: blur(2px);
-            animation: floatAndFade 15s infinite ease-in-out;
-            box-shadow: 0 0 5px var(--primary-color), 0 0 10px var(--glow-color);
-        }
-
-        @keyframes floatAndFade {
-            0% { transform: translate(0, 0) scale(1); opacity: 0.6; }
-            50% { transform: translate(var(--x), var(--y)) scale(1.1); opacity: 0.8; }
-            100% { transform: translate(0, 0) scale(1); opacity: 0.6; }
+            cursor: url('https://raw.githubusercontent.com/luizcarlos07/lula-coin-miner/main/frontend/assets/cursor.cur'), auto;
         }
 
         /* Layout Principal */
         .game-container {
             display: flex;
             flex-grow: 1;
+            width: 100%;
             position: relative;
-            z-index: 1;
         }
 
-        /* Sidebar Esquerda */
-        .sidebar {
+        .side-panel {
             width: 250px;
-            background-color: var(--tertiary-color);
+            background-color: var(--dark-gray);
+            border-right: 2px solid var(--primary-color);
+            box-shadow: 2px 0 10px var(--glow-color);
             padding: 20px;
             display: flex;
             flex-direction: column;
-            border-right: 1px solid var(--border-color);
-            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
-            font-family: 'Orbitron', sans-serif;
+            gap: 15px;
+            z-index: 50;
         }
 
-        .stats-box, .actions-box {
-            background-color: var(--medium-gray);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-        }
-
-        .stats-box h3, .actions-box h3 {
-            color: var(--primary-color);
-            margin-top: 0;
-            margin-bottom: 10px;
-            text-shadow: 0 0 3px var(--primary-color);
-        }
-
-        .stat-item {
-            margin-bottom: 8px;
-            font-size: 1.1em;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .stat-item span:first-child {
-            color: var(--text-color);
-        }
-
-        .stat-item span:last-child {
-            color: var(--primary-color);
-            font-weight: bold;
-        }
-
-        .action-button {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            width: 100%;
-            margin-bottom: 10px;
-            font-size: 1em;
-            font-weight: bold;
-            transition: background-color 0.3s ease, transform 0.2s ease;
-        }
-
-        .action-button:hover {
-            background-color: #e60000;
-            transform: translateY(-2px);
-        }
-
-        /* Área Principal do Jogo */
         .main-content {
             flex-grow: 1;
             display: flex;
             flex-direction: column;
-            background-color: var(--dark-gray);
+            background-color: var(--tertiary-color); /* Fundo do galpão */
+            position: relative;
+            overflow: hidden;
         }
 
-        .header {
-            background-color: var(--tertiary-color);
-            padding: 15px 20px;
+        .top-bar {
+            background-color: var(--dark-gray);
+            border-bottom: 2px solid var(--primary-color);
+            padding: 10px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid var(--border-color);
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
-            font-family: 'Orbitron', sans-serif;
+            box-shadow: 0 2px 10px var(--glow-color);
+            z-index: 50;
         }
 
-        .header .user-info {
-            display: flex;
-            align-items: center;
-        }
-
-        .header .user-info i {
-            margin-right: 10px;
-            color: var(--primary-color);
-            font-size: 1.5em;
-        }
-
-        .header .user-info span {
-            font-size: 1.2em;
-            font-weight: bold;
-        }
-
-        .header .header-buttons button {
-            background-color: var(--light-gray);
-            color: var(--text-color);
-            border: 1px solid var(--border-color);
-            padding: 8px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-left: 10px;
-            transition: background-color 0.3s ease;
-        }
-
-        .header .header-buttons button:hover {
-            background-color: var(--medium-gray);
-        }
-
-        /* Sala de Mineração */
-        .mining-room {
-            flex-grow: 1;
-            background-color: var(--wall-color-dark);
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-end; /* Alinha o chão na parte inferior */
-            overflow: hidden;
-            border-radius: 10px;
-            margin: 20px; /* Margem em volta da sala */
-            border: 2px solid var(--border-color);
-            box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
-        }
-
-        .floor {
-            width: 100%;
-            height: 20%; /* Ajuste para o tamanho do "chão" */
-            background-color: var(--floor-color);
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            border-top: 5px solid var(--light-gray); /* Linha de horizonte */
-            box-shadow: inset 0 5px 15px rgba(0,0,0,0.5);
-        }
-
-        .rack-container {
+        .user-info, .game-stats {
             display: flex;
             gap: 20px;
-            position: relative;
-            z-index: 2; /* Acima do chão e das partículas */
-            margin-bottom: 5%; /* Posição acima do chão */
-            flex-wrap: wrap; /* Para quebrar linhas se tiver muitos racks */
-            justify-content: center;
-            align-items: flex-end; /* Alinha os racks na parte inferior */
-            height: 70%; /* Os racks ocupam a maior parte da sala */
-            padding-bottom: 20px; /* Espaço entre racks e chão */
+            align-items: center;
         }
 
-        .mining-rack {
-            background-color: var(--rack-color);
-            border: 2px solid var(--light-gray);
-            border-radius: 8px;
-            padding: 10px;
-            width: 150px;
-            min-height: 200px;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
-            position: relative; /* Para posicionar os LEDs/efeitos */
-        }
-
-        .gpu-slot {
-            width: 100%;
-            height: 40px; /* Altura do slot */
-            background-color: var(--slot-color);
-            border: 1px dashed var(--light-gray);
-            border-radius: 4px;
+        .stat-item {
             display: flex;
             align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: background-color 0.3s ease, border-color 0.3s ease;
-            position: relative;
-            overflow: hidden; /* Para garantir que a imagem da GPU caiba */
-        }
-
-        .gpu-slot:hover:not(.occupied) {
-            background-color: rgba(255, 255, 255, 0.05);
-            border-color: var(--gpu-slot-hover);
-        }
-
-        .gpu-slot.occupied {
-            border: 1px solid var(--primary-color);
-            background-color: rgba(255, 59, 59, 0.1); /* Um tom mais claro quando ocupado */
-            cursor: default;
-        }
-
-        .gpu-slot img {
-            max-width: 90%;
-            max-height: 90%;
-            object-fit: contain;
-        }
-
-        .gpu-slot .gpu-name {
-            position: absolute;
-            bottom: 2px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 0.7em;
+            gap: 8px;
+            font-size: 1.1em;
             color: var(--text-color);
-            background: rgba(0, 0, 0, 0.6);
-            padding: 2px 5px;
-            border-radius: 3px;
         }
 
-        /* Barra de Seleção de Mineradores (para colocar GPUs) */
-        .miner-selection-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background-color: var(--tertiary-color);
-            border-top: 1px solid var(--border-color);
+        .stat-icon {
+            color: var(--primary-color);
+            text-shadow: 0 0 5px var(--glow-color);
+        }
+
+        .mine-area {
+            flex-grow: 1;
             display: flex;
             justify-content: center;
-            padding: 10px 0;
-            gap: 15px;
-            z-index: 10;
-            transform: translateY(100%); /* Inicia escondida */
-            transition: transform 0.3s ease-out;
+            align-items: center;
+            position: relative;
+            background: linear-gradient(to bottom, var(--wall-color-dark) 0%, var(--wall-color-light) 50%, var(--floor-color) 100%);
+            overflow: hidden;
+            flex-direction: column;
+            padding-bottom: 50px; /* Espaço para racks */
         }
 
-        .miner-selection-bar.active {
-            transform: translateY(0); /* Mostra a barra */
-        }
-
-        .miner-option {
-            background-color: var(--medium-gray);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 10px;
+        #mineButton {
+            background-color: var(--primary-color);
+            color: var(--tertiary-color);
+            border: 3px solid var(--glow-color);
+            padding: 25px 40px;
+            border-radius: 50%;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2em;
             cursor: pointer;
-            text-align: center;
-            transition: background-color 0.2s ease, transform 0.2s ease;
-            width: 100px;
+            transition: all 0.2s ease-in-out;
+            text-shadow: 0 0 10px var(--glow-color);
+            box-shadow: 0 0 20px var(--glow-color);
+            animation: pulse 1.5s infinite alternate;
+            z-index: 10;
         }
 
-        .miner-option:hover {
+        #mineButton:hover {
+            background-color: #ff6a6a;
+            box-shadow: 0 0 30px #ff6a6a;
+            transform: scale(1.05);
+        }
+
+        #mineButton:active {
+            transform: scale(0.95);
+            box-shadow: 0 0 10px var(--glow-color);
+        }
+
+        @keyframes pulse {
+            from { box-shadow: 0 0 20px var(--glow-color); }
+            to { box-shadow: 0 0 35px #ff6a6a; }
+        }
+
+        /* Botões do painel lateral */
+        .side-panel button {
+            background-color: var(--medium-gray);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            border-radius: 5px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s, transform 0.1s;
+        }
+
+        .side-panel button:hover {
             background-color: var(--light-gray);
-            transform: translateY(-3px);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 8px var(--glow-color);
+            transform: translateY(-2px);
         }
 
-        .miner-option img {
-            width: 60px;
-            height: 60px;
-            margin-bottom: 5px;
-            object-fit: contain;
+        .side-panel button:active {
+            transform: translateY(0);
         }
 
-        .miner-option p {
-            margin: 0;
-            font-size: 0.8em;
+        #logoutButton {
+            background-color: var(--red-alert);
+            margin-top: auto; /* Empurra para o final do painel */
             color: var(--text-color);
         }
 
-        /* Botão Cancelar Seleção */
-        #cancel-selection-btn {
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
-            z-index: 11; /* Acima da barra de seleção */
-            background-color: var(--red-alert);
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1em;
-            display: none; /* Inicia oculto */
+        #logoutButton:hover {
+            background-color: #cc3700;
+            box-shadow: 0 0 10px var(--red-alert);
         }
 
-        /* Modais (Shop, Inventory) */
+        /* Modal Base */
         .modal {
             display: none; /* Hidden by default */
             position: fixed; /* Stay in place */
-            z-index: 20; /* Sit on top */
+            z-index: 100; /* Sit on top */
             left: 0;
             top: 0;
             width: 100%; /* Full width */
             height: 100%; /* Full height */
             overflow: auto; /* Enable scroll if needed */
             background-color: rgba(0,0,0,0.8); /* Black w/ opacity */
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            justify-content: center; /* Center horizontally */
+            align-items: center; /* Center vertically */
+            backdrop-filter: blur(5px);
         }
 
         .modal-content {
-            background-color: var(--medium-gray);
+            background-color: var(--dark-gray);
             margin: auto;
-            padding: 30px;
-            border: 1px solid var(--border-color);
-            border-radius: 15px;
+            padding: 20px;
+            border: 2px solid var(--primary-color);
+            border-radius: 10px;
             width: 80%;
-            max-width: 900px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.7);
+            max-width: 700px;
+            box-shadow: 0 0 20px var(--glow-color);
             position: relative;
+            text-align: center;
         }
 
         .close-button {
-            color: var(--text-color);
+            color: var(--primary-color);
             position: absolute;
+            top: 10px;
             right: 20px;
-            top: 15px;
             font-size: 30px;
             font-weight: bold;
             cursor: pointer;
+            transition: text-shadow 0.3s;
         }
 
-        .modal-content h2 {
+        .close-button:hover,
+        .close-button:focus {
+            color: #ff6a6a;
+            text-shadow: 0 0 10px #ff6a6a;
+            text-decoration: none;
+        }
+
+        .modal h2 {
+            font-family: 'Orbitron', sans-serif;
             color: var(--primary-color);
-            text-align: center;
             margin-bottom: 20px;
-            text-shadow: 0 0 5px var(--primary-color);
+            text-shadow: 0 0 8px var(--glow-color);
         }
 
-        .modal-categories {
+        .category-buttons {
             display: flex;
             justify-content: center;
-            margin-bottom: 20px;
             gap: 10px;
+            margin-bottom: 20px;
         }
 
-        .modal-category-btn {
-            background-color: var(--light-gray);
-            color: var(--text-color);
+        .category-buttons button {
+            background-color: var(--medium-gray);
             border: 1px solid var(--border-color);
+            color: var(--text-color);
             padding: 8px 15px;
             border-radius: 5px;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.2s, border-color 0.2s;
         }
 
-        .modal-category-btn:hover, .modal-category-btn.active {
+        .category-buttons button:hover {
+            background-color: var(--light-gray);
+            border-color: var(--primary-color);
+        }
+
+        .category-buttons button.active {
             background-color: var(--primary-color);
+            color: var(--tertiary-color);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 10px var(--glow-color);
         }
 
-        .modal-items-grid {
+        .items-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
             gap: 20px;
-            max-height: 400px;
+            max-height: 400px; /* Limita a altura e adiciona scroll */
             overflow-y: auto;
-            padding: 10px;
+            padding-right: 10px; /* Para não cortar o scrollbar */
         }
 
-        .shop-item, .inventory-item {
-            background-color: var(--dark-gray);
+        .item-card {
+            background-color: var(--medium-gray);
             border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 15px;
             text-align: center;
-            box-shadow: 0 0 10px rgba(0,0,0,0.3);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
-        .shop-item img, .inventory-item img {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 10px auto;
-            object-fit: contain;
+        .item-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 12px var(--glow-color);
         }
 
-        .shop-item h4, .inventory-item h4 {
-            color: var(--text-color);
-            margin-top: 0;
+        .item-card img {
+            max-width: 100px;
+            height: auto;
+            margin-bottom: 10px;
+            filter: drop-shadow(0 0 5px var(--glow-color));
+        }
+
+        .item-card h3 {
+            color: var(--primary-color);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1em;
             margin-bottom: 5px;
-            font-size: 1em;
         }
 
-        .shop-item p, .inventory-item p {
+        .item-card p {
             font-size: 0.9em;
             color: var(--light-gray);
-            margin-bottom: 5px;
-        }
-
-        .shop-item .cost, .inventory-item .quantity {
-            color: var(--primary-color);
-            font-weight: bold;
-            font-size: 1.1em;
             margin-bottom: 10px;
         }
 
-        .shop-item button {
+        .item-card button {
             background-color: var(--primary-color);
-            color: white;
-            padding: 8px 12px;
+            color: var(--tertiary-color);
             border: none;
+            padding: 8px 15px;
             border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        .shop-item button:hover {
-            background-color: #e60000;
-        }
-
-        /* Estilos do monitor do jogo */
-        .monitor-display {
-            background-color: #0a0e2a; /* Fundo do monitor */
-            border: 5px solid #000;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5), inset 0 0 10px rgba(0, 255, 255, 0.3);
-            padding: 15px;
-            text-align: left;
-            margin: 20px auto;
-            width: 80%;
-            max-width: 600px;
             font-family: 'Share Tech Mono', monospace;
-            color: #00ffcc; /* Verde ciano neon */
-            font-size: 1.1em;
-            line-height: 1.4;
-            animation: monitorGlow 2s infinite alternate;
+            cursor: pointer;
+            transition: background-color 0.2s;
         }
 
-        @keyframes monitorGlow {
-            from { box-shadow: 0 0 20px rgba(0, 255, 255, 0.5), inset 0 0 10px rgba(0, 255, 255, 0.3); }
-            to { box-shadow: 0 0 30px rgba(0, 255, 255, 0.7), inset 0 0 15px rgba(0, 255, 255, 0.5); }
+        .item-card button:hover {
+            background-color: #ff6a6a;
         }
 
-        .monitor-display p {
-            margin: 0;
+        /* Racks de GPU */
+        .rack-container {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 50px; /* Espaço entre os racks */
+            padding-bottom: 20px; /* Espaço do chão */
+            z-index: 10;
+        }
+
+        .rack {
+            background-color: var(--medium-gray);
+            border: 2px solid var(--primary-color);
+            box-shadow: 0 0 10px var(--glow-color);
+            padding: 10px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            width: 120px; /* Largura do rack */
+            height: 250px; /* Altura do rack */
+        }
+
+        .rack-slot {
+            background-color: var(--dark-gray);
+            border: 1px dashed var(--border-color);
+            height: 50px; /* Altura do slot */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--light-gray);
+            font-size: 0.8em;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+            position: relative;
+        }
+
+        .rack-slot.occupied {
+            border-style: solid;
+            background-color: rgba(46, 0, 138, 0.3); /* Um azul mais forte para slots ocupados */
+        }
+
+        .rack-slot:hover:not(.occupied) {
+            background-color: rgba(255, 59, 59, 0.1);
+            border-color: var(--primary-color);
+        }
+
+        .rack-slot img.gpu-icon {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 3px var(--glow-color));
+        }
+
+        .mining-power-text {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            font-size: 0.7em;
+            color: var(--primary-color);
+            text-shadow: 0 0 3px var(--glow-color);
+            z-index: 1; /* Para ficar acima da imagem */
+        }
+
+        /* Indicador de clique */
+        .click-effect {
+            position: absolute;
+            color: var(--primary-color);
+            font-size: 1.5em;
+            font-weight: bold;
+            opacity: 0;
+            animation: fadeAndMoveUp 0.8s ease-out forwards;
+            pointer-events: none; /* Garante que não interfira com cliques */
+            text-shadow: 0 0 5px var(--glow-color);
+            z-index: 20;
+        }
+
+        @keyframes fadeAndMoveUp {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-50px); opacity: 0; }
+        }
+
+        /* Overlay para mensagens */
+        .overlay-message {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            color: white;
+            font-size: 1.5em;
+            text-align: center;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .overlay-message.success {
+            color: #4CAF50; /* Verde */
+            text-shadow: 0 0 10px #4CAF50;
+        }
+
+        .overlay-message.error {
+            color: #F44336; /* Vermelho */
+            text-shadow: 0 0 10px #F44336;
+        }
+
+        .overlay-message.info {
+            color: #2196F3; /* Azul */
+            text-shadow: 0 0 10px #2196F3;
+        }
+
+        .overlay-message-text {
+            padding: 20px;
+            border-radius: 8px;
+            background-color: rgba(0, 0, 0, 0.7);
+            border: 2px solid;
+            box-shadow: 0 0 20px;
+        }
+
+        .overlay-message.success .overlay-message-text { border-color: #4CAF50; box-shadow: 0 0 20px #4CAF50; }
+        .overlay-message.error .overlay-message-text { border-color: #F44336; box-shadow: 0 0 20px #F44336; }
+        .overlay-message.info .overlay-message-text { border-color: #2196F3; box-shadow: 0 0 20px #2196F3; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Partículas de fundo */
+        .particle-animation-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            overflow: hidden;
+            z-index: 1; /* Atrás do conteúdo principal */
+        }
+
+        .particle {
+            position: absolute;
+            background-color: rgba(255, 59, 59, 0.4); /* Cor das partículas */
+            border-radius: 50%;
+            animation: floatAndFade linear infinite;
+            opacity: 0;
+        }
+
+        @keyframes floatAndFade {
+            0% {
+                transform: translate(0, 0) scale(0);
+                opacity: 0;
+            }
+            25% {
+                opacity: 0.6;
+            }
+            75% {
+                opacity: 0.3;
+            }
+            100% {
+                transform: translate(var(--x), var(--y)) scale(1);
+                opacity: 0;
+            }
         }
     </style>
 </head>
 <body>
-    <div id="animation-container"></div> <div id="overlay-message">
-        <div id="overlay-message-text"></div>
-        <button id="overlay-message-ok-button">OK</button>
+    <div class="particle-animation-container"></div>
+
+    <div id="overlay-message" class="overlay-message" style="display:none;">
+        <span id="overlay-message-text" class="overlay-message-text"></span>
     </div>
 
     <div class="game-container">
-        <aside class="sidebar">
-            <div class="stats-box">
-                <h3>Suas Estatísticas</h3>
-                <div class="stat-item">
-                    <span>Lula Coins:</span> <span id="lula-coins-display">0</span>
-                </div>
-                <div class="stat-item">
-                    <span>Nível:</span> <span id="level-display">1</span>
-                </div>
-                <div class="stat-item">
-                    <span>Hashrate Total:</span> <span id="hashrate-display">0 H/s</span>
-                </div>
-                <div class="stat-item">
-                    <span>Minerador Base:</span> <span id="miner-value-display">1 C/clique</span>
-                </div>
+        <aside class="side-panel">
+            <div class="user-profile">
+                <p>Olá, <span id="currentUsernameDisplay">Carregando...</span></p>
+                <p>ID: <span id="userIdDisplay">Carregando...</span></p>
             </div>
-
-            <div class="actions-box">
-                <h3>Ações</h3>
-                <button id="miner-button" class="action-button">Minar Lula Coins</button>
-                <button id="upgrade-miner-button" class="action-button">Upgrade Minerador</button>
-                <button id="saque-button" class="action-button">Sacar Lula Coins</button>
-            </div>
-            <button id="logout-button" class="action-button" style="background-color: var(--red-alert); margin-top: auto;">Sair do Jogo</button>
+            <button id="mineBaseButton">Mineração Base</button>
+            <button id="openShopBtn">Loja</button>
+            <button id="openInventoryBtn">Inventário</button>
+            <button id="logoutButton">Sair</button>
         </aside>
 
         <main class="main-content">
-            <header class="header">
-                <div class="user-info">
-                    <i class="fas fa-user-circle"></i>
-                    <span id="username-display">Carregando...</span>
-                </div>
-                <div class="header-buttons">
-                    <button id="open-shop-btn"><i class="fas fa-store"></i> Loja</button>
-                    <button id="open-inventory-btn"><i class="fas fa-box-open"></i> Inventário</button>
+            <header class="top-bar">
+                <div class="game-stats">
+                    <div class="stat-item">
+                        <i class="fas fa-coins stat-icon"></i>
+                        <span id="lula-coins-display">0</span> Lula Coins
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-bolt stat-icon"></i>
+                        <span id="hashrate-display">0</span> Hash/s
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-level-up-alt stat-icon"></i>
+                        Nível <span id="level-display">1</span>
+                    </div>
                 </div>
             </header>
 
-            <section class="mining-room" id="mining-room">
-                <div class="floor"></div>
-                <div class="rack-container" id="rack-container">
-                    </div>
-            </section>
+            <section class="mine-area">
+                <button id="mineButton">Minerar!</button>
 
-            <div class="monitor-display">
-                <p id="monitor-text">Bem-vindo ao Lula Coin Miner! Comece a minerar!</p>
-            </div>
+                <div class="rack-container" id="rackContainer">
+                    </div>
+
+                <button id="cancelSelectionBtn" style="display:none; margin-top: 10px;">Cancelar Seleção</button>
+            </section>
         </main>
     </div>
 
-    <div class="miner-selection-bar" id="miner-selection-bar">
-        </div>
-    <button id="cancel-selection-btn">Cancelar Seleção</button>
-
-    <div id="shop-modal" class="modal">
+    <div id="shopModal" class="modal">
         <div class="modal-content">
-            <span class="close-button" id="close-shop-btn">&times;</span>
-            <h2>Loja Lula Coin</h2>
-            <div class="modal-categories">
-                <button class="modal-category-btn active" data-category="gpus">GPUs</button>
-                <button class="modal-category-btn" data-category="upgrades">Upgrades</button>
+            <span class="close-button" id="closeShopBtn">&times;</span>
+            <h2>Loja de Upgrades</h2>
+            <div class="category-buttons">
+                <button data-category="gpus" class="active">GPUs</button>
+                <button data-category="coolers">Coolers</button>
+                <button data-category="psus">PSUs</button>
+                <button data-category="miners">Mineradores</button>
             </div>
-            <div id="shop-items-grid" class="modal-items-grid">
+            <div id="shopItemsGrid" class="items-grid">
                 </div>
         </div>
     </div>
 
-    <div id="inventory-modal" class="modal">
+    <div id="inventoryModal" class="modal">
         <div class="modal-content">
-            <span class="close-button" id="close-inventory-btn">&times;</span>
+            <span class="close-button" id="closeInventoryBtn">&times;</span>
             <h2>Seu Inventário</h2>
-            <div class="modal-categories">
-                <button class="modal-category-btn active" data-category="gpus">GPUs</button>
-                <button class="modal-category-btn" data-category="upgrades">Upgrades</button>
+            <div class="category-buttons">
+                <button data-category="gpus" class="active">GPUs</button>
+                <button data-category="coolers">Coolers</button>
+                <button data-category="psus">PSUs</button>
+                <button data-category="miners">Mineradores</button>
             </div>
-            <div id="inventory-items-grid" class="modal-items-grid">
+            <div id="inventoryItemsGrid" class="items-grid">
                 </div>
         </div>
     </div>
 
+    <script src="js/utils.js"></script> <script src="js/auth.js"></script> <script src="js/game.js"></script> <script>
+        // Funções de partículas de fundo (podem ir para um arquivo JS separado se quiser)
+        function createParticle() {
+            const animationContainer = document.querySelector('.particle-animation-container');
+            if (!animationContainer) return;
 
-    <script>
-        // URL base da sua API do backend no Render
-        const API_BASE_URL = 'https://lula-coin-backend.onrender.com';
+            const particle = document.createElement('div');
+            particle.classList.add('particle');
+            const size = Math.random() * 5 + 2; // Tamanho entre 2px e 7px
+            particle.style.width = `${size}px`;
+            particle.style.height = `${size}px`;
 
-        // --- FUNÇÃO GLOBAL PARA EXIBIR MENSAGENS (REPETIDA AQUI PARA GARANTIR ACESSO, MAS IDEALMENTE EM UM ARQUIVO SEPARADO) ---
-        // Se você mover essa função para um arquivo JS separado e carregá-lo antes de auth.js e game.js, pode remover esta repetição.
-        function showOverlayMessage(message, type = 'info') {
-            const overlayMessage = document.getElementById('overlay-message');
-            const overlayMessageText = document.getElementById('overlay-message-text');
-            const overlayMessageOkButton = document.getElementById('overlay-message-ok-button');
+            const startX = Math.random() * window.innerWidth;
+            const startY = Math.random() * window.innerHeight;
+            particle.style.left = `${startX}px`;
+            particle.style.top = `${startY}px`;
 
-            if (overlayMessage && overlayMessageText && overlayMessageOkButton) {
-                overlayMessageText.textContent = message;
-                overlayMessage.style.display = 'flex'; // Mostra o overlay
+            const endX = Math.random() * window.innerWidth;
+            const endY = Math.random() * window.innerHeight;
 
-                // Define a cor de fundo do overlay com base no tipo de mensagem
-                if (type === 'error') {
-                    overlayMessage.style.backgroundColor = 'rgba(255, 0, 0, 0.7)';
-                } else if (type === 'success') {
-                    overlayMessage.style.backgroundColor = 'rgba(0, 128, 0, 0.7)';
-                } else {
-                    overlayMessage.style.backgroundColor = 'rgba(0, 0, 0, 0.7)'; // Padrão
-                }
+            particle.style.setProperty('--x', `${endX - startX}px`);
+            particle.style.setProperty('--y', `${endY - startY}px`);
+            particle.style.animationDuration = `${Math.random() * 10 + 5}s`; // Duração entre 5s e 15s
+            particle.style.animationDelay = `${Math.random() * 5}s`; // Atraso inicial
 
-                // Oculta o overlay ao clicar no botão OK
-                overlayMessageOkButton.onclick = () => {
-                    overlayMessage.style.display = 'none';
-                };
-            } else {
-                // Fallback para alert se os elementos não forem encontrados
-                alert(message);
-            }
-        }
+            animationContainer.appendChild(particle);
 
-
-        // Variáveis de estado do jogo
-        let userToken = localStorage.getItem('token'); // Pegar o token do localStorage após o login
-        let currentUsername = localStorage.getItem('username'); // Pegar o username do localStorage
-        let lulaCoins = 0;
-        let level = 1;
-        let minerValue = 1;
-        let totalHashrate = 0;
-        let placedGpus = {};
-        let inventory = { gpus: [], upgrades: [] }; // Inicialize com as categorias esperadas
-
-        // Referências aos elementos da UI do jogo
-        const lulaCoinsDisplay = document.getElementById('lula-coins-display');
-        const levelDisplay = document.getElementById('level-display');
-        const hashrateDisplay = document.getElementById('hashrate-display');
-        const minerValueDisplay = document.getElementById('miner-value-display'); // Novo para minerValue
-        const minerButton = document.getElementById('miner-button');
-        const upgradeMinerButton = document.getElementById('upgrade-miner-button');
-        const saqueButton = document.getElementById('saque-button');
-        const logoutButton = document.getElementById('logout-button');
-        const monitorText = document.getElementById('monitor-text');
-        const usernameDisplay = document.getElementById('username-display'); // Para exibir o username
-
-        // Modais e seus botões
-        const openShopBtn = document.getElementById('open-shop-btn');
-        const closeShopBtn = document.getElementById('close-shop-btn');
-        const shopModal = document.getElementById('shop-modal');
-        const shopCategoryBtns = document.querySelectorAll('#shop-modal .modal-category-btn');
-        const shopItemsGrid = document.getElementById('shop-items-grid');
-
-        const openInventoryBtn = document.getElementById('open-inventory-btn');
-        const closeInventoryBtn = document.getElementById('close-inventory-btn');
-        const inventoryModal = document.getElementById('inventory-modal');
-        const inventoryCategoryBtns = document.querySelectorAll('#inventory-modal .modal-category-btn');
-        const inventoryItemsGrid = document.getElementById('inventory-items-grid');
-
-        const rackContainer = document.getElementById('rack-container');
-        const minerSelectionBar = document.getElementById('miner-selection-bar');
-        const cancelSelectionBtn = document.getElementById('cancel-selection-btn');
-        let placingItem = null; // Para controlar qual item está sendo "arrastado" para colocação
-
-
-        // --- Funções de Utilidade ---
-
-        // Função para atualizar a UI do jogo
-        function updateUI() {
-            if (lulaCoinsDisplay) lulaCoinsDisplay.textContent = lulaCoins.toFixed(2);
-            if (levelDisplay) levelDisplay.textContent = level;
-            if (hashrateDisplay) hashrateDisplay.textContent = `${totalHashrate} H/s`;
-            if (minerValueDisplay) minerValueDisplay.textContent = `${minerValue} C/clique`; // Atualiza aqui
-            if (usernameDisplay) usernameDisplay.textContent = currentUsername || 'Usuário';
-            updateRackDisplay(); // Garante que os racks e GPUs são atualizados
-        }
-
-        // Função para mostrar mensagens no monitor do jogo
-        function displayMonitorMessage(message) {
-            if (monitorText) {
-                monitorText.textContent = `> ${new Date().toLocaleTimeString()}: ${message}`;
-            }
-        }
-
-        // Função para redirecionar para o login se não houver token
-        function redirectToLogin() {
-            localStorage.removeItem('token');
-            localStorage.removeItem('username');
-            window.location.href = 'index.html';
-        }
-
-        // --- Funções de API Backend ---
-
-        async function fetchWithAuth(url, options = {}) {
-            if (!userToken) {
-                showOverlayMessage('Sessão expirada. Por favor, faça login novamente.', 'error');
-                redirectToLogin();
-                throw new Error('No token found');
-            }
-
-            options.headers = {
-                ...options.headers,
-                'Authorization': `Bearer ${userToken}`,
-                'Content-Type': 'application/json'
-            };
-
-            const res = await fetch(url, options);
-
-            // Se o token for inválido/expirado, redireciona para o login
-            if (res.status === 401 || res.status === 403) {
-                showOverlayMessage('Sessão expirada. Por favor, faça login novamente.', 'error');
-                redirectToLogin();
-                throw new Error('Unauthorized or Forbidden');
-            }
-
-            return res;
-        }
-
-        async function loadUserData() {
-            try {
-                const res = await fetchWithAuth(`${API_BASE_URL}/api/game/state`);
-                const data = await res.json();
-
-                if (res.ok) {
-                    lulaCoins = data.lulaCoins;
-                    level = data.level;
-                    minerValue = data.minerValue;
-                    totalHashrate = data.totalHashrate;
-                    inventory = data.inventory || { gpus: [], upgrades: [] };
-                    placedGpus = data.placedGpus || {};
-                    updateUI();
-                    displayMonitorMessage('Dados do jogo carregados com sucesso!');
-                    document.body.style.display = 'flex'; // Mostra o corpo da página após carregar
-                } else {
-                    showOverlayMessage(data.message || 'Erro ao carregar dados do usuário.', 'error');
-                    redirectToLogin();
-                }
-            } catch (error) {
-                console.error('Erro ao carregar dados do usuário:', error);
-                showOverlayMessage('Erro de conexão com o servidor ao carregar dados. Faça login novamente.', 'error');
-                redirectToLogin();
-            }
-        }
-
-        async function mineLulaCoins() {
-            try {
-                const res = await fetchWithAuth(`${API_BASE_URL}/api/game/mine`, {
-                    method: 'POST'
-                });
-                const data = await res.json();
-
-                if (res.ok) {
-                    lulaCoins = data.lulaCoins;
-                    level = data.level; // Se o backend atualizar o level
-                    displayMonitorMessage(data.message);
-                    updateUI();
-                } else {
-                    showOverlayMessage(data.message || 'Erro ao minar.', 'error');
-                }
-            } catch (error) {
-                console.error('Erro ao minar Lula Coins:', error);
-                showOverlayMessage('Erro de conexão ao minar. Tente novamente.', 'error');
-            }
-        }
-
-        async function upgradeMiner() {
-            try {
-                const res = await fetchWithAuth(`${API_BASE_URL}/api/game/upgrade-miner`, {
-                    method: 'POST'
-                });
-                const data = await res.json();
-
-                if (res.ok) {
-                    lulaCoins = data.lulaCoins;
-                    minerValue = data.minerValue;
-                    level = data.level;
-                    displayMonitorMessage(data.message);
-                    updateUI();
-                } else {
-                    showOverlayMessage(data.message || 'Erro ao fazer upgrade.', 'error');
-                }
-            } catch (error) {
-                console.error('Erro ao fazer upgrade do minerador:', error);
-                showOverlayMessage('Erro de conexão ao fazer upgrade. Tente novamente.', 'error');
-            }
-        }
-
-        async function buyItem(itemId, itemType) {
-            try {
-                const res = await fetchWithAuth(`${API_BASE_URL}/api/game/buy-item`, {
-                    method: 'POST',
-                    body: JSON.stringify({ itemId, itemType })
-                });
-                const data = await res.json();
-
-                if (res.ok) {
-                    lulaCoins = data.lulaCoins;
-                    inventory = data.inventory;
-                    displayMonitorMessage(data.message);
-                    updateUI();
-                    renderShopItems(itemType); // Atualiza a loja
-                    renderInventoryItems(itemType); // Atualiza o inventário para refletir a compra
-                } else {
-                    showOverlayMessage(data.message || 'Erro ao comprar item.', 'error');
-                }
-            } catch (error) {
-                console.error('Erro ao comprar item:', error);
-                showOverlayMessage('Erro de conexão ao comprar item. Tente novamente.', 'error');
-            }
-        }
-
-        async function sellItem(itemId, itemType) {
-            try {
-                const res = await fetchWithAuth(`${API_BASE_URL}/api/game/sell-item`, {
-                    method: 'POST',
-                    body: JSON.stringify({ itemId, itemType })
-                });
-                const data = await res.json();
-
-                if (res.ok) {
-                    lulaCoins = data.lulaCoins;
-                    inventory = data.inventory;
-                    totalHashrate = data.totalHashrate; // Hashrate pode mudar se vender GPU
-                    placedGpus = data.placedGpus || {}; // Se vender GPU colocada
-                    displayMonitorMessage(data.message);
-                    updateUI();
-                    renderInventoryItems(itemType); // Atualiza o inventário
-                } else {
-                    showOverlayMessage(data.message || 'Erro ao vender item.', 'error');
-                }
-            } catch (error) {
-                console.error('Erro ao vender item:', error);
-                showOverlayMessage('Erro de conexão ao vender item. Tente novamente.', 'error');
-            }
-        }
-
-        async function placeGpu(gpuId, slotId) {
-            try {
-                const res = await fetchWithAuth(`${API_BASE_URL}/api/game/place-gpu`, {
-                    method: 'POST',
-                    body: JSON.stringify({ gpuId, slotId })
-                });
-                const data = await res.json();
-
-                if (res.ok) {
-                    placedGpus = data.placedGpus;
-                    inventory = data.inventory;
-                    totalHashrate = data.totalHashrate;
-                    displayMonitorMessage(data.message);
-                    updateUI();
-                    renderInventoryItems('gpus'); // Atualiza inventário
-                } else {
-                    showOverlayMessage(data.message || 'Erro ao colocar GPU.', 'error');
-                }
-            } catch (error) {
-                console.error('Erro ao colocar GPU:', error);
-                showOverlayMessage('Erro de conexão ao colocar GPU. Tente novamente.', 'error');
-            }
-        }
-
-        async function saqueLulaCoins() {
-            const amountStr = prompt("Quantas Lula Coins você quer sacar?");
-            const amount = parseFloat(amountStr);
-
-            if (isNaN(amount) || amount <= 0) {
-                showOverlayMessage("Valor inválido para saque.", 'error');
-                return;
-            }
-
-            try {
-                const res = await fetchWithAuth(`${API_BASE_URL}/api/game/withdraw`, {
-                    method: 'POST',
-                    body: JSON.stringify({ amount })
-                });
-                const data = await res.json();
-
-                if (res.ok) {
-                    lulaCoins = data.lulaCoins;
-                    displayMonitorMessage(data.message);
-                    updateUI();
-                } else {
-                    showOverlayMessage(data.message || 'Erro ao sacar Lula Coins.', 'error');
-                }
-            } catch (error) {
-                console.error('Erro ao sacar Lula Coins:', error);
-                showOverlayMessage('Erro de conexão ao sacar. Tente novamente.', 'error');
-            }
-        }
-
-        function logout() {
-            showOverlayMessage('Saindo do jogo...', 'info');
-            setTimeout(() => {
-                redirectToLogin();
-            }, 1000); // Dá tempo para o usuário ver a mensagem antes de redirecionar
-        }
-
-        // --- Renderização da UI ---
-
-        // Renderiza itens da loja
-        function renderShopItems(category) {
-            shopItemsGrid.innerHTML = ''; // Limpa o grid
-
-            // Mock de itens da loja (deveria vir de um banco de dados ou configuração separada)
-            // Mantendo aqui para simplicidade, mas o ideal seria o backend fornecer isso.
-            const shopItems = {
-                gpus: [
-                    { id: "basic_gpu", name: "GPU Básica", hashrate: 10, cost: 100, img: "https://via.placeholder.com/80x80/FF0000/FFFFFF?text=GPU1" },
-                    { id: "mid_gpu", name: "GPU Intermediária", hashrate: 50, cost: 450, img: "https://via.placeholder.com/80x80/00FF00/000000?text=GPU2" },
-                    { id: "pro_gpu", name: "GPU Profissional", hashrate: 200, cost: 1500, img: "https://via.placeholder.com/80x80/0000FF/FFFFFF?text=GPU3" }
-                ],
-                upgrades: [
-                    { id: "power_supply_1", name: "Fonte de Energia I", effect: "+10% Hashrate", cost: 300, img: "https://via.placeholder.com/80x80/FFFF00/000000?text=PSU1" },
-                    { id: "cooling_fan_1", name: "Ventoinha Resfriamento I", effect: "Reduz calor", cost: 150, img: "https://via.placeholder.com/80x80/FF00FF/FFFFFF?text=FAN1" }
-                ]
-            };
-
-            const itemsToShow = shopItems[category] || [];
-
-            itemsToShow.forEach(item => {
-                const itemDiv = document.createElement('div');
-                itemDiv.classList.add('shop-item');
-                itemDiv.innerHTML = `
-                    <img src="${item.img}" alt="${item.name}">
-                    <h4>${item.name}</h4>
-                    <p>${item.effect || `Hashrate: ${item.hashrate}`}</p>
-                    <p class="cost">${item.cost.toFixed(2)} LC</p>
-                    <button data-item-id="${item.id}" data-item-type="${category}">Comprar</button>
-                `;
-                itemDiv.querySelector('button').addEventListener('click', (e) => {
-                    buyItem(e.target.dataset.itemId, e.target.dataset.itemType);
-                });
-                shopItemsGrid.appendChild(itemDiv);
+            particle.addEventListener('animationend', () => {
+                particle.remove();
             });
         }
-
-        // Renderiza itens do inventário
-        function renderInventoryItems(category) {
-            inventoryItemsGrid.innerHTML = ''; // Limpa o grid
-            const itemsToShow = inventory[category] || [];
-
-            if (itemsToShow.length === 0) {
-                inventoryItemsGrid.innerHTML = '<p style="text-align: center; color: var(--light-gray);">Seu inventário está vazio nesta categoria.</p>';
-                return;
-            }
-
-            itemsToShow.forEach(item => {
-                const itemDiv = document.createElement('div');
-                itemDiv.classList.add('inventory-item');
-                itemDiv.innerHTML = `
-                    <img src="${item.img}" alt="${item.name}">
-                    <h4>${item.name}</h4>
-                    <p>${item.effect || `Hashrate: ${item.hashrate}`}</p>
-                    <p class="quantity">Qtd: ${item.quantity || 1}</p>
-                    <button class="action-button" data-item-id="${item.id}" data-item-type="${category}" data-action="place">${category === 'gpus' ? 'Colocar' : 'Usar'}</button>
-                    <button class="action-button" data-item-id="${item.id}" data-item-type="${category}" data-action="sell" style="background-color: #8B0000;">Vender</button>
-                `;
-                itemDiv.querySelectorAll('button').forEach(button => {
-                    button.addEventListener('click', (e) => {
-                        const action = e.target.dataset.action;
-                        const itemId = e.target.dataset.itemId;
-                        const itemType = e.target.dataset.itemType;
-
-                        if (action === 'place' && itemType === 'gpus') {
-                            startPlacingItem(itemId);
-                            inventoryModal.style.display = 'none'; // Fecha o inventário
-                        } else if (action === 'sell') {
-                            sellItem(itemId, itemType);
-                        }
-                        // Lógica para 'usar' upgrades pode ser adicionada aqui
-                    });
-                });
-                inventoryItemsGrid.appendChild(itemDiv);
-            });
-        }
-
-        // Gerar racks e slots dinamicamente
-        function updateRackDisplay() {
-            rackContainer.innerHTML = ''; // Limpa o container
-            const numRacks = 3; // Você pode tornar isso configurável
-            const slotsPerRack = 4;
-
-            for (let r = 1; r <= numRacks; r++) {
-                const rackDiv = document.createElement('div');
-                rackDiv.classList.add('mining-rack');
-                rackDiv.id = `rack-${r}`;
-
-                for (let s = 0; s < slotsPerRack; s++) {
-                    const slotId = `rack-${r}-slot-${s}`;
-                    const slotDiv = document.createElement('div');
-                    slotDiv.classList.add('gpu-slot');
-                    slotDiv.id = slotId;
-
-                    if (placedGpus[slotId]) {
-                        // Se houver uma GPU colocada neste slot
-                        const gpu = placedGpus[slotId];
-                        slotDiv.classList.add('occupied');
-                        slotDiv.innerHTML = `<img src="${gpu.img}" alt="${gpu.name}"><span class="gpu-name">${gpu.name}</span>`;
-                        slotDiv.style.cursor = 'default'; // Não permite clique
-                    } else {
-                        // Slot vazio
-                        slotDiv.innerHTML = '<span>+</span>';
-                        slotDiv.addEventListener('click', () => handleSlotClick(slotId));
-                    }
-                    rackDiv.appendChild(slotDiv);
-                }
-                rackContainer.appendChild(rackDiv);
-            }
-        }
-
-        // --- Lógica de Colocação de GPU ---
-
-        function startPlacingItem(gpuId) {
-            placingItem = inventory.gpus.find(gpu => gpu.id === gpuId); // Encontra a GPU selecionada
-            if (!placingItem) {
-                showOverlayMessage('GPU não encontrada no inventário.', 'error');
-                return;
-            }
-            if (placingItem.quantity === 0) {
-                 showOverlayMessage('Você não tem mais desta GPU no inventário.', 'error');
-                 return;
-            }
-
-            showOverlayMessage(`Clique em um slot vazio para colocar a ${placingItem.name}.`, 'info');
-            minerSelectionBar.classList.add('active'); // Mostra a barra de seleção (apenas se tiver itens nela)
-            cancelSelectionBtn.style.display = 'block'; // Mostra o botão de cancelar
-        }
-
-        function cancelPlacement() {
-            placingItem = null;
-            minerSelectionBar.classList.remove('active');
-            cancelSelectionBtn.style.display = 'none';
-            displayMonitorMessage('Colocação de GPU cancelada.');
-        }
-
-        async function handleSlotClick(slotId) {
-            if (placingItem) {
-                const slotElement = document.getElementById(slotId);
-                if (slotElement && !slotElement.classList.contains('occupied')) {
-                    // Tenta colocar a GPU no backend
-                    await placeGpu(placingItem.id, slotId);
-                    placingItem = null; // Limpa o item que estava sendo colocado
-                    minerSelectionBar.classList.remove('active'); // Esconde a barra de seleção
-                    cancelSelectionBtn.style.display = 'none'; // Esconde o botão de cancelar
-                } else {
-                    showOverlayMessage('Este slot já está ocupado ou é inválido.', 'error');
-                }
-            }
-        }
-
-        // --- Event Listeners Globais ---
 
         document.addEventListener('DOMContentLoaded', () => {
-            // Verifica se o usuário está logado ao carregar a página
-            if (!userToken) {
-                redirectToLogin();
-                return; // Impede a execução do restante do script se não estiver logado
+            generateParticles(50); // Gere 50 partículas no carregamento
+            setInterval(() => createParticle(), 1000); // Adiciona uma nova partícula a cada segundo para manter o efeito
+        });
+
+        function generateParticles(count) {
+            for (let i = 0; i < count; i++) {
+                createParticle();
+            }
+        }
+
+        // Adicione o listener para o botão de mineração base
+        document.addEventListener('DOMContentLoaded', () => {
+            const mineBaseButton = document.getElementById('mineBaseButton');
+            if (mineBaseButton) {
+                mineBaseButton.addEventListener('click', () => {
+                    // O valor 10 é um exemplo. Você pode tornar isso configurável.
+                    mineLulaCoins(10);
+                });
             }
 
-            // Carrega os dados do usuário do backend
-            loadUserData();
-
-            // Adiciona event listeners aos botões do jogo
-            if (minerButton) minerButton.addEventListener('click', mineLulaCoins);
-            if (upgradeMinerButton) upgradeMinerButton.addEventListener('click', upgradeMiner);
-            if (saqueButton) saqueButton.addEventListener('click', saqueLulaCoins);
-            if (logoutButton) logoutButton.addEventListener('click', logout);
-
             // Listeners da Loja
+            const openShopBtn = document.getElementById('openShopBtn');
+            const closeShopBtn = document.getElementById('closeShopBtn');
+            const shopModal = document.getElementById('shopModal');
+            const shopCategoryBtns = document.querySelectorAll('#shopModal .category-buttons button');
+
             if (openShopBtn) openShopBtn.addEventListener('click', () => {
                 shopModal.style.display = 'flex'; // Use flex para centralizar
-                renderShopItems('gpus'); // Renderiza a categoria inicial (ex: GPUs)
+                renderShopItems('gpus'); // Renderiza a categoria inicial
             });
             if (closeShopBtn) closeShopBtn.addEventListener('click', () => shopModal.style.display = 'none');
 
@@ -1093,6 +647,11 @@
             });
 
             // Listeners do Inventário
+            const openInventoryBtn = document.getElementById('openInventoryBtn');
+            const closeInventoryBtn = document.getElementById('closeInventoryBtn');
+            const inventoryModal = document.getElementById('inventoryModal');
+            const inventoryCategoryBtns = document.querySelectorAll('#inventoryModal .category-buttons button');
+
             if (openInventoryBtn) openInventoryBtn.addEventListener('click', () => {
                 inventoryModal.style.display = 'flex'; // Use flex para centralizar
                 renderInventoryItems('gpus'); // Renderiza a categoria inicial
@@ -1108,6 +667,7 @@
             });
 
             // Listener para o botão de cancelar seleção de GPU
+            const cancelSelectionBtn = document.getElementById('cancelSelectionBtn');
             if (cancelSelectionBtn) cancelSelectionBtn.addEventListener('click', cancelPlacement);
 
             // Fechar modais ao clicar fora
