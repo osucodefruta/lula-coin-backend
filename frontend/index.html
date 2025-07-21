@@ -640,10 +640,10 @@
             </form>
 
             <p id="authMessageDisplay"></p>
-            <p>
+            <p id="showRegisterParagraph">
                 Ainda não tem conta? <a href="#" id="showRegisterLink">Registre-se aqui</a>
             </p>
-            <p style="display: none;">
+            <p id="showLoginParagraph" style="display: none;">
                 Já tem conta? <a href="#" id="showLoginLink">Faça login aqui</a>
             </p>
         </div>
@@ -723,24 +723,23 @@
     <script>
         // --- PARTE DO UTILS.JS ---
         function showOverlayMessage(message, type = 'info') {
-            const overlay = document.getElementById('overlayMessage'); // ID 'overlay-message' no CSS, 'overlayMessage' no HTML
+            const overlay = document.getElementById('overlayMessage');
             const text = document.getElementById('overlay-message-text');
             if (!overlay || !text) {
-                console.error("Elementos 'overlay-message' ou 'overlay-message-text' não encontrados no DOM.");
+                console.error("Elementos 'overlayMessage' ou 'overlay-message-text' não encontrados no DOM para exibir mensagem.");
                 return;
             }
 
+            // Remove classes de tipo anteriores e adiciona a nova
+            overlay.classList.remove('success', 'error', 'info');
+            overlay.classList.add(type);
+
             text.textContent = message;
-            overlay.className = 'overlay-message ' + type;
             overlay.classList.add('show'); // Adiciona a classe 'show' para exibir com transição
 
             setTimeout(() => {
                 overlay.classList.remove('show'); // Remove a classe 'show' para esconder com transição
-                // Opcional: Limpar a classe de tipo após a transição, se necessário
-                setTimeout(() => {
-                    overlay.className = 'overlay-message'; // Volta à classe base
-                }, 500); // tempo da transição em CSS
-            }, 3000);
+            }, 3000); // Esconde após 3 segundos
         }
 
         // --- PARTE DA AUTENTICAÇÃO (FRONTEND) ---
@@ -758,7 +757,10 @@
         const loginPasswordInput = document.getElementById('loginPassword');
         const registerUsernameInput = document.getElementById('registerUsername');
         const registerPasswordInput = document.getElementById('registerPassword');
-        const authMessageDisplay = document.getElementById('authMessageDisplay'); // Ainda presente para fallback ou msg rápida
+        const authMessageDisplay = document.getElementById('authMessageDisplay');
+        const showRegisterParagraph = document.getElementById('showRegisterParagraph'); // Adicionado ID
+        const showLoginParagraph = document.getElementById('showLoginParagraph');     // Adicionado ID
+
 
         async function loginUser(username, password) {
             try {
@@ -776,7 +778,6 @@
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('username', data.username); // Salva o username
                     showOverlayMessage('Login bem-sucedido!', 'success');
-                    // Redireciona para a tela do jogo ou mostra a seção do jogo
                     renderGameUI(); // Chama a função para mostrar a UI do jogo
                 } else {
                     showOverlayMessage(data.message || 'Erro no login.', 'error');
@@ -802,10 +803,12 @@
                 if (response.ok) {
                     showOverlayMessage(data.message || 'Registro bem-sucedido! Faça login agora.', 'success');
                     // Após o registro, mostra o formulário de login
-                    loginForm.style.display = 'block';
-                    registerForm.style.display = 'none';
-                    loginUsernameInput.value = username; // Preenche o username para facilitar
-                    registerPasswordInput.value = '';
+                    if (loginForm) loginForm.style.display = 'block';
+                    if (registerForm) registerForm.style.display = 'none';
+                    if (loginUsernameInput) loginUsernameInput.value = username; // Preenche o username para facilitar
+                    if (registerPasswordInput) registerPasswordInput.value = '';
+                    if (showLoginParagraph) showLoginParagraph.style.display = 'none'; // Esconde link para login
+                    if (showRegisterParagraph) showRegisterParagraph.style.display = 'block'; // Mostra link para registro
                 } else {
                     showOverlayMessage(data.message || 'Erro no registro.', 'error');
                 }
@@ -819,14 +822,12 @@
             localStorage.removeItem('token');
             localStorage.removeItem('username');
             showOverlayMessage('Sessão encerrada.', 'info');
-            // Redireciona para a tela de login ou mostra a seção de autenticação
             renderAuthUI(); // Chama a função para mostrar a UI de autenticação
         }
 
         function checkAuth() {
             const token = localStorage.getItem('token');
             if (token) {
-                // Se houver um token, tenta carregar o estado do jogo
                 renderGameUI();
                 return true;
             } else {
@@ -836,16 +837,18 @@
         }
 
         function renderGameUI() {
-            authSection.style.display = 'none';
-            gameSection.style.display = 'flex'; // Use flex para manter o layout do jogo
-            // Inicializa o estado do jogo e event listeners para a UI do jogo
-            initializeGameListeners();
-            fetchGameState(); // Carrega os dados do jogo ao entrar
+            if (authSection) authSection.style.display = 'none';
+            if (gameSection) {
+                gameSection.style.display = 'flex'; // Use flex para manter o layout do jogo
+                // Inicializa o estado do jogo e event listeners para a UI do jogo
+                initializeGameListeners(); // Garante que listeners são configurados ao mostrar a tela do jogo
+                fetchGameState(); // Carrega os dados do jogo ao entrar
+            }
         }
 
         function renderAuthUI() {
-            authSection.style.display = 'flex';
-            gameSection.style.display = 'none';
+            if (authSection) authSection.style.display = 'flex';
+            if (gameSection) gameSection.style.display = 'none';
         }
 
         // --- PARTE DO GAME.JS ---
@@ -857,6 +860,7 @@
         let placedGpus = {}; // { "rack-1-slot-0": { id: "gpu1", name: "GPU Básica", hashrate: 10, img: "path/to/img.png" } }
         let inventory = {
             gpus: [],
+            racks: [], // Adicionado para rastrear racks no inventário
             upgrades: []
         };
         let isPlacingGpu = false;
@@ -906,12 +910,12 @@
 
         // Função para atualizar a UI com os dados do jogo
         function updateGameUI() {
-            currentUsernameDisplay.textContent = localStorage.getItem('username') || 'Visitante';
-            lulaCoinsDisplay.textContent = lulaCoins.toFixed(2);
-            lulaCoinsDisplayMiningArea.textContent = lulaCoins.toFixed(2);
-            hashrateDisplay.textContent = totalHashrate.toFixed(2);
-            hashrateDisplayMiningArea.textContent = totalHashrate.toFixed(2);
-            levelDisplay.textContent = level;
+            if (currentUsernameDisplay) currentUsernameDisplay.textContent = localStorage.getItem('username') || 'Visitante';
+            if (lulaCoinsDisplay) lulaCoinsDisplay.textContent = lulaCoins.toFixed(2);
+            if (lulaCoinsDisplayMiningArea) lulaCoinsDisplayMiningArea.textContent = lulaCoins.toFixed(2);
+            if (hashrateDisplay) hashrateDisplay.textContent = totalHashrate.toFixed(2);
+            if (hashrateDisplayMiningArea) hashrateDisplayMiningArea.textContent = totalHashrate.toFixed(2);
+            if (levelDisplay) levelDisplay.textContent = level;
             renderRacks();
             renderInventoryItems(document.querySelector('#inventoryModal .category-buttons .active')?.dataset.category || 'gpus');
         }
@@ -940,7 +944,7 @@
                     lulaCoins = data.lulaCoins || 0;
                     totalHashrate = data.totalHashrate || 0;
                     level = data.level || 1;
-                    inventory = data.inventory || { gpus: [], upgrades: [] };
+                    inventory = data.inventory || { gpus: [], racks: [], upgrades: [] }; // Garante que racks é um array
                     placedGpus = data.placedGpus || {};
                     updateGameUI();
                 } else if (response.status === 401) {
@@ -956,7 +960,7 @@
         }
 
         // Função de mineração (por clique)
-        async function mineLulaCoins() {
+        async function mineLulaCoins(event) { // Passa o objeto event
             const token = localStorage.getItem('token');
             if (!token) {
                 showOverlayMessage('Você precisa estar logado para minerar!', 'error');
@@ -965,13 +969,15 @@
             }
 
             // Efeito visual de clique
-            const clickEffect = document.createElement('div');
-            clickEffect.classList.add('click-effect');
-            clickEffect.textContent = `+${(minerValue + (totalHashrate / 10)).toFixed(2)}`; // Exibe clique + hashrate passivo
-            clickEffect.style.left = `${event.clientX - mineArea.getBoundingClientRect().left}px`;
-            clickEffect.style.top = `${event.clientY - mineArea.getBoundingClientRect().top}px`;
-            mineArea.appendChild(clickEffect);
-            clickEffect.addEventListener('animationend', () => clickEffect.remove());
+            if (mineArea && event) { // Verifica se mineArea e event existem
+                const clickEffect = document.createElement('div');
+                clickEffect.classList.add('click-effect');
+                clickEffect.textContent = `+${(minerValue + (totalHashrate / 10)).toFixed(2)}`; // Exibe clique + hashrate passivo
+                clickEffect.style.left = `${event.clientX - mineArea.getBoundingClientRect().left}px`;
+                clickEffect.style.top = `${event.clientY - mineArea.getBoundingClientRect().top}px`;
+                mineArea.appendChild(clickEffect);
+                clickEffect.addEventListener('animationend', () => clickEffect.remove());
+            }
 
             try {
                 const response = await fetch(`${API_BASE_URL_GAME}/mine`, {
@@ -1002,8 +1008,17 @@
 
         // --- Funções da Loja ---
         function renderShopItems(category) {
+            if (!shopItemsGrid) {
+                console.error("Elemento 'shopItemsGrid' não encontrado.");
+                return;
+            }
             shopItemsGrid.innerHTML = '';
             const items = shopItems[category] || [];
+
+            if (items.length === 0) {
+                shopItemsGrid.innerHTML = '<p style="text-align: center; color: var(--light-gray);">Nenhum item nesta categoria.</p>';
+                return;
+            }
 
             items.forEach(item => {
                 const card = document.createElement('div');
@@ -1077,6 +1092,10 @@
 
         // --- Funções do Inventário ---
         function renderInventoryItems(category) {
+            if (!inventoryItemsGrid) {
+                console.error("Elemento 'inventoryItemsGrid' não encontrado.");
+                return;
+            }
             inventoryItemsGrid.innerHTML = '';
             let itemsToRender = [];
 
@@ -1093,6 +1112,21 @@
                         itemsToRender.push({
                             ...gpu,
                             quantity: gpuCounts[gpuId]
+                        });
+                    }
+                }
+            } else if (category === 'racks') { // Adicionado para renderizar racks no inventário
+                const rackCounts = {};
+                inventory.racks.forEach(rack => {
+                    rackCounts[rack.id] = (rackCounts[rack.id] || 0) + 1;
+                });
+
+                for (const rackId in rackCounts) {
+                    const rack = shopItems.racks.find(r => r.id === rackId);
+                    if (rack) {
+                        itemsToRender.push({
+                            ...rack,
+                            quantity: rackCounts[rackId]
                         });
                     }
                 }
@@ -1141,9 +1175,9 @@
             if (itemInShop) {
                 selectedGpuToPlace = itemInShop; // Armazena a GPU completa
                 isPlacingGpu = true;
-                shopModal.style.display = 'none'; // Fecha a loja
-                inventoryModal.style.display = 'none'; // Fecha o inventário
-                cancelSelectionBtn.style.display = 'block'; // Mostra botão de cancelar
+                if (shopModal) shopModal.style.display = 'none'; // Fecha a loja
+                if (inventoryModal) inventoryModal.style.display = 'none'; // Fecha o inventário
+                if (cancelSelectionBtn) cancelSelectionBtn.style.display = 'block'; // Mostra botão de cancelar
                 showOverlayMessage(`Selecione um slot vazio para colocar a ${selectedGpuToPlace.name}.`, 'info');
                 addEventListenersToRackSlots(); // Re-adiciona listeners para clique nos slots
             } else {
@@ -1196,7 +1230,7 @@
         function cancelPlacement() {
             isPlacingGpu = false;
             selectedGpuToPlace = null;
-            cancelSelectionBtn.style.display = 'none';
+            if (cancelSelectionBtn) cancelSelectionBtn.style.display = 'none';
             showOverlayMessage('Colocação de GPU cancelada.', 'info');
             // Remove qualquer classe de "seleção" dos slots se houver
         }
@@ -1204,75 +1238,66 @@
 
         // --- Funções dos Racks ---
         function renderRacks() {
+            if (!rackContainer) {
+                console.error("Elemento 'rackContainer' não encontrado.");
+                return;
+            }
             rackContainer.innerHTML = '';
-            // Cria racks baseados na quantidade no inventário ou um padrão inicial
-            // Por simplicidade, vamos criar um rack padrão se não houver nenhum no placedGpus
-            // Em um sistema real, você teria um array de racks do backend
-            if (Object.keys(placedGpus).length === 0 && inventory.racks.length === 0) {
-                 // Criar 1 rack padrão se não houver nenhum
-                const defaultRack = document.createElement('div');
-                defaultRack.classList.add('rack');
-                defaultRack.setAttribute('data-rack-id', 'rack-1'); // ID padrão
-                // Adiciona slots ao rack
-                for (let i = 0; i < 4; i++) { // Por exemplo, 4 slots por rack
+
+            const racksToRender = [];
+            // Adiciona racks do inventário (se houver)
+            inventory.racks.forEach(rack => {
+                const existingRackDetails = shopItems.racks.find(r => r.id === rack.id);
+                if (existingRackDetails) {
+                    // Adiciona o rack completo com sua quantidade (se relevante)
+                    racksToRender.push({ ...existingRackDetails, instanceId: rack.instanceId }); // Usar instanceId para racks comprados
+                }
+            });
+
+            // Se não houver racks comprados, mas há GPUs colocadas, cria racks virtuais para elas
+            if (racksToRender.length === 0 && Object.keys(placedGpus).length > 0) {
+                const uniqueRackIdsInPlacedGpus = new Set();
+                Object.keys(placedGpus).forEach(slotId => uniqueRackIdsInPlacedGpus.add(slotId.split('-').slice(0, 2).join('-')));
+                uniqueRackIdsInPlacedGpus.forEach(rackId => {
+                    const defaultRackDetails = shopItems.racks.find(r => r.id === rackId) || { id: rackId, name: "Rack Padrão", slots: 4 };
+                    racksToRender.push({ ...defaultRackDetails, instanceId: rackId }); // Usa o ID como instanceId para racks virtuais
+                });
+            } else if (racksToRender.length === 0) {
+                // Se não há racks comprados e nem GPUs colocadas, renderiza 1 rack padrão vazio
+                racksToRender.push({ id: 'rack_padrao_inicial', name: 'Rack Padrão', slots: 4, instanceId: 'rack_padrao_inicial' });
+            }
+
+
+            racksToRender.forEach(rackDetails => {
+                const rackDiv = document.createElement('div');
+                rackDiv.classList.add('rack');
+                rackDiv.setAttribute('data-rack-id', rackDetails.instanceId || rackDetails.id); // Usar instanceId se disponível
+
+                for (let i = 0; i < rackDetails.slots; i++) {
                     const slot = document.createElement('div');
                     slot.classList.add('rack-slot');
-                    slot.setAttribute('data-slot-id', `rack-1-slot-${i}`);
+                    const slotId = `${rackDetails.instanceId || rackDetails.id}-slot-${i}`;
+                    slot.setAttribute('data-slot-id', slotId);
                     slot.textContent = 'Slot Vazio';
 
-                    if (placedGpus[`rack-1-slot-${i}`]) {
-                        const gpu = placedGpus[`rack-1-slot-${i}`];
+                    if (placedGpus[slotId]) {
+                        const gpu = placedGpus[slotId];
                         slot.classList.add('occupied');
                         slot.innerHTML = `<img src="${gpu.img}" alt="${gpu.name}" class="gpu-icon"><span class="mining-power-text">${gpu.hashrate} H/s</span>`;
                     }
-                    defaultRack.appendChild(slot);
+                    rackDiv.appendChild(slot);
                 }
-                rackContainer.appendChild(defaultRack);
-            } else {
-                // Renderizar racks do inventário ou do estado do jogo
-                const allRackIds = new Set();
-                inventory.racks.forEach(rack => allRackIds.add(rack.id));
-                Object.keys(placedGpus).forEach(slotId => allRackIds.add(slotId.split('-').slice(0,2).join('-'))); // Extrai rack-id de slot-id
+                rackContainer.appendChild(rackDiv);
+            });
 
-                allRackIds.forEach(rackId => {
-                    const existingRack = document.querySelector(`.rack[data-rack-id="${rackId}"]`);
-                    let rackDiv;
-
-                    if (existingRack) {
-                        rackDiv = existingRack;
-                        rackDiv.innerHTML = ''; // Limpa para redesenhar slots
-                    } else {
-                        rackDiv = document.createElement('div');
-                        rackDiv.classList.add('rack');
-                        rackDiv.setAttribute('data-rack-id', rackId);
-                        rackContainer.appendChild(rackDiv);
-                    }
-
-                    const rackDetails = shopItems.racks.find(r => r.id === rackId) || { slots: 4 }; // Default 4 slots if not found
-
-                    for (let i = 0; i < rackDetails.slots; i++) {
-                        const slot = document.createElement('div');
-                        slot.classList.add('rack-slot');
-                        slot.setAttribute('data-slot-id', `${rackId}-slot-${i}`);
-                        slot.textContent = 'Slot Vazio';
-
-                        if (placedGpus[`${rackId}-slot-${i}`]) {
-                            const gpu = placedGpus[`${rackId}-slot-${i}`];
-                            slot.classList.add('occupied');
-                            slot.innerHTML = `<img src="${gpu.img}" alt="${gpu.name}" class="gpu-icon"><span class="mining-power-text">${gpu.hashrate} H/s</span>`;
-                        }
-                        rackDiv.appendChild(slot);
-                    }
-                });
-            }
-
-            addEventListenersToRackSlots(); // Garante que os listeners estejam sempre ativos
+            addEventListenersToRackSlots(); // Garante que os listeners estejam sempre ativos após renderização
         }
 
 
         function addEventListenersToRackSlots() {
             document.querySelectorAll('.rack-slot').forEach(slot => {
-                slot.onclick = null; // Remove listeners antigos para evitar duplicação
+                // É crucial remover listeners antigos para evitar chamadas duplicadas
+                slot.removeEventListener('click', handleRackSlotClick); // Remove antes de adicionar
                 slot.addEventListener('click', handleRackSlotClick);
             });
         }
@@ -1337,6 +1362,7 @@
 
         // --- Inicialização e Event Listeners Gerais ---
         function initializeAuthListeners() {
+            console.log("Inicializando Listeners de Autenticação...");
             if (loginForm) {
                 loginForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
@@ -1344,7 +1370,7 @@
                     const password = loginPasswordInput.value;
                     await loginUser(username, password);
                 });
-            }
+            } else { console.log("loginForm não encontrado."); }
 
             if (registerForm) {
                 registerForm.addEventListener('submit', async (e) => {
@@ -1353,49 +1379,56 @@
                     const password = registerPasswordInput.value;
                     await registerUser(username, password);
                 });
-            }
+            } else { console.log("registerForm não encontrado."); }
 
             if (showRegisterLink) {
                 showRegisterLink.addEventListener('click', (e) => {
                     e.preventDefault();
-                    loginForm.style.display = 'none';
-                    registerForm.style.display = 'block';
-                    document.getElementById('showLoginLink').parentNode.style.display = 'block'; // Mostra link para login
-                    document.getElementById('showRegisterLink').parentNode.style.display = 'none'; // Esconde link para registro
-                    authMessageDisplay.innerText = '';
-                    loginUsernameInput.value = '';
-                    loginPasswordInput.value = '';
+                    if (loginForm) loginForm.style.display = 'none';
+                    if (registerForm) registerForm.style.display = 'block';
+                    if (showLoginParagraph) showLoginParagraph.style.display = 'block'; // Mostra link para login
+                    if (showRegisterParagraph) showRegisterParagraph.style.display = 'none'; // Esconde link para registro
+                    if (authMessageDisplay) authMessageDisplay.innerText = '';
+                    if (loginUsernameInput) loginUsernameInput.value = '';
+                    if (loginPasswordInput) loginPasswordInput.value = '';
                 });
-            }
+            } else { console.log("showRegisterLink não encontrado."); }
 
             if (showLoginLink) {
                 showLoginLink.addEventListener('click', (e) => {
                     e.preventDefault();
-                    loginForm.style.display = 'block';
-                    registerForm.style.display = 'none';
-                    document.getElementById('showLoginLink').parentNode.style.display = 'none'; // Esconde link para login
-                    document.getElementById('showRegisterLink').parentNode.style.display = 'block'; // Mostra link para registro
-                    authMessageDisplay.innerText = '';
-                    registerUsernameInput.value = '';
-                    registerPasswordInput.value = '';
+                    if (loginForm) loginForm.style.display = 'block';
+                    if (registerForm) registerForm.style.display = 'none';
+                    if (showLoginParagraph) showLoginParagraph.style.display = 'none'; // Esconde link para login
+                    if (showRegisterParagraph) showRegisterParagraph.style.display = 'block'; // Mostra link para registro
+                    if (authMessageDisplay) authMessageDisplay.innerText = '';
+                    if (registerUsernameInput) registerUsernameInput.value = '';
+                    if (registerPasswordInput) registerPasswordInput.value = '';
                 });
-            }
+            } else { console.log("showLoginLink não encontrado."); }
         }
 
         function initializeGameListeners() {
+            console.log("Inicializando Listeners do Jogo...");
             // Garante que o username sempre seja exibido
-            currentUsernameDisplay.textContent = localStorage.getItem('username') || 'Visitante';
+            if (currentUsernameDisplay) currentUsernameDisplay.textContent = localStorage.getItem('username') || 'Visitante';
 
             if (mineButton) mineButton.addEventListener('click', mineLulaCoins);
+            else console.log("mineButton não encontrado.");
             if (mineArea) mineArea.addEventListener('click', mineLulaCoins);
+            else console.log("mineArea não encontrado.");
 
             if (logoutButtonGame) logoutButtonGame.addEventListener('click', logoutUser); // Botão de logout do jogo
+            else console.log("logoutButtonGame não encontrado.");
 
             if (openShopBtn) openShopBtn.addEventListener('click', () => {
-                shopModal.style.display = 'flex';
+                if (shopModal) shopModal.style.display = 'flex';
                 renderShopItems(document.querySelector('#shopModal .category-buttons .active')?.dataset.category || 'gpus');
             });
-            if (closeShopBtn) closeShopBtn.addEventListener('click', () => shopModal.style.display = 'none');
+            else console.log("openShopBtn não encontrado.");
+
+            if (closeShopBtn) closeShopBtn.addEventListener('click', () => { if (shopModal) shopModal.style.display = 'none'; });
+            else console.log("closeShopBtn não encontrado.");
 
             shopCategoryButtons.forEach(btn => {
                 btn.addEventListener('click', () => {
@@ -1406,10 +1439,13 @@
             });
 
             if (openInventoryBtn) openInventoryBtn.addEventListener('click', () => {
-                inventoryModal.style.display = 'flex';
+                if (inventoryModal) inventoryModal.style.display = 'flex';
                 renderInventoryItems(document.querySelector('#inventoryModal .category-buttons .active')?.dataset.category || 'gpus');
             });
-            if (closeInventoryBtn) closeInventoryBtn.addEventListener('click', () => inventoryModal.style.display = 'none');
+            else console.log("openInventoryBtn não encontrado.");
+
+            if (closeInventoryBtn) closeInventoryBtn.addEventListener('click', () => { if (inventoryModal) inventoryModal.style.display = 'none'; });
+            else console.log("closeInventoryBtn não encontrado.");
 
             inventoryCategoryButtons.forEach(btn => {
                 btn.addEventListener('click', () => {
@@ -1420,13 +1456,14 @@
             });
 
             if (cancelSelectionBtn) cancelSelectionBtn.addEventListener('click', cancelPlacement);
+            else console.log("cancelSelectionBtn não encontrado.");
 
             // Fechar modais ao clicar fora
             window.onclick = function(event) {
-                if (event.target == shopModal) {
+                if (shopModal && event.target == shopModal) {
                     shopModal.style.display = "none";
                 }
-                if (event.target == inventoryModal) {
+                if (inventoryModal && event.target == inventoryModal) {
                     inventoryModal.style.display = "none";
                 }
             };
@@ -1435,15 +1472,25 @@
 
         // --- Animação de fundo (partículas) ---
         const particleContainerAuth = document.querySelector('#authSection .particle-container');
-        const particleContainerGame = document.querySelector('.hangar-section'); // Para partículas no hangar também
+        // Para partículas no hangar também, se você tiver um container específico lá
+        // Se a section .hangar-section é o container, então o que está é correto,
+        // mas certifique-se que não está colidindo com elementos clicáveis por cima.
+        // Se você quiser um container de partículas separado dentro de hangar-section,
+        // adicione um <div class="particle-container-game"> dentro de .hangar-section
+        // e mude a linha abaixo para:
+        // const particleContainerGame = document.querySelector('.hangar-section .particle-container-game');
+        const particleContainerGame = document.querySelector('.hangar-section');
 
         function createParticle(container) {
+            if (!container) return; // Adicionado para evitar erro se container for null
+
             const particle = document.createElement('div');
             particle.classList.add('particle');
             const size = Math.random() * 5 + 2;
             particle.style.width = `${size}px`;
             particle.style.height = `${size}px`;
 
+            // Garante que o cálculo de posição é feito corretamente em relação ao container
             const rect = container.getBoundingClientRect();
             const startX = Math.random() * rect.width;
             const startY = Math.random() * rect.height;
@@ -1466,21 +1513,25 @@
         }
 
         function generateParticles(container, count) {
-            if (!container) return; // Garante que o container existe
+            if (!container) {
+                console.log(`Container de partículas não encontrado para gerar ${count} partículas.`);
+                return;
+            }
             for (let i = 0; i < count; i++) {
                 createParticle(container);
             }
         }
 
-        // Loop de mineração passiva (a cada 5 segundos)
+        // Loop de mineração passiva (a cada 5 segundos) - Ajustado para segurança
         setInterval(async () => {
-            if (localStorage.getItem('token')) { // Só busca estado se estiver logado
+            if (localStorage.getItem('token') && gameSection && gameSection.style.display === 'flex') { // Só busca estado se estiver logado E a tela do jogo estiver visível
                 await fetchGameState();
             }
         }, 5000);
 
         // Inicialização Principal
         document.addEventListener('DOMContentLoaded', () => {
+            console.log("Conteúdo do DOM Carregado. Iniciando a inicialização...");
             initializeAuthListeners();
             checkAuth(); // Verifica o token ao carregar a página e mostra a UI correta
 
@@ -1488,13 +1539,12 @@
             if (particleContainerAuth) {
                 generateParticles(particleContainerAuth, 50); // Mais partículas na tela de login
                 setInterval(() => createParticle(particleContainerAuth), 1000);
-            }
-            // As partículas do hangar serão geradas quando a seção do jogo for exibida e initializeGameListeners for chamado
-            // ou podemos ter um gerador constante se o container estiver sempre no DOM
-            if (particleContainerGame) { // Assume que o hangar está no DOM, mesmo que escondido
+            } else { console.log("particleContainerAuth (seção de autenticação) não encontrado."); }
+
+            if (particleContainerGame) {
                  generateParticles(particleContainerGame, 30); // Menos partículas no jogo
                  setInterval(() => createParticle(particleContainerGame), 2000);
-            }
+            } else { console.log("particleContainerGame (hangar) não encontrado."); }
         });
 
     </script>
