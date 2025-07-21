@@ -9,7 +9,7 @@
     <style>
         /* Variáveis CSS para fácil tematização */
         :root {
-            --primary-color: #ff3b3b; /* Ciano Neon */
+            --primary-color: #ff3b3b; /* Vermelho Neon */
             --secondary-color: #2e008a; /* Azul Escuro */
             --tertiary-color: #0a0e2a; /* Azul Quase Preto */
             --text-color: #e0e0e0;
@@ -21,406 +21,282 @@
             --glow-color: rgba(255, 59, 59, 0.6);
 
             /* Cores para o ambiente do galpão */
-            --wall-color-dark: #3a4750; /* Cinza Metálico Escuro */
-            --wall-color-light: #52636d; /* Cinza Metálico Claro */
-            --floor-color-dark: #2a343a; /* Cinza de Concreto Escuro */
-            --floor-color-light: #444f56; /* Cinza de Concreto Claro */
-            --shelf-color: #607d8b; /* Azul Acinzentado */
-            --monitor-screen: #0f1c2c; /* Tela escura azulada */
-        }
-
-        /* Reset Básico para consistência entre navegadores */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Share Tech Mono', monospace; /* Fonte para o corpo do texto */
+            --wall-color-dark: #3a4750;
+            --wall-color-light: #4a5c68;
+            --floor-color: #2c3e50;
+            --rack-color: #222;
+            --rack-glow-color: rgba(255, 59, 59, 0.5);
         }
 
         body {
-            background-color: #0a0a0a;
+            font-family: 'Share Tech Mono', monospace;
+            background-color: var(--dark-gray);
             color: var(--text-color);
-            overflow: hidden; /* Evita barras de rolagem indesejadas no corpo */
+            margin: 0;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-        }
-
-        #auth-section {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            max-width: 400px;
-            padding: 40px;
-            background-color: var(--medium-gray);
-            border-radius: 10px;
-            box-shadow: 0 0 20px var(--glow-color);
+            overflow: hidden; /* Para as partículas */
             position: relative;
-            z-index: 10;
         }
 
-        #auth-section h1 {
-            color: var(--primary-color);
-            text-shadow: 0 0 10px var(--glow-color);
-            margin-bottom: 30px;
-            font-family: 'Orbitron', sans-serif;
-            font-weight: 700;
-        }
-
-        .auth-form {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .auth-form label {
-            margin-bottom: 8px;
-            color: var(--text-color);
-        }
-
-        .auth-form input {
-            width: calc(100% - 20px);
-            padding: 10px;
-            margin-bottom: 20px;
-            border: 1px solid var(--border-color);
-            border-radius: 5px;
-            background-color: var(--dark-gray);
-            color: var(--text-color);
-            font-family: 'Share Tech Mono', monospace;
-            outline: none;
-        }
-
-        .auth-form button {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-family: 'Orbitron', sans-serif;
-            font-weight: 700;
-            font-size: 1.1em;
-            transition: background-color 0.3s ease, box-shadow 0.3s ease;
-            box-shadow: 0 0 8px rgba(255, 59, 59, 0.4);
-            margin-top: 10px;
-        }
-
-        .auth-form button:hover {
-            background-color: #ff5c5c;
-            box-shadow: 0 0 15px rgba(255, 59, 59, 0.8);
-        }
-
-        .toggle-link {
-            margin-top: 20px;
-            color: var(--text-color);
-            text-align: center;
-        }
-
-        .toggle-link a {
-            color: var(--primary-color);
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-
-        .toggle-link a:hover {
-            color: #ff5c5c;
-            text-decoration: underline;
-        }
-
-        #auth-message {
-            color: var(--red-alert);
-            margin-top: 15px;
-            font-weight: bold;
-            text-align: center;
-        }
-
-        #app {
-            display: none; /* Initially hidden */
-            flex-direction: column;
-            width: 100vw;
-            height: 100vh;
-            max-width: 1920px;
-            max-height: 1080px;
+        /* Estilos do Hangar / Sala de Mineração */
+        .mining-room {
+            position: relative;
+            width: 90vw;
+            height: 80vh;
+            background: linear-gradient(to bottom, var(--wall-color-dark), var(--wall-color-light), var(--floor-color));
             border: 2px solid var(--border-color);
             box-shadow: 0 0 20px var(--glow-color);
-            background-color: var(--dark-gray);
-            position: relative;
-            overflow: hidden;
-        }
-
-        /* Animações reutilizáveis */
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-5px); }
-            100% { transform: translateY(0px); }
-        }
-
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0; }
-        }
-
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 5px var(--primary-color), 0 0 10px var(--primary-color); }
-            50% { box-shadow: 0 0 10px var(--primary-color), 0 0 20px var(--primary-color); }
-        }
-
-        @keyframes scanline {
-            0% { background-position: 0 0; }
-            100% { background-position: 0 100%; }
-        }
-
-        @keyframes glow-text {
-            0%, 100% { text-shadow: 0 0 5px var(--primary-color), 0 0 15px var(--primary-color); }
-            50% { text-shadow: 0 0 10px var(--primary-color), 0 0 30px var(--primary-color); }
-        }
-
-        .room-btn {
-            padding: 5px 10px;
-            background-color: var(--primary-color);
-            border: none;
-            border-radius: 5px;
-            color: var(--dark-gray);
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 0 8px var(--primary-color);
-            transition: all 0.2s ease;
-        }
-
-        .room-btn.active {
-            background-color: #fff;
-            color: var(--primary-color);
-            box-shadow: 0 0 15px #fff;
-        }
-
-        .room-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 12px var(--primary-color);
-        }
-
-        /* Header do jogo */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 30px;
-            background-color: var(--secondary-color);
-            border-bottom: 2px solid var(--primary-color);
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-            z-index: 100;
-            position: relative;
-        }
-
-        .user-info, .game-stats {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .stat-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 1.1em;
-            font-family: 'Orbitron', sans-serif;
-            color: var(--text-color);
-        }
-
-        .stat-item i {
-            color: var(--primary-color);
-            font-size: 1.3em;
-        }
-
-        .buttons-container {
-            display: flex;
-            gap: 15px;
-        }
-
-        .action-button {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-family: 'Orbitron', sans-serif;
-            font-weight: 700;
-            font-size: 0.9em;
-            transition: background-color 0.3s ease, box-shadow 0.3s ease;
-            box-shadow: 0 0 5px rgba(255, 59, 59, 0.4);
-        }
-
-        .action-button:hover {
-            background-color: #ff5c5c;
-            box-shadow: 0 0 10px rgba(255, 59, 59, 0.8);
-        }
-
-        .logout-button {
-            background-color: var(--dark-gray);
-            border: 1px solid var(--primary-color);
-        }
-
-        .logout-button:hover {
-            background-color: #ff4500;
-            box-shadow: 0 0 10px rgba(255, 69, 0, 0.8);
-        }
-
-        /* Container principal do jogo (o "galpão") */
-        .game-area {
-            flex-grow: 1;
-            display: flex;
-            position: relative;
-            background-image:
-                linear-gradient(to right, var(--wall-color-dark) 1px, transparent 1px),
-                linear-gradient(to bottom, var(--wall-color-dark) 1px, transparent 1px);
-            background-size: 20px 20px;
-            background-color: var(--wall-color-light);
-            perspective: 1000px; /* Para efeitos 3D futuros */
-            overflow: hidden; /* Garante que o conteúdo dentro não transborde */
-        }
-
-        /* Estilos para as "salas" ou áreas do galpão */
-        .room {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background-color: var(--tertiary-color);
-            display: none; /* Inicia escondido */
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.5s ease-in-out;
-        }
-
-        .room.active {
-            display: flex;
-            opacity: 1;
-        }
-
-        /* Sala principal: Mining Hangar */
-        #mining-hangar {
-            background-color: var(--tertiary-color);
-            padding: 20px;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr); /* 3 racks */
-            grid-template-rows: repeat(2, 1fr); /* 2 linhas para altura */
-            gap: 30px;
-            place-items: center; /* Centraliza itens nas células do grid */
-        }
-
-        .rack {
-            background-color: var(--rack-color); /* Definido no JS */
-            border: 2px solid #555;
             border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.6);
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            position: relative;
-            transform-style: preserve-3d;
-            animation: pulse-border 2s infinite alternate;
-            width: 90%; /* Ajuste para não ocupar 100% da célula */
-            height: 90%; /* Ajuste para não ocupar 100% da célula */
-            justify-content: center; /* Centraliza slots verticalmente */
-            align-items: center; /* Centraliza slots horizontalmente */
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 20px;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow: hidden;
+            display: none; /* Escondido por padrão, mostrado após login */
+            z-index: 1; /* Acima das partículas */
         }
 
-        @keyframes pulse-border {
-            from { border-color: rgba(255, 59, 59, 0.3); }
-            to { border-color: rgba(255, 59, 59, 0.8); }
+        .rack-container {
+            border: 1px solid var(--rack-color);
+            background-color: var(--rack-color);
+            border-radius: 5px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-around;
+            position: relative;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3); /* Brilho ciano para os racks */
         }
 
         .rack-title {
             color: var(--primary-color);
             font-family: 'Orbitron', sans-serif;
-            text-align: center;
             margin-bottom: 10px;
-            font-size: 1.2em;
-            text-shadow: 0 0 5px var(--glow-color);
+            font-size: 0.9em;
+            text-align: center;
         }
 
-        .rack-slot {
-            background-color: var(--server-color); /* Definido no JS */
-            border: 1px dashed var(--border-color);
-            min-height: 80px;
-            width: 90%; /* Ocupa a maior parte do rack */
+        .slot {
+            width: 80px;
+            height: 80px;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
             display: flex;
             justify-content: center;
             align-items: center;
-            color: var(--light-gray);
-            font-size: 0.9em;
             cursor: pointer;
-            transition: background-color 0.2s ease, border-color 0.2s ease;
-            position: relative; /* Para o GPU */
-            overflow: hidden; /* Para a imagem do GPU */
+            position: relative;
+            background-color: rgba(0, 0, 0, 0.2);
         }
 
-        .rack-slot:hover {
-            background-color: #444;
-            border-color: var(--primary-color);
+        .slot.occupied {
+            border: 2px solid var(--primary-color);
         }
 
-        .rack-slot.occupied {
-            border: 1px solid var(--primary-color);
-            cursor: default;
-        }
-
-        .rack-slot .gpu-display {
+        .slot img {
             width: 100%;
             height: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.8em;
-            text-align: center;
-            padding: 5px; /* Para não encostar nas bordas */
-        }
-
-        .rack-slot .gpu-display img {
-            max-width: 90%;
-            max-height: 70%;
             object-fit: contain;
-            margin-bottom: 5px;
-            border-radius: 3px;
+            user-select: none; /* Previne seleção de imagem */
+            -webkit-user-drag: none; /* Previne arrastar imagem */
         }
 
-        .rack-slot .gpu-display span {
-            color: var(--text-color);
+        /* Estilos do console de monitoramento */
+        .monitor-console {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: rgba(0, 0, 0, 0.8);
+            border: 1px solid var(--primary-color);
+            box-shadow: 0 0 15px var(--glow-color);
+            padding: 15px;
+            border-radius: 5px;
+            width: 300px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 0.8em;
+            color: limegreen; /* Cor de terminal */
+            z-index: 10;
         }
 
-        /* Sala da Loja (Shop) */
-        #shop-room {
-            background-color: var(--dark-gray);
+        #monitor-text {
+            white-space: pre-wrap; /* Preserva quebras de linha */
+        }
+
+        /* Estilos do Terminal */
+        .terminal {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 500px;
+            background-color: rgba(0, 0, 0, 0.9);
+            border: 1px solid var(--primary-color);
+            box-shadow: 0 0 20px var(--glow-color);
+            border-radius: 8px;
+            padding: 15px;
+            z-index: 10; /* Acima de outros elementos */
+        }
+
+        .terminal-output {
+            height: 150px;
+            overflow-y: scroll;
+            background-color: #0a0a0a;
+            border: 1px solid #333;
+            padding: 10px;
+            margin-bottom: 10px;
+            font-size: 0.85em;
+            color: limegreen;
+            white-space: pre-wrap; /* Para quebra de linha */
+        }
+
+        .terminal-input-container {
             display: flex;
-            flex-direction: column;
             align-items: center;
-            padding: 20px;
-            gap: 20px;
         }
 
-        #shop-room h2 {
+        .terminal-input-container span {
+            color: var(--primary-color);
+            margin-right: 5px;
+            font-size: 0.9em;
+        }
+
+        .terminal-input {
+            flex-grow: 1;
+            background-color: #1a1a1a;
+            border: 1px solid var(--primary-color);
+            color: limegreen;
+            padding: 8px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.9em;
+            outline: none;
+        }
+
+
+        /* Estilos do HUD (canto superior direito) */
+        .hud {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.8);
+            border: 1px solid var(--primary-color);
+            box-shadow: 0 0 15px var(--glow-color);
+            padding: 15px;
+            border-radius: 5px;
+            z-index: 10;
+            text-align: right;
+        }
+
+        .hud div {
+            margin-bottom: 5px;
+        }
+
+        .hud span {
             color: var(--primary-color);
             font-family: 'Orbitron', sans-serif;
-            text-shadow: 0 0 10px var(--glow-color);
+            font-size: 1.1em;
+        }
+
+        .hud p {
+            margin: 0;
+            font-size: 0.9em;
+        }
+
+        /* Botões de Ação Global (canto inferior direito) */
+        .action-buttons {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .action-button, .modal-button {
+            background-color: var(--primary-color);
+            color: var(--tertiary-color);
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9em;
+            transition: background-color 0.3s, transform 0.2s;
+            box-shadow: 0 0 10px var(--glow-color);
+            text-transform: uppercase;
+        }
+
+        .action-button:hover, .modal-button:hover {
+            background-color: #ff6a6a;
+            transform: translateY(-2px);
+        }
+
+        .action-button:active, .modal-button:active {
+            transform: translateY(0);
+        }
+
+        /* Estilos de Modais */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 100; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0, 0, 0, 0.7); /* Black w/ opacity */
+            justify-content: center; /* Center horizontally */
+            align-items: center; /* Center vertically */
+        }
+
+        .modal-content {
+            background-color: var(--dark-gray);
+            border: 2px solid var(--primary-color);
+            box-shadow: 0 0 25px var(--glow-color);
+            padding: 30px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 600px;
+            position: relative;
+            text-align: center;
+        }
+
+        .close-button {
+            color: var(--primary-color);
+            font-size: 30px;
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: #ff6a6a;
+            text-decoration: none;
+        }
+
+        .modal-title {
+            color: var(--primary-color);
+            font-family: 'Orbitron', sans-serif;
             margin-bottom: 20px;
+            font-size: 1.8em;
+            text-transform: uppercase;
         }
 
         .category-buttons {
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
             justify-content: center;
+            margin-bottom: 20px;
+            gap: 10px;
         }
 
         .category-buttons button {
@@ -430,1269 +306,594 @@
             padding: 8px 15px;
             border-radius: 5px;
             cursor: pointer;
-            font-family: 'Share Tech Mono', monospace;
-            transition: background-color 0.2s ease, border-color 0.2s ease;
+            transition: background-color 0.3s;
         }
 
-        .category-buttons button:hover,
+        .category-buttons button:hover {
+            background-color: var(--light-gray);
+        }
+
         .category-buttons button.active {
             background-color: var(--primary-color);
-            border-color: var(--primary-color);
-            color: white;
-        }
-
-        .shop-items-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Mais espaço para os itens */
-            gap: 25px;
-            width: 100%;
-            max-width: 1200px; /* Limite a largura da loja */
-            max-height: calc(100vh - 250px); /* Ajusta altura para caber na tela */
-            overflow-y: auto;
-            padding-right: 15px; /* Espaço para a barra de scroll */
-        }
-
-        .shop-item {
-            background-color: var(--medium-gray);
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-            border: 1px solid var(--border-color);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            height: 100%;
-        }
-
-        .shop-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(255, 59, 59, 0.3);
-        }
-
-        .shop-item img {
-            max-width: 100px;
-            height: auto;
-            margin: 0 auto 10px auto;
-            border-radius: 5px;
-        }
-
-        .item-info h3 {
-            margin: 5px 0;
-            color: var(--text-color);
-            font-size: 1.1em;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .item-info p {
-            margin: 2px 0;
-            font-size: 0.9em;
-            color: var(--light-gray);
-        }
-
-        .item-info .cost, .item-info .hashrate {
-            color: var(--primary-color);
-            font-weight: bold;
-        }
-
-        .shop-item button {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-top: 10px;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 1em;
-            transition: background-color 0.2s ease;
-        }
-
-        .shop-item button:hover {
-            background-color: #ff5c5c;
-        }
-
-        /* Sala do Inventário (Inventory) */
-        #inventory-room {
-            background-color: var(--dark-gray);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-            gap: 20px;
-        }
-
-        #inventory-room h2 {
-            color: var(--primary-color);
-            font-family: 'Orbitron', sans-serif;
-            text-shadow: 0 0 10px var(--glow-color);
-            margin-bottom: 20px;
-        }
-
-        .inventory-items-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 25px;
-            width: 100%;
-            max-width: 1200px;
-            max-height: calc(100vh - 250px);
-            overflow-y: auto;
-            padding-right: 15px;
-        }
-
-        .inventory-item {
-            background-color: var(--medium-gray);
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-            border: 1px solid var(--border-color);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            height: 100%;
-        }
-
-        .inventory-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(255, 59, 59, 0.3);
-        }
-
-        .inventory-item img {
-            max-width: 100px;
-            height: auto;
-            margin: 0 auto 10px auto;
-            border-radius: 5px;
-        }
-
-        .inventory-item .action-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            margin-top: 10px;
-        }
-
-        .inventory-item .action-buttons button {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 8px 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.9em;
-            transition: background-color 0.2s ease;
-        }
-
-        .inventory-item .action-buttons button:hover {
-            background-color: #ff5c5c;
-        }
-
-        .inventory-item .action-buttons button.placed-button {
-            background-color: #555;
-            cursor: not-allowed;
-        }
-
-        /* Terminal de controle (console) */
-        .terminal {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 350px;
-            height: 250px;
-            background-color: rgba(0, 0, 0, 0.9);
-            border-top: 2px solid var(--primary-color);
-            border-right: 2px solid var(--primary-color);
-            border-top-right-radius: 10px;
-            font-family: 'Share Tech Mono', monospace;
-            color: #00ff00; /* Verde neon */
-            display: flex;
-            flex-direction: column;
-            box-shadow: 5px -5px 20px rgba(0, 255, 0, 0.3);
-            z-index: 99;
-            padding: 15px;
-        }
-
-        .terminal-output {
-            flex-grow: 1;
-            overflow-y: auto;
-            margin-bottom: 10px;
-            white-space: pre-wrap; /* Preserva espaços e quebras de linha */
-            word-wrap: break-word; /* Quebra palavras longas */
-        }
-
-        .terminal-output p {
-            margin: 0;
-            padding: 0;
-            line-height: 1.2;
-        }
-
-        .terminal-input-container {
-            display: flex;
-            align-items: center;
-        }
-
-        .terminal-input-container span {
-            color: #00ff00;
-            margin-right: 5px;
-        }
-
-        .terminal-input {
-            background: none;
-            border: none;
-            color: #00ff00;
-            flex-grow: 1;
-            outline: none;
-            font-family: 'Share Tech Mono', monospace;
-        }
-
-        /* Botão de Minerar (flutuante) */
-        #miner-button {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            background-color: var(--primary-color);
-            color: white;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.8em;
-            font-weight: 700;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            border: 5px solid rgba(255, 59, 59, 0.6);
-            box-shadow: 0 0 25px var(--glow-color);
-            transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
-            z-index: 50; /* Acima dos racks */
-        }
-
-        #miner-button:active {
-            transform: translateX(-50%) scale(0.95);
+            color: var(--tertiary-color);
             box-shadow: 0 0 10px var(--glow-color);
         }
 
-        /* Barra de seleção de mineradores (para colocar GPUs) */
-        #minerSelectionBar {
+        .item-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 10px; /* Para scrollbar */
+        }
+
+        .item-card {
+            background-color: #1a1a1a;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            width: 150px;
+            text-align: center;
+            box-shadow: 0 0 8px rgba(0, 255, 255, 0.2);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .item-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+        }
+
+        .item-card img {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+
+        .item-card h4 {
+            margin: 0 0 5px 0;
+            color: var(--primary-color);
+            font-size: 1.1em;
+        }
+
+        .item-card p {
+            margin: 0 0 8px 0;
+            font-size: 0.85em;
+            color: var(--text-color);
+        }
+
+        .item-card .cost {
+            color: yellow; /* Cor para o custo */
+            font-weight: bold;
+        }
+        .item-card .hashrate {
+            color: limegreen; /* Cor para hashrate */
+            font-weight: bold;
+        }
+
+        .item-card button {
+            background-color: var(--primary-color);
+            color: var(--tertiary-color);
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.8em;
+            transition: background-color 0.3s;
+            margin-top: auto; /* Empurra o botão para baixo */
+        }
+
+        .item-card button:hover {
+            background-color: #ff6a6a;
+        }
+
+        /* Mensagens de Overlay */
+        .overlay-message {
+            display: none; /* Escondido por padrão */
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            font-size: 1.2em;
+            text-align: center;
+            z-index: 1000; /* Acima de tudo */
+            border: 2px solid;
+        }
+
+        .overlay-message.info { border-color: #007bff; }
+        .overlay-message.success { border-color: #28a745; }
+        .overlay-message.error { border-color: var(--red-alert); }
+
+        /* Barra de Seleção de Mineradores (para colocar GPUs) */
+        .miner-selection-bar {
             position: fixed;
             bottom: 0;
-            left: 0;
             width: 100%;
             background-color: rgba(0, 0, 0, 0.9);
             border-top: 2px solid var(--primary-color);
-            padding: 15px;
+            box-shadow: 0 0 20px var(--glow-color);
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 20px;
-            z-index: 1002; /* Acima dos modais */
-            display: none; /* Inicia escondida */
+            padding: 10px 0;
+            z-index: 900;
+            display: none; /* Escondido por padrão */
         }
 
-        #minerSelectionBar .selected-miner-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        .miner-selection-bar p {
+            margin: 0 20px;
             color: var(--text-color);
             font-size: 1.1em;
         }
 
-        #minerSelectionBar .selected-miner-info img {
-            width: 50px;
-            height: 50px;
-            border-radius: 5px;
-        }
-
-        #minerSelectionBar button {
+        .miner-selection-bar button {
             background-color: var(--red-alert);
             color: white;
-            padding: 10px 20px;
             border: none;
+            padding: 8px 15px;
             border-radius: 5px;
             cursor: pointer;
             font-family: 'Orbitron', sans-serif;
-            font-weight: 700;
-            transition: background-color 0.2s ease;
+            transition: background-color 0.3s;
         }
 
-        #minerSelectionBar button:hover {
-            background-color: #ff6a00;
+        .miner-selection-bar button:hover {
+            background-color: #ff6a6a;
         }
 
-        /* Modal de Saque */
-        .modal {
-            display: none; /* Hidden by default */
-            position: fixed; /* Stay in place */
-            z-index: 1001; /* Sit on top */
-            left: 0;
-            top: 0;
-            width: 100%; /* Full width */
-            height: 100%; /* Full height */
-            overflow: auto; /* Enable scroll if needed */
-            background-color: rgba(0,0,0,0.8); /* Black w/ opacity */
-            align-items: center; /* Center content vertically */
-            justify-content: center; /* Center content horizontally */
-        }
-
-        .modal-content {
-            background-color: var(--dark-gray);
-            margin: auto;
-            padding: 30px;
-            border: 2px solid var(--primary-color);
-            border-radius: 10px;
-            width: 80%;
-            max-width: 500px;
-            box-shadow: 0 0 20px rgba(255, 59, 59, 0.5);
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 15px;
-            margin-bottom: 15px;
-        }
-
-        .modal-header h2 {
-            margin: 0;
-            color: var(--primary-color);
-            font-family: 'Orbitron', sans-serif;
-            text-shadow: 0 0 8px var(--glow-color);
-        }
-
-        .close-button {
-            color: var(--text-color);
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: color 0.2s ease;
-        }
-
-        .close-button:hover,
-        .close-button:focus {
-            color: var(--primary-color);
-        }
-
-        #withdrawModal .withdraw-form label {
-            display: block;
-            margin-bottom: 10px;
-            font-size: 1.1em;
-            color: var(--text-color);
-        }
-
-        #withdrawModal .withdraw-form input {
-            width: calc(100% - 20px);
-            padding: 10px;
-            margin-bottom: 20px;
-            border: 1px solid var(--border-color);
-            border-radius: 5px;
-            background-color: var(--dark-gray);
-            color: var(--text-color);
-            font-family: 'Share Tech Mono', monospace;
-            outline: none;
-        }
-
-        #withdrawModal .withdraw-form button {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-family: 'Orbitron', sans-serif;
-            font-weight: 700;
-            font-size: 1.1em;
-            transition: background-color 0.3s ease, box-shadow 0.3s ease;
-            box-shadow: 0 0 8px rgba(255, 59, 59, 0.4);
-            width: 100%;
-        }
-
-        #withdrawModal .withdraw-form button:hover {
-            background-color: #ff5c5c;
-            box-shadow: 0 0 15px rgba(255, 59, 59, 0.8);
-        }
-
-        /* Overlay de Mensagens (para feedback ao usuário) */
-        .overlay-message {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            display: none; /* Inicia escondido */
-        }
-
-        .overlay-message-content {
-            background-color: var(--medium-gray);
-            padding: 30px;
-            border-radius: 10px;
-            text-align: center;
-            box-shadow: 0 0 25px rgba(0, 0, 0, 0.8);
-            max-width: 80%;
-            min-width: 300px;
-            border: 2px solid var(--primary-color);
-        }
-
-        .overlay-message-text {
-            font-size: 1.2em;
-            color: var(--text-color);
-            margin-bottom: 20px;
-        }
-
-        .overlay-message.info .overlay-message-content { border-color: #00bcd4; } /* Ciano */
-        .overlay-message.success .overlay-message-content { border-color: #4caf50; } /* Verde */
-        .overlay-message.error .overlay-message-content { border-color: var(--red-alert); } /* Vermelho */
-
-        /* Partículas de fundo */
+        /* Container de Partículas */
         .particle-container {
             position: absolute;
-            top: 0;
-            left: 0;
             width: 100%;
             height: 100%;
+            top: 0;
+            left: 0;
             overflow: hidden;
-            pointer-events: none; /* Permite clicar nos elementos por baixo */
-            z-index: 1;
+            z-index: 0; /* Fica abaixo dos outros elementos */
         }
 
         .particle {
             position: absolute;
-            background-color: var(--primary-color);
+            background-color: rgba(255, 255, 255, 0.8);
             border-radius: 50%;
             opacity: 0;
-            animation: particle-fade-move 5s infinite;
-            box-shadow: 0 0 5px var(--glow-color);
+            animation: floatAndFade 5s infinite ease-out;
         }
 
-        @keyframes particle-fade-move {
-            0% {
-                opacity: 0;
-                transform: translate(0, 0) scale(0.5);
-            }
-            20% {
-                opacity: 0.8;
-            }
-            80% {
-                opacity: 0.8;
-            }
-            100% {
-                opacity: 0;
-                transform: translate(var(--x-end), var(--y-end)) scale(1.5);
-            }
+        @keyframes floatAndFade {
+            0% { transform: translateY(0) translateX(0) scale(0); opacity: 0; }
+            20% { opacity: 1; }
+            100% { transform: translateY(-100vh) translateX(50px) scale(1); opacity: 0; }
         }
+
+        /* Estilos para a seção de autenticação */
+        .auth-container {
+            background-color: var(--tertiary-color);
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 30px var(--glow-color);
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+            position: relative;
+            z-index: 1; /* Acima das partículas */
+        }
+
+        .auth-container h2 {
+            color: var(--primary-color);
+            font-family: 'Orbitron', sans-serif;
+            margin-bottom: 25px;
+            font-size: 2em;
+        }
+
+        .auth-container form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .auth-container input[type="text"],
+        .auth-container input[type="password"] {
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            background-color: var(--dark-gray);
+            color: var(--text-color);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1em;
+            outline: none;
+        }
+
+        .auth-container input[type="text"]:focus,
+        .auth-container input[type="password"]:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 8px var(--glow-color);
+        }
+
+        .auth-container button {
+            background-color: var(--primary-color);
+            color: var(--tertiary-color);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1em;
+            transition: background-color 0.3s, transform 0.2s;
+            box-shadow: 0 0 15px var(--glow-color);
+            text-transform: uppercase;
+        }
+
+        .auth-container button:hover {
+            background-color: #ff6a6a;
+            transform: translateY(-2px);
+        }
+
+        .auth-container button:active {
+            transform: translateY(0);
+        }
+
+        .auth-container p {
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: var(--text-color);
+        }
+
+        .auth-container a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s;
+        }
+
+        .auth-container a:hover {
+            color: #ff6a6a;
+        }
+
+        .message-display {
+            color: var(--red-alert);
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+
+        #game-section {
+            display: none; /* Inicialmente escondida */
+            width: 100%;
+            height: 100vh;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        #auth-section {
+            display: flex; /* Inicialmente visível */
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100vh;
+            z-index: 1;
+        }
+
+        /* Estilos do Modal de Saque */
+        .withdraw-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .withdraw-form input[type="number"] {
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            background-color: var(--dark-gray);
+            color: var(--text-color);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1em;
+            outline: none;
+        }
+        .withdraw-form input[type="number"]:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 8px var(--glow-color);
+        }
+
+        /* Rig Manager Modal */
+        #rigManagerModal .rig-slot {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #1c1c1c;
+            border: 1px solid #444;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 5px;
+        }
+
+        #rigManagerModal .rig-slot span {
+            font-size: 0.9em;
+            color: var(--text-color);
+        }
+
+        #rigManagerModal .rig-slot button {
+            background-color: var(--red-alert);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8em;
+        }
+
     </style>
 </head>
 <body>
     <div id="overlay-message" class="overlay-message">
-        <div class="overlay-message-content">
-            <p id="overlay-message-text" class="overlay-message-text"></p>
-        </div>
+        <p id="overlay-message-text"></p>
     </div>
 
     <section id="auth-section">
         <div class="particle-container" id="particle-container-auth"></div>
-        <h1>Lula Coin Miner</h1>
-
-        <form id="login-form" class="auth-form">
-            <h2>Login</h2>
-            <label for="login-username">Usuário:</label>
-            <input type="text" id="login-username" required autocomplete="username">
-            <label for="login-password">Senha:</label>
-            <input type="password" id="login-password" required autocomplete="current-password">
-            <button type="submit">Entrar</button>
-            <p id="auth-message"></p>
-            <div class="toggle-link">
-                Não tem uma conta? <a href="#" id="show-register">Registre-se aqui</a>
+        <div class="auth-container">
+            <div id="login-form-container">
+                <h2>Lula Coin Miner</h2>
+                <form id="login-form">
+                    <input type="text" id="login-username" placeholder="Usuário" required>
+                    <input type="password" id="login-password" placeholder="Senha" required>
+                    <button type="submit">Login</button>
+                </form>
+                <p>Não tem uma conta? <a href="#" id="show-register">Registre-se</a></p>
+                <p id="login-message" class="message-display"></p>
             </div>
-        </form>
 
-        <form id="register-form" class="auth-form" style="display: none;">
-            <h2>Registro</h2>
-            <label for="register-username">Usuário:</label>
-            <input type="text" id="register-username" required autocomplete="username">
-            <label for="register-password">Senha:</label>
-            <input type="password" id="register-password" required autocomplete="new-password">
-            <button type="submit">Registrar</button>
-            <p id="auth-message-register"></p>
-            <div class="toggle-link">
-                Já tem uma conta? <a href="#" id="show-login">Faça Login</a>
+            <div id="register-form-container" style="display: none;">
+                <h2>Registrar</h2>
+                <form id="register-form">
+                    <input type="text" id="register-username" placeholder="Usuário" required>
+                    <input type="password" id="register-password" placeholder="Senha" required>
+                    <button type="submit">Registrar</button>
+                </form>
+                <p>Já tem uma conta? <a href="#" id="show-login">Fazer Login</a></p>
+                <p id="register-message" class="message-display"></p>
             </div>
-        </form>
+        </div>
     </section>
 
-    <div id="app">
+    <section id="game-section">
         <div class="particle-container" id="particle-container-game"></div>
-        <header class="header">
-            <div class="user-info">
-                <span class="stat-item"><i class="fas fa-user-circle"></i> <span id="username-display">Carregando...</span></span>
-                <span class="stat-item"><i class="fas fa-coins"></i> <span id="lula-coins-display">0.00</span></span>
-            </div>
-            <div class="game-stats">
-                <span class="stat-item"><i class="fas fa-chart-line"></i> Hashrate: <span id="hashrate-display">0</span> H/s</span>
-                <span class="stat-item"><i class="fas fa-tachometer-alt"></i> Nível: <span id="level-display">1</span></span>
-            </div>
-            <div class="buttons-container">
-                <button id="open-shop-btn" class="action-button room-btn"><i class="fas fa-store"></i> Loja</button>
-                <button id="open-inventory-btn" class="action-button room-btn"><i class="fas fa-boxes"></i> Inventário</button>
-                <button id="open-withdraw-modal-btn" class="action-button"><i class="fas fa-wallet"></i> Sacar</button>
-                <button id="logout-button" class="action-button logout-button"><i class="fas fa-sign-out-alt"></i> Sair</button>
-            </div>
-        </header>
 
-        <div class="game-area">
-            <div id="mining-hangar" class="room active">
-                <div class="rack" id="rack-1">
-                    <div class="rack-title">Rack 1</div>
-                    <div class="rack-slot" data-rack="1" data-slot="0">Vazio</div>
-                    <div class="rack-slot" data-rack="1" data-slot="1">Vazio</div>
-                    <div class="rack-slot" data-rack="1" data-slot="2">Vazio</div>
-                </div>
-                <div class="rack" id="rack-2">
-                    <div class="rack-title">Rack 2</div>
-                    <div class="rack-slot" data-rack="2" data-slot="0">Vazio</div>
-                    <div class="rack-slot" data-rack="2" data-slot="1">Vazio</div>
-                    <div class="rack-slot" data-rack="2" data-slot="2">Vazio</div>
-                </div>
-                <div class="rack" id="rack-3">
-                    <div class="rack-title">Rack 3</div>
-                    <div class="rack-slot" data-rack="3" data-slot="0">Vazio</div>
-                    <div class="rack-slot" data-rack="3" data-slot="1">Vazio</div>
-                    <div class="rack-slot" data-rack="3" data-slot="2">Vazio</div>
-                </div>
-                <div class="rack" id="rack-4">
-                    <div class="rack-title">Rack 4</div>
-                    <div class="rack-slot" data-rack="4" data-slot="0">Vazio</div>
-                    <div class="rack-slot" data-rack="4" data-slot="1">Vazio</div>
-                    <div class="rack-slot" data-rack="4" data-slot="2">Vazio</div>
-                </div>
-                <div class="rack" id="rack-5">
-                    <div class="rack-title">Rack 5</div>
-                    <div class="rack-slot" data-rack="5" data-slot="0">Vazio</div>
-                    <div class="rack-slot" data-rack="5" data-slot="1">Vazio</div>
-                    <div class="rack-slot" data-rack="5" data-slot="2">Vazio</div>
-                </div>
-                <div class="rack" id="rack-6">
-                    <div class="rack-title">Rack 6</div>
-                    <div class="rack-slot" data-rack="6" data-slot="0">Vazio</div>
-                    <div class="rack-slot" data-rack="6" data-slot="1">Vazio</div>
-                    <div class="rack-slot" data-rack="6" data-slot="2">Vazio</div>
-                </div>
+        <div class="mining-room" id="mining-room">
+            <div class="rack-container" id="rack-1">
+                <h3 class="rack-title">Rack 1</h3>
+                <div class="slot" data-rack="1" data-slot="0"></div>
+                <div class="slot" data-rack="1" data-slot="1"></div>
             </div>
+            <div class="rack-container" id="rack-2">
+                <h3 class="rack-title">Rack 2</h3>
+                <div class="slot" data-rack="2" data-slot="0"></div>
+                <div class="slot" data-rack="2" data-slot="1"></div>
+            </div>
+            <div class="rack-container" id="rack-3">
+                <h3 class="rack-title">Rack 3</h3>
+                <div class="slot" data-rack="3" data-slot="0"></div>
+                <div class="slot" data-rack="3" data-slot="1"></div>
+            </div>
+            <div class="rack-container" id="rack-4">
+                <h3 class="rack-title">Rack 4</h3>
+                <div class="slot" data-rack="4" data-slot="0"></div>
+                <div class="slot" data-rack="4" data-slot="1"></div>
+            </div>
+            <div class="rack-container" id="rack-5">
+                <h3 class="rack-title">Rack 5</h3>
+                <div class="slot" data-rack="5" data-slot="0"></div>
+                <div class="slot" data-rack="5" data-slot="1"></div>
+            </div>
+            <div class="rack-container" id="rack-6">
+                <h3 class="rack-title">Rack 6</h3>
+                <div class="slot" data-rack="6" data-slot="0"></div>
+                <div class="slot" data-rack="6" data-slot="1"></div>
+            </div>
+        </div>
 
-            <div id="shop-room" class="room">
-                <h2>Loja de Mineradores</h2>
-                <div class="category-buttons">
-                    <button data-category="gpus" class="active">GPUs</button>
-                    <button data-category="upgrades">Upgrades</button>
-                </div>
-                <div id="shop-items-container" class="shop-items-container">
-                    </div>
-            </div>
+        <div class="monitor-console">
+            <pre id="monitor-text">
+Lula Coin Miner OS v1.0
+Booting...
+Connection: OK
+Status: Online
 
-            <div id="inventory-room" class="room">
-                <h2>Inventário</h2>
-                <div class="category-buttons">
-                    <button data-category="gpus" class="active">GPUs</button>
-                    <button data-category="upgrades">Upgrades</button>
-                </div>
-                <div id="inventory-items-container" class="inventory-items-container">
-                    </div>
-            </div>
+Hashrate: 0 H/s
+Balance: 0.00 LC
+User: Guest
+Level: 1
+            </pre>
         </div>
 
         <div class="terminal">
             <div class="terminal-output" id="terminal-output">
-                <p>LulaOS v1.0.0 Booting...</p>
-                <p>Type 'help' for commands.</p>
+                Bem-vindo ao Lula Coin Miner Terminal. Digite 'help' para comandos.
             </div>
             <div class="terminal-input-container">
-                <span>></span><input type="text" id="terminal-input" placeholder="Digite um comando...">
+                <span>></span><input type="text" class="terminal-input" id="terminal-input" autofocus>
             </div>
         </div>
 
-        <button id="miner-button">MINERAR</button>
-    </div>
-
-    <div id="minerSelectionBar">
-        <div class="selected-miner-info">
-            <img id="selected-miner-img" src="" alt="Miner">
-            <span id="selected-miner-name"></span>
+        <div class="hud">
+            <p>Usuário: <span id="username-display">Carregando...</span></p>
+            <p>Lula Coins: <span id="lula-coins-display">0.00</span></p>
+            <p>Hashrate Total: <span id="hashrate-display">0</span> H/s</p>
+            <p>Nível Minerador: <span id="level-display">1</span></p>
         </div>
-        <button id="cancelSelectionBtn">Cancelar Seleção</button>
-    </div>
 
-    <div id="withdrawModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Sacar Lula Coins</h2>
-                <span class="close-button" id="close-withdraw-modal-btn">&times;</span>
+        <div class="action-buttons">
+            <button id="miner-button" class="action-button">Minerar!</button>
+            <button id="upgrade-miner-button" class="action-button">Upgrade Miner</button>
+            <button id="open-shop-btn" class="action-button">Loja</button>
+            <button id="open-inventory-btn" class="action-button">Inventário</button>
+            <button id="open-rig-manager-btn" class="action-button">Gerenciar Rigs</button>
+            <button id="saque-button" class="action-button">Sacar Lula Coins</button>
+            <button id="logout-button" class="action-button">Logout</button>
+        </div>
+
+        <div id="shopModal" class="modal">
+            <div class="modal-content">
+                <span class="close-button" id="close-shop-btn">&times;</span>
+                <h3 class="modal-title">Loja de Itens</h3>
+                <div class="category-buttons" id="shop-category-buttons">
+                    <button data-category="gpus" class="active">GPUs</button>
+                    <button data-category="upgrades">Upgrades</button>
+                </div>
+                <div id="shop-items-list" class="item-list">
+                    </div>
             </div>
-            <form id="withdraw-form" class="withdraw-form">
-                <label for="withdraw-amount">Valor para sacar:</label>
-                <input type="number" id="withdraw-amount" min="0.01" step="0.01" required>
-                <button type="submit">Sacar</button>
-            </form>
-            <p id="withdraw-message"></p>
         </div>
-    </div>
 
+        <div id="inventoryModal" class="modal">
+            <div class="modal-content">
+                <span class="close-button" id="close-inventory-btn">&times;</span>
+                <h3 class="modal-title">Inventário</h3>
+                <div class="category-buttons" id="inventory-category-buttons">
+                    <button data-category="gpus" class="active">GPUs</button>
+                    <button data-category="upgrades">Upgrades</button>
+                </div>
+                <div id="inventory-items-list" class="item-list">
+                    </div>
+            </div>
+        </div>
+
+        <div id="withdrawModal" class="modal">
+            <div class="modal-content">
+                <span class="close-button" id="close-withdraw-btn">&times;</span>
+                <h3 class="modal-title">Sacar Lula Coins</h3>
+                <p>Seu saldo atual: <span id="withdraw-current-balance">0.00</span> Lula Coins</p>
+                <form id="withdraw-form" class="withdraw-form">
+                    <input type="number" id="withdraw-amount" placeholder="Valor do saque" min="0.01" step="0.01" required>
+                    <button type="submit" class="modal-button">Confirmar Saque</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="rigManagerModal" class="modal">
+            <div class="modal-content">
+                <span class="close-button" id="close-rig-manager-btn">&times;</span>
+                <h3 class="modal-title">Gerenciar Rigs</h3>
+                <div id="rig-slots-list" class="item-list" style="flex-direction: column;">
+                    </div>
+            </div>
+        </div>
+
+        <div id="minerSelectionBar" class="miner-selection-bar">
+            <p>Clique em um slot vazio no rack para posicionar a GPU.</p>
+            <button id="cancelSelectionBtn">Cancelar Seleção</button>
+        </div>
+
+    </section>
+
+    <script src="js/utils.js"></script>
     <script>
-        // Definindo a URL base da sua API do backend no Render
-        // ESTA URL É CRÍTICA! Substitua 'https://lula-coin-backend.onrender.com' pela URL REAL do seu backend no Render.
-        const API_BASE_URL = 'https://lula-coin-backend.onrender.com';
+        // backend/routes/auth.js
+        const API_BASE_URL = 'https://lula-coin-backend.onrender.com'; // Sua URL do backend no Render
 
-        // Variáveis de estado do jogo (podem ser atualizadas pelo fetchGameState)
-        let lulaCoins = 0;
-        let level = 1;
-        let minerValue = 1; // Hashrate base por clique (pode ser ajustado pelo backend)
-        let totalHashrate = 0; // Hashrate total dos GPUs
-        let placedGpus = {}; // { "rack-1-slot-0": { id: "gpu1", name: "GPU Básica", hashrate: 10, img: "path/to/img.png" } }
-        let inventory = {
-            gpus: [],
-            upgrades: []
-        };
-        let isPlacingGpu = false;
-        let selectedGpuToPlace = null; // Guarda o item do inventário selecionado para colocar
-
-        // Referências a elementos do DOM - GERAIS
+        // Referências aos elementos do DOM para autenticação
         const authSection = document.getElementById('auth-section');
-        const gameSection = document.getElementById('app'); // 'app' agora é a seção do jogo
+        const gameSection = document.getElementById('game-section');
+
         const loginForm = document.getElementById('login-form');
-        const registerForm = document.getElementById('register-form');
         const loginUsernameInput = document.getElementById('login-username');
         const loginPasswordInput = document.getElementById('login-password');
+        const loginMessageDisplay = document.getElementById('login-message');
+
+        const registerForm = document.getElementById('register-form');
         const registerUsernameInput = document.getElementById('register-username');
         const registerPasswordInput = document.getElementById('register-password');
+        const registerMessageDisplay = document.getElementById('register-message');
+
         const showRegisterLink = document.getElementById('show-register');
         const showLoginLink = document.getElementById('show-login');
-        const authMessageDisplay = document.getElementById('auth-message'); // Mensagem para o login
-        const registerMessageDisplay = document.getElementById('auth-message-register'); // Mensagem para o registro
 
-        // Referências a elementos do DOM - JOGO
+        // Referências a elementos do DOM do jogo (alguns podem ser repetidos do game.js para clareza aqui)
         const usernameDisplay = document.getElementById('username-display');
         const lulaCoinsDisplay = document.getElementById('lula-coins-display');
         const hashrateDisplay = document.getElementById('hashrate-display');
         const levelDisplay = document.getElementById('level-display');
         const minerButton = document.getElementById('miner-button');
+        const upgradeMinerButton = document.getElementById('upgrade-miner-button');
         const openShopBtn = document.getElementById('open-shop-btn');
         const openInventoryBtn = document.getElementById('open-inventory-btn');
-        const miningHangar = document.getElementById('mining-hangar');
-        const shopRoom = document.getElementById('shop-room');
-        const inventoryRoom = document.getElementById('inventory-room');
-        const shopItemsContainer = document.getElementById('shop-items-container');
-        const shopCategoryButtons = document.querySelectorAll('#shop-room .category-buttons button');
-        const inventoryItemsContainer = document.getElementById('inventory-items-container');
-        const inventoryCategoryButtons = document.querySelectorAll('#inventory-room .category-buttons button');
-        const minerSelectionBar = document.getElementById('minerSelectionBar');
-        const selectedMinerImg = document.getElementById('selected-miner-img');
-        const selectedMinerName = document.getElementById('selected-miner-name');
-        const cancelSelectionBtn = document.getElementById('cancelSelectionBtn');
-        const openWithdrawModalBtn = document.getElementById('open-withdraw-modal-btn');
+        const openRigManagerBtn = document.getElementById('open-rig-manager-btn');
+        const saqueButton = document.getElementById('saque-button');
+        const logoutButton = document.getElementById('logout-button');
+        const monitorText = document.getElementById('monitor-text');
+        const terminalInput = document.getElementById('terminal-input');
+        const terminalOutput = document.getElementById('terminal-output');
+
+        // Modals e seus botões de fechar
+        const shopModal = document.getElementById('shopModal');
+        const closeShopBtn = document.getElementById('close-shop-btn');
+        const inventoryModal = document.getElementById('inventoryModal');
+        const closeInventoryBtn = document.getElementById('close-inventory-btn');
         const withdrawModal = document.getElementById('withdrawModal');
-        const closeWithdrawModalBtn = document.getElementById('close-withdraw-modal-btn');
+        const closeWithdrawBtn = document.getElementById('close-withdraw-btn');
+        const rigManagerModal = document.getElementById('rigManagerModal');
+        const closeRigManagerBtn = document.getElementById('close-rig-manager-btn');
+        const minerSelectionBar = document.getElementById('minerSelectionBar');
+        const cancelSelectionBtn = document.getElementById('cancelSelectionBtn');
+
+        // Formulário de saque
         const withdrawForm = document.getElementById('withdraw-form');
         const withdrawAmountInput = document.getElementById('withdraw-amount');
-        const withdrawMessageDisplay = document.getElementById('withdraw-message');
-        const logoutButton = document.getElementById('logout-button');
+        const withdrawCurrentBalance = document.getElementById('withdraw-current-balance');
 
-        // Terminal DOM elements
-        const terminalOutput = document.getElementById('terminal-output');
-        const terminalInput = document.getElementById('terminal-input');
+        // Variáveis de estado do jogo (devem ser inicializadas com dados do usuário)
+        let lulaCoins = 0;
+        let level = 1;
+        let minerValue = 1;
+        let totalHashrate = 0;
+        let inventory = { gpus: [], upgrades: [] };
+        let placedGpus = {};
+        let isPlacingGpu = false; // Flag para saber se o usuário está em modo de colocação
+        let selectedGpuToPlace = null; // Guarda o item do inventário selecionado para colocar
 
-        // Referências para containers de partículas
+        // Referências aos elementos de racks e slots (do game.js original)
+        const rackSlots = document.querySelectorAll('.slot');
+        const shopItemsList = document.getElementById('shop-items-list');
+        const inventoryItemsList = document.getElementById('inventory-items-list');
+        const rigSlotsList = document.getElementById('rig-slots-list'); // Novo para o Rig Manager
+
+        // Categorias de Loja e Inventário
+        const shopCategoryButtons = document.querySelectorAll('#shopModal .category-buttons button');
+        const inventoryCategoryButtons = document.querySelectorAll('#inventoryModal .category-buttons button');
+
+        // Partículas
         const particleContainerAuth = document.getElementById('particle-container-auth');
         const particleContainerGame = document.getElementById('particle-container-game');
 
-
-        // --- Funções Auxiliares ---
-        function showOverlayMessage(message, type = 'info', duration = 3000) {
-            const overlay = document.getElementById('overlay-message');
-            const messageText = document.getElementById('overlay-message-text');
-
-            if (!overlay || !messageText) {
-                console.error("Elementos de overlay de mensagem não encontrados no DOM.");
-                return;
-            }
-
-            overlay.classList.remove('info', 'success', 'error');
-            overlay.classList.add(type);
-
-            messageText.textContent = message;
-            overlay.style.display = 'flex';
-
-            setTimeout(() => {
-                overlay.style.display = 'none';
-            }, duration);
-        }
-
-        function openModal(modal) {
-            if (modal) modal.style.display = 'flex';
-        }
-
-        function closeModal(modal) {
-            if (modal) modal.style.display = 'none';
-        }
-
-        function showRoom(roomElementId) {
-            document.querySelectorAll('.room').forEach(room => {
-                room.classList.remove('active');
-            });
-            const activeRoom = document.getElementById(roomElementId);
-            if (activeRoom) {
-                activeRoom.classList.add('active');
-            }
-        }
-
-        // MOCKS (Serão substituídos por dados do backend, mas mantidos para a estrutura do front-end)
-        const shopItems = {
-            gpus: [
-                { id: "basic_gpu", name: "GPU Básica", hashrate: 10, cost: 100, img: "https://via.placeholder.com/80x80/FF0000/FFFFFF?text=GPU1" },
-                { id: "mid_gpu", name: "GPU Intermediária", hashrate: 50, cost: 450, img: "https://via.placeholder.com/80x80/00FF00/000000?text=GPU2" },
-                { id: "pro_gpu", name: "GPU Profissional", hashrate: 200, cost: 1500, img: "https://via.placeholder.com/80x80/0000FF/FFFFFF?text=GPU3" }
-            ],
-            upgrades: [
-                { id: "power_supply_1", name: "Fonte de Energia I", effect: "+10% Hashrate", cost: 300, img: "https://via.placeholder.com/80x80/FFFF00/000000?text=PSU1" },
-                { id: "cooling_fan_1", name: "Ventoinha Avançada", effect: "+5% Hashrate", cost: 150, img: "https://via.placeholder.com/80x80/FFA500/FFFFFF?text=FAN1" }
-            ]
-        };
-
-
-        // --- Funções de Autenticação ---
-        async function loginUser(username, password) {
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('username', data.username); // Salva o username
-                    showOverlayMessage('Login bem-sucedido!', 'success');
-                    checkAuth(); // Chama checkAuth para mudar a interface
-                } else {
-                    showOverlayMessage(data.message || 'Erro no login.', 'error');
-                    authMessageDisplay.textContent = data.message || 'Erro no login.';
-                }
-            } catch (error) {
-                console.error('Erro de rede ou servidor no login:', error);
-                showOverlayMessage('Erro de conexão. Tente novamente.', 'error');
-                authMessageDisplay.textContent = 'Erro de conexão. Tente novamente.';
-            }
-        }
-
-        async function registerUser(username, password) {
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    showOverlayMessage('Registro bem-sucedido! Faça login para continuar.', 'success');
-                    registerUsernameInput.value = '';
-                    registerPasswordInput.value = '';
-                    loginForm.style.display = 'block';
-                    registerForm.style.display = 'none';
-                    registerMessageDisplay.textContent = ''; // Limpa mensagem de registro
-                    authMessageDisplay.textContent = ''; // Limpa mensagem de login
-                } else {
-                    showOverlayMessage(data.message || 'Erro no registro.', 'error');
-                    registerMessageDisplay.textContent = data.message || 'Erro no registro.';
-                }
-            } catch (error) {
-                console.error('Erro de rede ou servidor no registro:', error);
-                showOverlayMessage('Erro de conexão. Tente novamente.', 'error');
-                registerMessageDisplay.textContent = 'Erro de conexão. Tente novamente.';
-            }
-        }
-
-        function logoutUser() {
-            localStorage.removeItem('token');
-            localStorage.removeItem('username');
-            showOverlayMessage('Sessão encerrada.', 'info');
-            checkAuth(); // Volta para a tela de login
-        }
-
-        function showAuthSection() {
-            authSection.style.display = 'flex';
-            gameSection.style.display = 'none';
-        }
-
-        function showGameSection() {
-            authSection.style.display = 'none';
-            gameSection.style.display = 'flex';
-            showRoom('mining-hangar'); // Inicia no hangar ao entrar no jogo
-            // Garante que os listeners do jogo são ativos
-            initializeGameListeners();
-        }
-
-        async function checkAuth() {
-            const token = localStorage.getItem('token');
-            if (token) {
-                try {
-                    const response = await fetch(`${API_BASE_URL}/api/game/state`, {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        }
-                    });
-
-                    if (response.ok) {
-                        const data = await response.json();
-                        // Certifica-se de que 'data' é um objeto válido antes de prosseguir
-                        if (!data || typeof data !== 'object') {
-                            console.error('Dados do estado do jogo recebidos são inválidos (não é um objeto):', data);
-                            showOverlayMessage('Erro: Dados do jogo inválidos. Faça login novamente.', 'error');
-                            logoutUser();
-                            return;
-                        }
-                        updateGameUI(data); // Atualiza a UI com os dados do jogo
-                        showGameSection(); // Mostra a seção do jogo
-                    } else if (response.status === 401) {
-                        console.error("Token inválido ou sessão expirada. Faça login novamente.");
-                        showOverlayMessage("Sessão expirada ou inválida. Faça login novamente.", "error");
-                        logoutUser(); // Limpa o token e volta para login
-                    } else {
-                        const errorData = await response.json().catch(() => ({ message: 'Erro desconhecido.' }));
-                        console.error(`Erro ao obter estado do jogo: ${errorData.message}`);
-                        showOverlayMessage(`Erro ao obter estado do jogo: ${errorData.message}`, "error");
-                        logoutUser(); // Em caso de outros erros, melhor forçar logout
-                    }
-                } catch (error) {
-                    console.error('Erro de rede ao verificar autenticação ou processar JSON:', error);
-                    showOverlayMessage('Erro de conexão ao servidor ou dados malformados. Tente novamente.', 'error');
-                    logoutUser(); // Erro grave, força logout
-                }
-            } else {
-                showAuthSection(); // Sem token, mostra a tela de login
-            }
-        }
-
-        function updateGameUI(data) {
-            console.log('Dados do estado do jogo recebidos:', data);
-
-            lulaCoins = data.lulaCoins || 0;
-            level = data.level || 1;
-            totalHashrate = data.totalHashrate || 0;
-            
-            // Garante que inventory e placedGpus são objetos/arrays válidos,
-            // e se não forem fornecidos, inicializa como objetos/arrays vazios.
-            inventory = data.inventory && typeof data.inventory === 'object' ? data.inventory : { gpus: [], upgrades: [] };
-            inventory.gpus = Array.isArray(inventory.gpus) ? inventory.gpus : [];
-            inventory.upgrades = Array.isArray(inventory.upgrades) ? inventory.upgrades : [];
-            
-            placedGpus = data.placedGpus && typeof data.placedGpus === 'object' ? data.placedGpus : {};
-
-            usernameDisplay.textContent = localStorage.getItem('username') || 'Visitante';
-            lulaCoinsDisplay.textContent = lulaCoins.toFixed(2);
-            hashrateDisplay.textContent = totalHashrate;
-            levelDisplay.textContent = level;
-
-            renderPlacedGpus(); // Atualiza a exibição dos GPUs nos racks
-        }
-
-        // --- Funções de Comunicação com Backend para o Jogo ---
-
-        async function fetchGameState() {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                console.warn('Nenhum token encontrado. Não é possível buscar o estado do jogo.');
-                showAuthSection();
-                return;
-            }
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/game/state`, {
-                    method: 'GET',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                     // Certifica-se de que 'data' é um objeto válido antes de prosseguir
-                     if (!data || typeof data !== 'object') {
-                        console.error('Dados do estado do jogo recebidos são inválidos (não é um objeto) durante fetchGameState:', data);
-                        showOverlayMessage('Erro: Dados do jogo inválidos. Faça login novamente.', 'error');
-                        logoutUser();
-                        return;
-                    }
-                    updateGameUI(data);
-                    appendTerminalOutput(`[STATUS] Lula Coins: ${lulaCoins.toFixed(2)}, Hashrate: ${totalHashrate} H/s`);
-                } else if (response.status === 401) {
-                    showOverlayMessage("Sessão expirada. Por favor, faça login novamente.", "error");
-                    logoutUser();
-                } else {
-                    const errorData = await response.json().catch(() => ({ message: 'Erro desconhecido.' }));
-                    console.error('Erro ao buscar estado do jogo:', errorData.message);
-                    showOverlayMessage(`Erro: ${errorData.message}`, 'error');
-                }
-            } catch (error) {
-                console.error('Erro de rede ao buscar estado do jogo:', error);
-                showOverlayMessage('Erro de conexão ao servidor.', 'error');
-            }
-        }
-
-        async function mineLulaCoins() {
-            const token = localStorage.getItem('token');
-            if (!token) return;
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/game/mine`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    updateGameUI(data);
-                    showOverlayMessage(`+${data.minedAmount.toFixed(2)} Lula Coins!`, 'success');
-                    appendTerminalOutput(`Mineração: +${data.minedAmount.toFixed(2)} Lula Coins.`);
-                } else if (response.status === 401) {
-                    showOverlayMessage("Sessão expirada. Faça login novamente.", "error");
-                    logoutUser();
-                } else {
-                    showOverlayMessage(data.message || 'Erro ao minerar.', 'error');
-                }
-            } catch (error) {
-                console.error('Erro ao minerar:', error);
-                showOverlayMessage('Erro de conexão.', 'error');
-            }
-        }
-
-        async function buyItem(itemId, category) {
-            const token = localStorage.getItem('token');
-            if (!token) return;
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/game/buy`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ itemId, category })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    updateGameUI(data);
-                    renderShop(category); // Re-renderiza a loja
-                    showOverlayMessage(data.message, 'success');
-                    appendTerminalOutput(`Comprado: ${data.itemName}.`);
-                } else if (response.status === 401) {
-                    showOverlayMessage("Sessão expirada. Faça login novamente.", "error");
-                    logoutUser();
-                } else {
-                    showOverlayMessage(data.message || 'Erro ao comprar item.', 'error');
-                    appendTerminalOutput(`ERRO: ${data.message || 'Erro ao comprar item.'}`);
-                }
-            } catch (error) {
-                console.error('Erro ao comprar item:', error);
-                showOverlayMessage('Erro de conexão.', 'error');
-                appendTerminalOutput('ERRO: Erro de conexão ao comprar.');
-            }
-        }
-
-        async function sellItem(itemId, category, instanceId) {
-            const token = localStorage.getItem('token');
-            if (!token) return;
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/game/sell`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ itemId, category, instanceId })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    updateGameUI(data);
-                    renderInventory(category); // Re-renderiza o inventário
-                    showOverlayMessage(data.message, 'success');
-                    appendTerminalOutput(`Vendido: ${data.itemName}.`);
-                } else if (response.status === 401) {
-                    showOverlayMessage("Sessão expirada. Faça login novamente.", "error");
-                    logoutUser();
-                } else {
-                    showOverlayMessage(data.message || 'Erro ao vender item.', 'error');
-                    appendTerminalOutput(`ERRO: ${data.message || 'Erro ao vender item.'}`);
-                }
-            } catch (error) {
-                console.error('Erro ao vender item:', error);
-                showOverlayMessage('Erro de conexão.', 'error');
-                appendTerminalOutput('ERRO: Erro de conexão ao vender.');
-            }
-        }
-
-        async function placeGpu(instanceId, rackId, slotId) {
-            const token = localStorage.getItem('token');
-            if (!token) return;
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/game/place-gpu`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ instanceId, rackId, slotId })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    updateGameUI(data);
-                    showOverlayMessage(data.message, 'success');
-                    cancelPlacement(); // Esconde a barra de seleção
-                    renderInventory('gpus'); // Atualiza inventário (GPU removido)
-                    appendTerminalOutput(`GPU ${selectedGpuToPlace.name} colocada no Rack ${rackId}, Slot ${slotId}.`);
-                } else if (response.status === 401) {
-                    showOverlayMessage("Sessão expirada. Faça login novamente.", "error");
-                    logoutUser();
-                } else {
-                    showOverlayMessage(data.message || 'Erro ao colocar GPU.', 'error');
-                    appendTerminalOutput(`ERRO: ${data.message || 'Erro ao colocar GPU.'}`);
-                }
-            } catch (error) {
-                console.error('Erro ao colocar GPU:', error);
-                showOverlayMessage('Erro de conexão.', 'error');
-                appendTerminalOutput('ERRO: Erro de conexão ao colocar GPU.');
-            }
-        }
-
-        async function removeGpu(rackId, slotId) {
-            const token = localStorage.getItem('token');
-            if (!token) return;
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/game/remove-gpu`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ rackId, slotId })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    updateGameUI(data);
-                    showOverlayMessage(data.message, 'success');
-                    renderInventory('gpus'); // Atualiza inventário (GPU devolvido)
-                    appendTerminalOutput(`GPU removida do Rack ${rackId}, Slot ${slotId}.`);
-                } else if (response.status === 401) {
-                    showOverlayMessage("Sessão expirada. Faça login novamente.", "error");
-                    logoutUser();
-                } else {
-                    showOverlayMessage(data.message || 'Erro ao remover GPU.', 'error');
-                    appendTerminalOutput(`ERRO: ${data.message || 'Erro ao remover GPU.'}`);
-                }
-            } catch (error) {
-                console.error('Erro ao remover GPU:', error);
-                showOverlayMessage('Erro de conexão.', 'error');
-                appendTerminalOutput('ERRO: Erro de conexão ao remover GPU.');
-            }
-        }
-
-        async function withdrawLulaCoins(event) {
-            event.preventDefault();
-            const amount = parseFloat(withdrawAmountInput.value);
-            const token = localStorage.getItem('token');
-
-            if (!token) return;
-
-            if (isNaN(amount) || amount <= 0) {
-                showOverlayMessage('Por favor, insira um valor válido para saque.', 'error');
-                return;
-            }
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/game/withdraw`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ amount })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    updateGameUI(data);
-                    showOverlayMessage(data.message, 'success');
-                    closeModal(withdrawModal);
-                    withdrawAmountInput.value = ''; // Limpa o campo
-                    appendTerminalOutput(`Saque de ${amount.toFixed(2)} Lula Coins realizado.`);
-                } else if (response.status === 401) {
-                    showOverlayMessage("Sessão expirada. Faça login novamente.", "error");
-                    logoutUser();
-                } else {
-                    showOverlayMessage(data.message || 'Erro ao sacar Lula Coins.', 'error');
-                    appendTerminalOutput(`ERRO: ${data.message || 'Erro ao sacar.'}`);
-                }
-            } catch (error) {
-                console.error('Erro ao sacar Lula Coins:', error);
-                showOverlayMessage('Erro de conexão.', 'error');
-                appendTerminalOutput('ERRO: Erro de conexão ao sacar.');
-            }
-        }
-
-
-        // --- Funções para Renderização de UI ---
-
-        function renderShop(category) {
-            shopItemsContainer.innerHTML = '';
-            // Usa os dados do MOCK, mas o backend controla o que é comprável
-            const items = shopItems[category] || [];
-
-            if (items.length === 0) {
-                shopItemsContainer.innerHTML = `<p style="text-align: center; color: var(--light-gray);">Nenhum item nesta categoria.</p>`;
-                return;
-            }
-
-            items.forEach(item => {
-                // Adiciona uma verificação para garantir que o item não é nulo/undefined
-                if (!item || typeof item !== 'object') {
-                    console.warn("Item inválido encontrado na loja:", item);
-                    return; // Pula este item inválido
-                }
-
-                const itemElement = document.createElement('div');
-                itemElement.classList.add('shop-item');
-                itemElement.innerHTML = `
-                    <div class="item-info">
-                        <img src="${item.img || 'https://via.placeholder.com/80x80/666666/FFFFFF?text=Item'}" alt="${item.name || 'Item'}">
-                        <h3>${item.name || 'Nome Desconhecido'}</h3>
-                        ${item.hashrate !== undefined ? `<p class="hashrate">Hashrate: ${item.hashrate} H/s</p>` : ''}
-                        ${item.effect ? `<p class="effect">Efeito: ${item.effect}</p>` : ''}
-                        <p class="cost">Custo: ${(item.cost || 0).toFixed(2)} <i class="fas fa-coins"></i></p>
-                    </div>
-                    <button onclick="buyItem('${item.id || ''}', '${category}')">Comprar</button>
-                `;
-                shopItemsContainer.appendChild(itemElement);
-            });
-        }
-
-        function renderInventory(category) {
-            inventoryItemsContainer.innerHTML = '';
-            const items = inventory[category] || [];
-
-            if (items.length === 0) {
-                inventoryItemsContainer.innerHTML = `<p style="text-align: center; color: var(--light-gray);">Inventário vazio nesta categoria.</p>`;
-                return;
-            }
-
-            items.forEach(item => {
-                // Adiciona uma verificação para garantir que o item não é nulo/undefined
-                if (!item || typeof item !== 'object') {
-                    console.warn("Item inválido encontrado no inventário:", item);
-                    return; // Pula este item inválido
-                }
-
-                const itemElement = document.createElement('div');
-                itemElement.classList.add('inventory-item');
-                itemElement.innerHTML = `
-                    <div class="item-info">
-                        <img src="${item.img || 'https://via.placeholder.com/80x80/666666/FFFFFF?text=Item'}" alt="${item.name || 'Item'}">
-                        <h3>${item.name || 'Nome Desconhecido'}</h3>
-                        ${item.hashrate !== undefined ? `<p class="hashrate">Hashrate: ${item.hashrate} H/s</p>` : ''}
-                        ${item.effect ? `<p class="effect">Efeito: ${item.effect}</p>` : ''}
-                        <p>Quantidade: ${item.quantity || 1}</p>
-                    </div>
-                    <div class="action-buttons">
-                        ${category === 'gpus' && !item.placed ? `<button onclick="prepareToPlaceGpu('${item.instanceId || ''}', '${item.id || ''}', '${item.name || ''}', '${item.hashrate !== undefined ? item.hashrate : 'N/A'}', '${item.img || ''}')">Colocar</button>` : ''}
-                        ${item.placed ? `<button class="placed-button" disabled>Colocado</button>` : ''}
-                        <button onclick="sellItem('${item.id || ''}', '${category}', '${item.instanceId || ''}')">Vender</button>
-                    </div>
-                `;
-                inventoryItemsContainer.appendChild(itemElement);
-            });
-        }
-
-        function prepareToPlaceGpu(instanceId, itemId, name, hashrate, img) {
-            isPlacingGpu = true;
-            selectedGpuToPlace = { instanceId, itemId, name, hashrate, img };
-            selectedMinerImg.src = img;
-            selectedMinerName.textContent = name;
-            minerSelectionBar.style.display = 'flex';
-            showRoom('mining-hangar'); // Volta para o hangar
-            showOverlayMessage(`Selecione um slot vazio para colocar a ${name}.`);
-        }
-
-        function cancelPlacement() {
-            isPlacingGpu = false;
-            selectedGpuToPlace = null;
-            minerSelectionBar.style.display = 'none';
-            showOverlayMessage('Colocação de GPU cancelada.', 'info');
-        }
-
-        function renderPlacedGpus() {
-            const rackSlots = document.querySelectorAll('.rack-slot');
-            rackSlots.forEach(slot => {
-                const rackId = slot.dataset.rack;
-                const slotId = slot.dataset.slot;
-                const slotKey = `rack-${rackId}-slot-${slotId}`;
-
-                // Adiciona uma verificação para garantir que placedGpus[slotKey] é um objeto válido
-                const gpu = placedGpus[slotKey];
-                if (gpu && typeof gpu === 'object' && gpu.id) { 
-                    slot.classList.add('occupied');
-                    slot.innerHTML = `
-                        <div class="gpu-display">
-                            <img src="${gpu.img || 'https://via.placeholder.com/60x60/666666/FFFFFF?text=GPU'}" alt="${gpu.name || 'GPU'}">
-                            <span>${gpu.name || 'GPU Desconhecida'} (${gpu.hashrate !== undefined ? gpu.hashrate : 'N/A'} H/s)</span>
-                        </div>
-                        <button class="remove-gpu-btn" onclick="removeGpu(${rackId}, ${slotId})">X</button>
-                    `;
-                    const removeBtn = slot.querySelector('.remove-gpu-btn');
-                    if (removeBtn) {
-                        removeBtn.style.position = 'absolute';
-                        removeBtn.style.top = '5px';
-                        removeBtn.style.right = '5px';
-                        removeBtn.style.backgroundColor = 'rgba(255, 0, 0, 0.7)';
-                        removeBtn.style.color = 'white';
-                        removeBtn.style.border = 'none';
-                        removeBtn.style.borderRadius = '50%';
-                        removeBtn.style.width = '20px';
-                        removeBtn.style.height = '20px';
-                        removeBtn.style.display = 'flex';
-                        removeBtn.style.justifyContent = 'center';
-                        removeBtn.style.alignItems = 'center';
-                        removeBtn.style.cursor = 'pointer';
-                        removeBtn.style.fontSize = '0.8em';
-                    }
-                } else {
-                    slot.classList.remove('occupied');
-                    slot.innerHTML = 'Vazio';
-                }
-            });
-        }
-
-        // --- Funções do Terminal ---
-        function appendTerminalOutput(message) {
-            const p = document.createElement('p');
-            p.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
-            terminalOutput.appendChild(p);
-            terminalOutput.scrollTop = terminalOutput.scrollHeight;
-        }
-
-        // --- Funções para Partículas de Fundo ---
+        // Funções de Partículas (do seu index.html original)
         function createParticle(container) {
-            if (!container) return;
             const particle = document.createElement('div');
             particle.classList.add('particle');
-            const size = Math.random() * 3 + 1;
+            const size = Math.random() * 3 + 1; // 1px to 4px
             particle.style.width = `${size}px`;
             particle.style.height = `${size}px`;
-            const startX = Math.random() * 100;
-            const startY = Math.random() * 100;
-            particle.style.left = `${startX}%`;
-            particle.style.top = `${startY}%`;
-            particle.style.setProperty('--x-end', `${(Math.random() - 0.5) * 200}px`);
-            particle.style.setProperty('--y-end', `${(Math.random() - 0.5) * 200}px`);
-            particle.style.animationDuration = `${Math.random() * 5 + 5}s`;
-
+            particle.style.left = `${Math.random() * 100}%`;
+            particle.style.top = `${Math.random() * 100}%`;
+            particle.style.animationDuration = `${Math.random() * 3 + 2}s`; // 2 to 5 seconds
+            particle.style.animationDelay = `${Math.random() * 0}s`; // Start immediately or with a slight delay
             container.appendChild(particle);
 
+            // Remover a partícula após a animação para evitar acúmulo
             particle.addEventListener('animationend', () => {
                 particle.remove();
             });
@@ -1705,8 +906,613 @@
             }
         }
 
-        // --- Inicialização e Listeners de Eventos ---
-        function initializeAuthListeners() {
+        // --- Funções de Autenticação (do seu auth.js) ---
+        async function registerUser(username, password) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showOverlayMessage(data.message, 'success');
+                    // Opcional: Redirecionar para login após registro ou preencher campos
+                    loginUsernameInput.value = username;
+                    loginPasswordInput.value = ''; // Limpa senha
+                    showLoginLink.click(); // Volta para a tela de login
+                } else {
+                    showOverlayMessage(data.message || 'Erro no registro.', 'error');
+                }
+            } catch (error) {
+                console.error('Erro de rede no registro:', error);
+                showOverlayMessage('Erro de conexão. Tente novamente.', 'error');
+            }
+        }
+
+        async function loginUser(username, password) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('username', data.username);
+                    showOverlayMessage('Login bem-sucedido!', 'success');
+                    checkAuth(); // Verifica e mostra a seção do jogo
+                } else {
+                    showOverlayMessage(data.message || 'Credenciais inválidas.', 'error');
+                }
+            } catch (error) {
+                console.error('Erro de rede no login:', error);
+                showOverlayMessage('Erro de conexão. Tente novamente.', 'error');
+            }
+        }
+
+        function logoutUser() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+            showOverlayMessage('Sessão encerrada.', 'info');
+            checkAuth(); // Volta para a tela de login
+        }
+
+        // --- Funções do Jogo (do seu game.js) ---
+
+        // Atualiza os displays do HUD e monitor
+        function updateGameState(state) {
+            usernameDisplay.textContent = state.username;
+            lulaCoins = state.lulaCoins;
+            lulaCoinsDisplay.textContent = lulaCoins.toFixed(2);
+            level = state.level;
+            levelDisplay.textContent = level;
+            minerValue = state.minerValue; // Certifique-se que o backend envia isso
+            totalHashrate = state.totalHashrate;
+            hashrateDisplay.textContent = totalHashrate.toFixed(2);
+            inventory = state.inventory;
+            placedGpus = state.placedGpus;
+
+            // Atualiza monitor de texto
+            monitorText.textContent = `
+Lula Coin Miner OS v1.0
+Booting...
+Connection: OK
+Status: Online
+
+Hashrate: ${totalHashrate.toFixed(2)} H/s
+Balance: ${lulaCoins.toFixed(2)} LC
+User: ${state.username}
+Level: ${level}
+            `;
+
+            // Renderiza as GPUs nos racks
+            renderPlacedGpus();
+            // Atualiza o inventário se o modal estiver aberto
+            if (inventoryModal.style.display === 'flex') {
+                renderInventory(document.querySelector('#inventoryModal .category-buttons button.active')?.dataset.category || 'gpus');
+            }
+            // Atualiza o rig manager se o modal estiver aberto
+            if (rigManagerModal.style.display === 'flex') {
+                renderRigManager();
+            }
+        }
+
+        // Função para buscar o estado do jogo do backend
+        async function fetchGameState() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                // showOverlayMessage('Sessão expirada ou não logado. Faça login novamente.', 'error');
+                // logoutUser(); // Força o logout se não há token
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/game/state`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    updateGameState(data);
+                } else if (response.status === 401) {
+                    // Token inválido ou expirado
+                    showOverlayMessage('Sessão expirada. Faça login novamente.', 'error');
+                    logoutUser();
+                } else {
+                    const errorData = await response.json();
+                    console.error('Erro ao obter estado do jogo:', errorData.message || response.statusText);
+                    showOverlayMessage(errorData.message || 'Erro ao carregar o jogo.', 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao obter estado do jogo:', error);
+                // showOverlayMessage('Erro de conexão ao carregar o jogo.', 'error');
+            }
+        }
+
+        async function mineLulaCoins() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showOverlayMessage('Faça login para minerar!', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/game/mine`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    lulaCoins = data.lulaCoins;
+                    lulaCoinsDisplay.textContent = lulaCoins.toFixed(2);
+                    // Adicionar efeito visual de mineração
+                    createParticle(minerButton, 5); // Adicionei um container para as partículas de clique
+                } else {
+                    showOverlayMessage(data.message || 'Erro ao minerar.', 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao minerar:', error);
+                showOverlayMessage('Erro de conexão ao minerar.', 'error');
+            }
+        }
+
+        async function buyItem(itemId, itemType) {
+            const token = localStorage.getItem('token');
+            if (!token) return showOverlayMessage('Faça login para comprar!', 'error');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/game/buy`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ itemId, itemType })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showOverlayMessage(data.message, 'success');
+                    updateGameState(data); // Atualiza todo o estado
+                } else {
+                    showOverlayMessage(data.message || 'Erro ao comprar.', 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao comprar item:', error);
+                showOverlayMessage('Erro de conexão ao comprar.', 'error');
+            }
+        }
+
+        async function placeGpu(gpuId, inventoryIndex, slotId) {
+            const token = localStorage.getItem('token');
+            if (!token) return showOverlayMessage('Faça login para colocar GPUs!', 'error');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/game/place-gpu`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ gpuId, inventoryIndex, slotId })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showOverlayMessage(data.message, 'success');
+                    updateGameState(data);
+                    cancelPlacement(); // Esconde a barra de seleção
+                } else {
+                    showOverlayMessage(data.message || 'Erro ao colocar GPU.', 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao colocar GPU:', error);
+                showOverlayMessage('Erro de conexão ao colocar GPU.', 'error');
+            }
+        }
+
+        async function removeGpu(slotId) {
+            const token = localStorage.getItem('token');
+            if (!token) return showOverlayMessage('Faça login para remover GPUs!', 'error');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/game/remove-gpu`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ slotId })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showOverlayMessage(data.message, 'success');
+                    updateGameState(data);
+                } else {
+                    showOverlayMessage(data.message || 'Erro ao remover GPU.', 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao remover GPU:', error);
+                showOverlayMessage('Erro de conexão ao remover GPU.', 'error');
+            }
+        }
+
+        async function sellItem(itemType, itemIndex) {
+            const token = localStorage.getItem('token');
+            if (!token) return showOverlayMessage('Faça login para vender itens!', 'error');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/game/sell-item`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ itemType, itemIndex })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showOverlayMessage(data.message, 'success');
+                    updateGameState(data);
+                } else {
+                    showOverlayMessage(data.message || 'Erro ao vender item.', 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao vender item:', error);
+                showOverlayMessage('Erro de conexão ao vender item.', 'error');
+            }
+        }
+
+        async function withdrawLulaCoins(e) {
+            e.preventDefault();
+            const token = localStorage.getItem('token');
+            if (!token) return showOverlayMessage('Faça login para sacar!', 'error');
+
+            const amount = parseFloat(withdrawAmountInput.value);
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/game/withdraw`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ amount })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showOverlayMessage(data.message, 'success');
+                    updateGameState(data);
+                    closeModal(withdrawModal);
+                    withdrawAmountInput.value = ''; // Limpa o campo
+                } else {
+                    showOverlayMessage(data.message || 'Erro ao sacar.', 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao sacar Lula Coins:', error);
+                showOverlayMessage('Erro de conexão ao sacar.', 'error');
+            }
+        }
+
+        // Renderiza as GPUs nos slots do rack
+        function renderPlacedGpus() {
+            rackSlots.forEach(slot => {
+                const slotId = `${slot.dataset.rack}-slot-${slot.dataset.slot}`;
+                slot.innerHTML = ''; // Limpa o slot
+                slot.classList.remove('occupied');
+
+                if (placedGpus[slotId]) {
+                    const gpu = placedGpus[slotId];
+                    const img = document.createElement('img');
+                    img.src = gpu.img;
+                    img.alt = gpu.name;
+                    slot.appendChild(img);
+                    slot.classList.add('occupied');
+                    slot.dataset.gpuId = gpu.id; // Para referência futura, se necessário
+                }
+            });
+        }
+
+        // Lógica para abrir/fechar modais
+        function openModal(modalElement) {
+            modalElement.style.display = 'flex';
+        }
+
+        function closeModal(modalElement) {
+            modalElement.style.display = 'none';
+        }
+
+        // Renderiza a loja
+        async function renderShop(category) {
+            shopItemsList.innerHTML = ''; // Limpa a lista
+            let itemsToRender = [];
+
+            // Mock de itens da loja (precisa ser atualizado para buscar do backend se shopItems mudar)
+            const shopData = { // Usando um mock temporário aqui, idealmente viria do backend
+                gpus: [
+                    { id: "basic_gpu", name: "GPU Básica", hashrate: 10, cost: 100, img: "https://via.placeholder.com/80x80/FF0000/FFFFFF?text=GPU1" },
+                    { id: "mid_gpu", name: "GPU Intermediária", hashrate: 50, cost: 450, img: "https://via.placeholder.com/80x80/00FF00/000000?text=GPU2" },
+                    { id: "pro_gpu", name: "GPU Profissional", hashrate: 200, cost: 1500, img: "https://via.placeholder.com/80x80/0000FF/FFFFFF?text=GPU3" }
+                ],
+                upgrades: [
+                    { id: "power_supply_1", name: "Fonte de Energia I", effect: "+10% Hashrate", cost: 300, img: "https://via.placeholder.com/80x80/FFFF00/000000?text=PSU1" },
+                    { id: "cooling_fan_1", name: "Ventoinha de Resfriamento I", effect: "+5% Hashrate", cost: 200, img: "https://via.placeholder.com/80x80/00FFFF/000000?text=FAN1" }
+                ]
+            };
+
+
+            if (category === 'gpus') {
+                itemsToRender = shopData.gpus;
+            } else if (category === 'upgrades') {
+                itemsToRender = shopData.upgrades;
+            }
+
+            itemsToRender.forEach(item => {
+                const card = document.createElement('div');
+                card.classList.add('item-card');
+                card.innerHTML = `
+                    <img src="${item.img}" alt="${item.name}">
+                    <h4>${item.name}</h4>
+                    ${item.hashrate ? `<p class="hashrate">+${item.hashrate} H/s</p>` : ''}
+                    ${item.effect ? `<p>${item.effect}</p>` : ''}
+                    <p class="cost">${item.cost.toFixed(2)} Lula Coins</p>
+                    <button data-item-id="${item.id}" data-item-type="${category}">Comprar</button>
+                `;
+                shopItemsList.appendChild(card);
+            });
+
+            // Adiciona listeners aos botões de compra
+            shopItemsList.querySelectorAll('button').forEach(button => {
+                button.addEventListener('click', () => {
+                    buyItem(button.dataset.itemId, button.dataset.itemType);
+                });
+            });
+        }
+
+        // Renderiza o inventário
+        function renderInventory(category) {
+            inventoryItemsList.innerHTML = ''; // Limpa a lista
+            let itemsToRender = [];
+            let currentInventory = inventory[category] || []; // Garante que é um array
+
+            if (category === 'gpus') {
+                itemsToRender = currentInventory;
+            } else if (category === 'upgrades') {
+                itemsToRender = currentInventory;
+            }
+
+            if (itemsToRender.length === 0) {
+                inventoryItemsList.innerHTML = '<p>Nenhum item nesta categoria.</p>';
+                return;
+            }
+
+            itemsToRender.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.classList.add('item-card');
+                card.innerHTML = `
+                    <img src="${item.img}" alt="${item.name}">
+                    <h4>${item.name}</h4>
+                    ${item.hashrate ? `<p class="hashrate">+${item.hashrate} H/s</p>` : ''}
+                    ${item.effect ? `<p>${item.effect}</p>` : ''}
+                    <button class="place-sell-btn" data-item-type="${category}" data-item-index="${index}" data-item-id="${item.id}">
+                        ${category === 'gpus' ? 'Colocar' : 'Usar'}
+                    </button>
+                    <button class="sell-btn" data-item-type="${category}" data-item-index="${index}">Vender</button>
+                `;
+                inventoryItemsList.appendChild(card);
+            });
+
+            // Adiciona listeners aos botões de colocar/usar e vender
+            inventoryItemsList.querySelectorAll('.place-sell-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    const itemType = button.dataset.itemType;
+                    const itemIndex = parseInt(button.dataset.itemIndex);
+                    const itemId = button.dataset.itemId;
+
+                    if (itemType === 'gpus') {
+                        // Inicia o modo de colocação de GPU
+                        isPlacingGpu = true;
+                        selectedGpuToPlace = { id: itemId, index: itemIndex };
+                        openModal(minerSelectionBar); // Mostra a barra de seleção
+                        closeModal(inventoryModal); // Fecha o inventário
+                        showOverlayMessage('Selecione um slot vazio no rack para colocar a GPU.', 'info');
+                    } else {
+                        // Lógica para usar upgrades
+                        showOverlayMessage('Funcionalidade de "Usar Upgrade" ainda não implementada.', 'info');
+                    }
+                });
+            });
+
+            inventoryItemsList.querySelectorAll('.sell-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    const itemType = button.dataset.itemType;
+                    const itemIndex = parseInt(button.dataset.itemIndex);
+                    sellItem(itemType, itemIndex);
+                });
+            });
+        }
+
+        // Renderiza o Rig Manager
+        function renderRigManager() {
+            rigSlotsList.innerHTML = ''; // Limpa a lista
+            let hasPlacedGpus = false;
+
+            // Itera sobre os slots para mostrar as GPUs colocadas
+            for (const slotId in placedGpus) {
+                if (placedGpus.hasOwnProperty(slotId)) {
+                    hasPlacedGpus = true;
+                    const gpu = placedGpus[slotId];
+                    const rigSlotDiv = document.createElement('div');
+                    rigSlotDiv.classList.add('rig-slot');
+                    rigSlotDiv.innerHTML = `
+                        <span>${slotId.replace('-', ' ').replace('slot', 'Slot').replace('rack', 'Rack')}: ${gpu.name} (${gpu.hashrate} H/s)</span>
+                        <button data-slot-id="${slotId}">Remover</button>
+                    `;
+                    rigSlotsList.appendChild(rigSlotDiv);
+                }
+            }
+
+            if (!hasPlacedGpus) {
+                rigSlotsList.innerHTML = '<p>Nenhuma GPU colocada nos racks.</p>';
+            }
+
+            // Adiciona listeners aos botões de remover
+            rigSlotsList.querySelectorAll('button').forEach(button => {
+                button.addEventListener('click', () => {
+                    const slotId = button.dataset.slotId;
+                    removeGpu(slotId);
+                });
+            });
+        }
+
+        // Lógica para slots de racks (clicar para colocar ou remover)
+        function addEventListenersToRackSlots() {
+            rackSlots.forEach(slot => {
+                slot.addEventListener('click', () => {
+                    const slotId = `${slot.dataset.rack}-slot-${slot.dataset.slot}`;
+
+                    if (isPlacingGpu && selectedGpuToPlace) {
+                        // Tentando colocar uma GPU
+                        if (!placedGpus[slotId]) { // Se o slot estiver vazio
+                            placeGpu(selectedGpuToPlace.id, selectedGpuToPlace.index, slotId);
+                        } else {
+                            showOverlayMessage('Este slot já está ocupado!', 'error');
+                        }
+                    } else if (placedGpus[slotId]) {
+                        // Clicou em um slot ocupado, oferece para remover (ou abrir modal de detalhes)
+                        // Por enquanto, apenas para remover
+                        showOverlayMessage(`GPU ${placedGpus[slotId].name} no ${slotId}. Use 'Gerenciar Rigs' para remover.`, 'info');
+                    } else {
+                        // Clicou em um slot vazio sem estar em modo de colocação
+                        showOverlayMessage('Selecione uma GPU no inventário para colocá-la aqui.', 'info');
+                    }
+                });
+            });
+        }
+
+        // Cancela o modo de colocação de GPU
+        function cancelPlacement() {
+            isPlacingGpu = false;
+            selectedGpuToPlace = null;
+            closeModal(minerSelectionBar);
+            showOverlayMessage('Colocação de GPU cancelada.', 'info');
+        }
+
+        // Funções para controle de modais
+        function openShop() {
+            openModal(shopModal);
+            renderShop('gpus'); // Renderiza GPUs por padrão ao abrir
+            shopCategoryButtons.forEach(b => b.classList.remove('active'));
+            document.querySelector('#shopModal .category-buttons button[data-category="gpus"]').classList.add('active');
+        }
+
+        function closeShop() {
+            closeModal(shopModal);
+        }
+
+        function openInventory() {
+            openModal(inventoryModal);
+            renderInventory('gpus'); // Renderiza GPUs por padrão ao abrir
+            inventoryCategoryButtons.forEach(b => b.classList.remove('active'));
+            document.querySelector('#inventoryModal .category-buttons button[data-category="gpus"]').classList.add('active');
+        }
+
+        function closeInventory() {
+            closeModal(inventoryModal);
+        }
+
+        function openWithdrawModal() {
+            withdrawCurrentBalance.textContent = lulaCoins.toFixed(2);
+            openModal(withdrawModal);
+        }
+
+        function openRigManager() {
+            openModal(rigManagerModal);
+            renderRigManager();
+        }
+
+        function handleShopCategoryClick(e) {
+            shopCategoryButtons.forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            renderShop(e.target.dataset.category);
+        }
+
+        function handleInventoryCategoryClick(e) {
+            inventoryCategoryButtons.forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            renderInventory(e.target.dataset.category);
+        }
+
+
+        // Lógica do Terminal
+        function appendTerminalOutput(message) {
+            const p = document.createElement('p');
+            p.textContent = message;
+            terminalOutput.appendChild(p);
+            terminalOutput.scrollTop = terminalOutput.scrollHeight; // Scroll to bottom
+        }
+
+        // --- Inicialização e Controle de Seções ---
+        async function checkAuth() {
+            const token = localStorage.getItem('token');
+            const username = localStorage.getItem('username');
+
+            if (token && username) {
+                // Tenta buscar o estado do jogo para validar o token
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/game/state`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        updateGameState(data);
+                        authSection.style.display = 'none';
+                        gameSection.style.display = 'flex'; // Mostra a seção do jogo
+                        // Gera partículas do jogo se ainda não estiverem geradas
+                        if (particleContainerGame && particleContainerGame.children.length === 0) {
+                            generateParticles(particleContainerGame, 30);
+                            setInterval(() => createParticle(particleContainerGame), 2000);
+                        }
+                        return true; // Autenticado e jogo carregado
+                    } else {
+                        // Token inválido ou expirado no backend
+                        showOverlayMessage('Sessão expirada. Faça login novamente.', 'error');
+                        localStorage.removeItem('token');
+                        localStorage.removeItem('username');
+                        authSection.style.display = 'flex';
+                        gameSection.style.display = 'none';
+                        return false;
+                    }
+                } catch (error) {
+                    console.error('Erro ao verificar autenticação com o backend:', error);
+                    showOverlayMessage('Erro de conexão ao verificar sessão.', 'error');
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('username');
+                    authSection.style.display = 'flex';
+                    gameSection.style.display = 'none';
+                    return false;
+                }
+            } else {
+                // Não há token salvo, mostra a tela de login
+                authSection.style.display = 'flex';
+                gameSection.style.display = 'none';
+                return false;
+            }
+        }
+
+        // Função para inicializar todos os listeners de eventos (chamada apenas uma vez)
+        function initializeEventListeners() {
+            // Listeners de Autenticação
             if (loginForm) {
                 loginForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
@@ -1728,9 +1534,9 @@
             if (showRegisterLink) {
                 showRegisterLink.addEventListener('click', (e) => {
                     e.preventDefault();
-                    loginForm.style.display = 'none';
-                    registerForm.style.display = 'block';
-                    authMessageDisplay.innerText = '';
+                    document.getElementById('login-form-container').style.display = 'none';
+                    document.getElementById('register-form-container').style.display = 'block';
+                    loginMessageDisplay.textContent = '';
                     loginUsernameInput.value = '';
                     loginPasswordInput.value = '';
                 });
@@ -1739,84 +1545,34 @@
             if (showLoginLink) {
                 showLoginLink.addEventListener('click', (e) => {
                     e.preventDefault();
-                    loginForm.style.display = 'block';
-                    registerForm.style.display = 'none';
-                    registerMessageDisplay.innerText = '';
+                    document.getElementById('login-form-container').style.display = 'block';
+                    document.getElementById('register-form-container').style.display = 'none';
+                    registerMessageDisplay.textContent = '';
                     registerUsernameInput.value = '';
                     registerPasswordInput.value = '';
                 });
             }
-        }
 
-        function initializeGameListeners() {
+            // Listeners do Jogo (apenas se os elementos existirem, pois podem estar hidden)
             if (minerButton) minerButton.addEventListener('click', mineLulaCoins);
-            if (openShopBtn) {
-                openShopBtn.addEventListener('click', () => {
-                    showRoom('shop-room');
-                    renderShop('gpus');
-                    shopCategoryButtons.forEach(btn => btn.classList.remove('active'));
-                    document.querySelector('#shop-room .category-buttons button[data-category="gpus"]').classList.add('active');
-                });
-            }
-            if (openInventoryBtn) {
-                openInventoryBtn.addEventListener('click', () => {
-                    showRoom('inventory-room');
-                    renderInventory('gpus');
-                    inventoryCategoryButtons.forEach(btn => btn.classList.remove('active'));
-                    document.querySelector('#inventory-room .category-buttons button[data-category="gpus"]').classList.add('active');
-                });
-            }
-            if (openWithdrawModalBtn) openWithdrawModalBtn.addEventListener('click', () => openModal(withdrawModal));
-            if (closeWithdrawModalBtn) closeWithdrawModalBtn.addEventListener('click', () => closeModal(withdrawModal));
+            if (openShopBtn) openShopBtn.addEventListener('click', openShop);
+            if (closeShopBtn) closeShopBtn.addEventListener('click', () => closeModal(shopModal)); // Usando closeModal
+            if (openInventoryBtn) openInventoryBtn.addEventListener('click', openInventory);
+            if (closeInventoryBtn) closeInventoryBtn.addEventListener('click', () => closeModal(inventoryModal)); // Usando closeModal
+            if (openRigManagerBtn) openRigManagerBtn.addEventListener('click', openRigManager);
+            if (closeRigManagerBtn) closeRigManagerBtn.addEventListener('click', () => closeModal(rigManagerModal));
+            if (saqueButton) saqueButton.addEventListener('click', openWithdrawModal);
+            if (closeWithdrawBtn) closeWithdrawBtn.addEventListener('click', () => closeModal(withdrawModal));
             if (logoutButton) logoutButton.addEventListener('click', logoutUser);
-
-            shopCategoryButtons.forEach(button => {
-                button.addEventListener('click', (event) => {
-                    shopCategoryButtons.forEach(btn => btn.classList.remove('active'));
-                    event.target.classList.add('active');
-                    renderShop(event.target.dataset.category);
-                });
-            });
-            inventoryCategoryButtons.forEach(button => {
-                button.addEventListener('click', (event) => {
-                    inventoryCategoryButtons.forEach(btn => btn.classList.remove('active'));
-                    event.target.classList.add('active');
-                    renderInventory(event.target.dataset.category);
-                });
-            });
-
-            if (cancelSelectionBtn) {
-                cancelSelectionBtn.addEventListener('click', cancelPlacement);
-            }
-
+            if (cancelSelectionBtn) cancelSelectionBtn.addEventListener('click', cancelPlacement);
             if (withdrawForm) withdrawForm.addEventListener('submit', withdrawLulaCoins);
 
-            // Add event listeners to rack slots for placing GPUs
-            const rackSlots = document.querySelectorAll('.rack-slot');
-            rackSlots.forEach(slot => {
-                // Remove any existing listeners to prevent duplicates
-                const oldClickListener = slot.dataset.clickListener;
-                if (oldClickListener) {
-                    slot.removeEventListener('click', eval(oldClickListener));
-                }
-
-                const newClickListener = () => {
-                    if (isPlacingGpu && !slot.classList.contains('occupied')) {
-                        const rackId = slot.dataset.rack;
-                        const slotId = slot.dataset.slot;
-                        if (selectedGpuToPlace && selectedGpuToPlace.instanceId) {
-                           placeGpu(selectedGpuToPlace.instanceId, parseInt(rackId), parseInt(slotId));
-                        } else {
-                           showOverlayMessage("Nenhuma GPU selecionada para colocar ou dados inválidos.", "error");
-                           console.error("Erro: selectedGpuToPlace ou instanceId é nulo/undefined.");
-                        }
-                    } else if (slot.classList.contains('occupied')) {
-                        // If a GPU is already placed, we don't do anything on simple click
-                        // The 'X' button inside the slot handles removal
-                    }
-                };
-                slot.addEventListener('click', newClickListener);
-                slot.dataset.clickListener = newClickListener.name; // Store reference for potential removal
+            // Listeners para cliques em categorias de loja e inventário
+            shopCategoryButtons.forEach(button => {
+                button.addEventListener('click', handleShopCategoryClick);
+            });
+            inventoryCategoryButtons.forEach(button => {
+                button.addEventListener('click', handleInventoryCategoryClick);
             });
 
             // Lógica do Terminal
@@ -1824,15 +1580,14 @@
                 terminalInput.addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') {
                         const command = terminalInput.value.trim();
-                        appendTerminalOutput(`> ${command}`);
+                        appendTerminalOutput(`[INPUT] ${command}`);
                         terminalInput.value = '';
 
                         if (command.toLowerCase() === 'help') {
                             appendTerminalOutput('Comandos disponíveis: help, clear, status');
                         } else if (command.toLowerCase() === 'clear') {
                             terminalOutput.innerHTML = '';
-                            appendTerminalOutput('LulaOS v1.0.0 Booting...');
-                            appendTerminalOutput('Type \'help\' for commands.');
+                            appendTerminalOutput('Terminal limpo.');
                         } else if (command.toLowerCase() === 'status') {
                             appendTerminalOutput(`Lula Coins: ${lulaCoins.toFixed(2)}`);
                             appendTerminalOutput(`Hashrate Total: ${totalHashrate.toFixed(2)} H/s`);
@@ -1844,11 +1599,16 @@
                 });
             }
 
+            // Adiciona listeners para os slots do rack
+            addEventListenersToRackSlots();
+
             // Fechar modais ao clicar fora (exceto a barra de seleção de mineradores)
             window.onclick = function(event) {
-                if (event.target == withdrawModal) {
-                    withdrawModal.style.display = "none";
-                }
+                if (event.target == shopModal) { closeModal(shopModal); }
+                if (event.target == inventoryModal) { closeModal(inventoryModal); }
+                if (event.target == withdrawModal) { closeModal(withdrawModal); }
+                if (event.target == rigManagerModal) { closeModal(rigManagerModal); }
+                // minerSelectionBar não deve fechar ao clicar fora, apenas via botão "Cancelar"
             };
         }
 
@@ -1858,11 +1618,11 @@
             if (localStorage.getItem('token')) { // Só busca estado se estiver logado
                 await fetchGameState();
             }
-        }, 5000);
+        }, 5000); // A cada 5 segundos
 
         // Inicialização Principal ao carregar o DOM
         document.addEventListener('DOMContentLoaded', () => {
-            initializeAuthListeners();
+            initializeEventListeners(); // Inicializa todos os listeners uma vez
             checkAuth(); // Verifica o token ao carregar a página e mostra a UI correta
 
             // Gera partículas nas seções apropriadas
@@ -1870,11 +1630,8 @@
                 generateParticles(particleContainerAuth, 50);
                 setInterval(() => createParticle(particleContainerAuth), 1000);
             }
-            // Só gera partículas no game container se o jogo estiver ativo, ou pode gerá-las mesmo escondido
-            if (particleContainerGame) {
-                 generateParticles(particleContainerGame, 30);
-                 setInterval(() => createParticle(particleContainerGame), 2000);
-            }
+            // As partículas do game container serão geradas dentro de checkAuth()
+            // quando a seção do jogo for exibida e confirmada a autenticação.
         });
     </script>
 </body>
