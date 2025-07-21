@@ -1,95 +1,462 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <title>Jogo de Mineração Online</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f2f2f2;
-      text-align: center;
-      margin-top: 100px;
-    }
-    .login-box {
-      background: white;
-      padding: 30px;
-      border-radius: 10px;
-      display: inline-block;
-      box-shadow: 0 0 10px #aaa;
-    }
-    input {
-      margin: 10px;
-      padding: 10px;
-      width: 200px;
-    }
-    button {
-      padding: 10px 20px;
-      margin: 10px;
-    }
-    .error {
-      color: red;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lula Coin Miner</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        /* Estilos mantidos conforme seu arquivo original */
+        :root {
+            --primary-color: #ff3b3b;
+            --secondary-color: #2e008a;
+            --tertiary-color: #0a0e2a;
+            --text-color: #e0e0e0;
+            --dark-gray: #1a1a1a;
+            --medium-gray: #333;
+            --light-gray: #555;
+            --red-alert: #ff4500;
+            --border-color: rgba(255, 59, 59, 0.3);
+            --glow-color: rgba(255, 59, 59, 0.6);
+        }
+
+        body {
+            font-family: 'Share Tech Mono', monospace;
+            background-color: var(--dark-gray);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        main {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #auth-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 400px;
+            padding: 40px;
+            background-color: var(--medium-gray);
+            border-radius: 10px;
+            box-shadow: 0 0 20px var(--glow-color);
+            position: relative;
+            z-index: 10;
+        }
+
+        #auth-section h1 {
+            color: var(--primary-color);
+            text-shadow: 0 0 10px var(--glow-color);
+            margin-bottom: 30px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+        }
+
+        .auth-form {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .auth-form input {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            background-color: var(--dark-gray);
+            color: var(--text-color);
+            font-family: 'Share Tech Mono', monospace;
+            outline: none;
+        }
+
+        .auth-form button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 1.1em;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 0 8px rgba(255, 59, 59, 0.4);
+            margin-top: 10px;
+        }
+
+        #game-section {
+            display: none;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background-color: var(--tertiary-color);
+            box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8);
+            overflow: hidden;
+        }
+
+        /* Adicione aqui os demais estilos conforme seu arquivo original */
+    </style>
 </head>
 <body>
-  <div class="login-box">
-    <h2>Jogo de Mineração Online</h2>
-    <h3>Login / Registrar</h3>
-    <input id="email" placeholder="Usuário">
-    <input id="senha" type="password" placeholder="Senha">
-    <br>
-    <button onclick="login()">Login</button>
-    <button onclick="register()">Registrar</button>
-    <p id="erro" class="error"></p>
-  </div>
+    <div id="overlay-message" class="overlay-message">
+        <div class="overlay-message-content">
+            <p id="overlay-message-text" class="overlay-message-text"></p>
+        </div>
+    </div>
 
-  <script>
-    async function register() {
-      const username = document.getElementById('email').value;
-      const password = document.getElementById('senha').value;
+    <main>
+        <section id="auth-section">
+            <h1>Lula Coin Miner</h1>
 
-      try {
-        const res = await fetch('https://lula-coin-backend.onrender.com/api/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password })
-        });
+            <form id="login-form" class="auth-form">
+                <h2>Login</h2>
+                <label for="login-username">Usuário:</label>
+                <input type="text" id="login-username" required autocomplete="username">
+                <label for="login-password">Senha:</label>
+                <input type="password" id="login-password" required autocomplete="current-password">
+                <button type="submit">Entrar</button>
+                <p id="auth-message"></p>
+                <div class="toggle-link">
+                    Não tem uma conta? <a href="#" id="show-register">Registre-se aqui</a>
+                </div>
+            </form>
 
-        const data = await res.json();
-        if (res.ok) {
-          localStorage.setItem('token', data.token);
-          alert("Registrado com sucesso!");
-        } else {
-          document.getElementById('erro').innerText = data.message || "Erro no registro";
+            <form id="register-form" class="auth-form" style="display: none;">
+                <h2>Registro</h2>
+                <label for="register-username">Usuário:</label>
+                <input type="text" id="register-username" required autocomplete="username">
+                <label for="register-password">Senha:</label>
+                <input type="password" id="register-password" required autocomplete="new-password">
+                <button type="submit">Registrar</button>
+                <p id="auth-message-register"></p>
+                <div class="toggle-link">
+                    Já tem uma conta? <a href="#" id="show-login">Faça Login</a>
+                </div>
+            </form>
+        </section>
+
+        <section id="game-section">
+            <header class="header-game">
+                <div class="user-info">
+                    <span class="stat-item"><i class="fas fa-user-circle"></i> <span id="username-display">Carregando...</span></span>
+                    <span class="stat-item"><i class="fas fa-coins"></i> <span id="lula-coins-display">0.00</span></span>
+                </div>
+                <div class="game-stats">
+                    <span class="stat-item"><i class="fas fa-chart-line"></i> Hashrate: <span id="hashrate-display">0</span> H/s</span>
+                    <span class="stat-item"><i class="fas fa-tachometer-alt"></i> Nível: <span id="level-display">1</span></span>
+                </div>
+                <div class="buttons-container">
+                    <button id="open-shop-btn" class="action-button"><i class="fas fa-store"></i> Loja</button>
+                    <button id="open-inventory-btn" class="action-button"><i class="fas fa-boxes"></i> Inventário</button>
+                    <button id="logout-button" class="action-button logout-button"><i class="fas fa-sign-out-alt"></i> Sair</button>
+                </div>
+            </header>
+
+            <div class="mining-room" id="mining-room">
+                <!-- Racks serão renderizados aqui -->
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Configuração crítica - URL do backend
+        const API_BASE_URL = 'https://lula-coin-backend.onrender.com';
+        
+        // Estado do jogo
+        let gameState = {
+            lulaCoins: 0,
+            level: 1,
+            totalHashrate: 0,
+            placedGpus: {},
+            inventory: { gpus: [], upgrades: [] }
+        };
+
+        // Elementos do DOM
+        const authSection = document.getElementById('auth-section');
+        const gameSection = document.getElementById('game-section');
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const loginUsernameInput = document.getElementById('login-username');
+        const loginPasswordInput = document.getElementById('login-password');
+        const registerUsernameInput = document.getElementById('register-username');
+        const registerPasswordInput = document.getElementById('register-password');
+        const showRegisterLink = document.getElementById('show-register');
+        const showLoginLink = document.getElementById('show-login');
+        const authMessageDisplay = document.getElementById('auth-message');
+        const registerMessageDisplay = document.getElementById('auth-message-register');
+        const usernameDisplay = document.getElementById('username-display');
+        const lulaCoinsDisplay = document.getElementById('lula-coins-display');
+        const hashrateDisplay = document.getElementById('hashrate-display');
+        const levelDisplay = document.getElementById('level-display');
+        const logoutButton = document.getElementById('logout-button');
+
+        // Funções de autenticação
+        async function loginUser(username, password) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('username', username);
+                    showOverlayMessage('Login bem-sucedido!', 'success');
+                    await checkAuth();
+                } else {
+                    showOverlayMessage(data.message || 'Erro no login', 'error');
+                }
+            } catch (error) {
+                console.error('Erro no login:', error);
+                showOverlayMessage('Erro de conexão com o servidor', 'error');
+            }
         }
-      } catch (err) {
-        document.getElementById('erro').innerText = "Erro de conexão com o servidor.";
-      }
-    }
 
-    async function login() {
-      const username = document.getElementById('email').value;
-      const password = document.getElementById('senha').value;
-
-      try {
-        const res = await fetch('https://lula-coin-backend.onrender.com/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password })
-        });
-
-        const data = await res.json();
-        if (res.ok) {
-          localStorage.setItem('token', data.token);
-          alert("Login realizado!");
-        } else {
-          document.getElementById('erro').innerText = data.message || "Erro no login";
+        async function registerUser(username, password) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showOverlayMessage('Registro bem-sucedido! Faça login para continuar.', 'success');
+                    registerForm.style.display = 'none';
+                    loginForm.style.display = 'block';
+                } else {
+                    showOverlayMessage(data.message || 'Erro no registro', 'error');
+                }
+            } catch (error) {
+                console.error('Erro no registro:', error);
+                showOverlayMessage('Erro de conexão com o servidor', 'error');
+            }
         }
-      } catch (err) {
-        document.getElementById('erro').innerText = "Erro de conexão com o servidor.";
-      }
-    }
-  </script>
+
+        function logoutUser() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+            showOverlayMessage('Sessão encerrada', 'info');
+            checkAuth();
+        }
+
+        // Funções de controle de UI
+        function showAuthSection() {
+            authSection.style.display = 'flex';
+            gameSection.style.display = 'none';
+        }
+
+        function showGameSection() {
+            authSection.style.display = 'none';
+            gameSection.style.display = 'flex';
+        }
+
+        // Função crítica - Verifica autenticação e carrega o jogo
+        async function checkAuth() {
+            const token = localStorage.getItem('token');
+            
+            if (!token) {
+                showAuthSection();
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/game/state`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    updateGameState(data);
+                    showGameSection();
+                } else {
+                    // Token inválido ou expirado
+                    showOverlayMessage('Sessão expirada. Faça login novamente.', 'error');
+                    logoutUser();
+                }
+            } catch (error) {
+                console.error('Erro ao verificar autenticação:', error);
+                showOverlayMessage('Erro de conexão com o servidor', 'error');
+                showAuthSection();
+            }
+        }
+
+        // Atualiza o estado do jogo com os dados do backend
+        function updateGameState(data) {
+            // Verifica se os dados são válidos
+            if (!data) {
+                console.error('Dados do jogo inválidos:', data);
+                showOverlayMessage('Erro ao carregar dados do jogo', 'error');
+                return;
+            }
+
+            // Atualiza o estado local
+            gameState = {
+                lulaCoins: data.lulaCoins || 0,
+                level: data.level || 1,
+                totalHashrate: data.totalHashrate || 0,
+                placedGpus: data.placedGpus || {},
+                inventory: data.inventory || { gpus: [], upgrades: [] }
+            };
+
+            // Atualiza a UI
+            usernameDisplay.textContent = localStorage.getItem('username') || 'Visitante';
+            lulaCoinsDisplay.textContent = gameState.lulaCoins.toFixed(2);
+            hashrateDisplay.textContent = gameState.totalHashrate;
+            levelDisplay.textContent = gameState.level;
+
+            // Renderiza os racks e GPUs (implemente conforme necessário)
+            renderPlacedGpus();
+        }
+
+        // Função para mostrar mensagens temporárias
+        function showOverlayMessage(message, type = 'info', duration = 3000) {
+            const overlay = document.getElementById('overlay-message');
+            const messageText = document.getElementById('overlay-message-text');
+
+            if (!overlay || !messageText) return;
+
+            overlay.className = `overlay-message ${type}`;
+            messageText.textContent = message;
+            overlay.style.display = 'flex';
+
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, duration);
+        }
+
+        // Função para renderizar GPUs nos racks (simplificada)
+        function renderPlacedGpus() {
+            const miningRoom = document.getElementById('mining-room');
+            
+            // Limpa os racks existentes
+            miningRoom.innerHTML = '';
+            
+            // Cria racks básicos (pode ser aprimorado conforme seus dados)
+            for (let rackId = 1; rackId <= 3; rackId++) {
+                const rack = document.createElement('div');
+                rack.className = 'rack';
+                rack.id = `rack-${rackId}`;
+                rack.innerHTML = `<div class="rack-title">Rack ${rackId}</div>`;
+                
+                for (let slotId = 0; slotId < 3; slotId++) {
+                    const slotKey = `rack-${rackId}-slot-${slotId}`;
+                    const slot = document.createElement('div');
+                    slot.className = 'rack-slot';
+                    slot.dataset.rack = rackId;
+                    slot.dataset.slot = slotId;
+                    
+                    if (gameState.placedGpus[slotKey]) {
+                        const gpu = gameState.placedGpus[slotKey];
+                        slot.classList.add('occupied');
+                        slot.innerHTML = `
+                            <div class="gpu-display">
+                                <img src="${gpu.img || 'https://via.placeholder.com/80x80/FF0000/FFFFFF?text=GPU'}" alt="${gpu.name}">
+                                <span>${gpu.name} (${gpu.hashrate} H/s)</span>
+                            </div>
+                        `;
+                    } else {
+                        slot.textContent = 'Vazio';
+                    }
+                    
+                    rack.appendChild(slot);
+                }
+                
+                miningRoom.appendChild(rack);
+            }
+        }
+
+        // Event Listeners
+        function initializeEventListeners() {
+            // Login/Registro
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const username = loginUsernameInput.value.trim();
+                const password = loginPasswordInput.value.trim();
+                
+                if (username && password) {
+                    await loginUser(username, password);
+                }
+            });
+
+            registerForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const username = registerUsernameInput.value.trim();
+                const password = registerPasswordInput.value.trim();
+                
+                if (username && password) {
+                    await registerUser(username, password);
+                }
+            });
+
+            showRegisterLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                loginForm.style.display = 'none';
+                registerForm.style.display = 'block';
+                authMessageDisplay.textContent = '';
+            });
+
+            showLoginLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                loginForm.style.display = 'block';
+                registerForm.style.display = 'none';
+                registerMessageDisplay.textContent = '';
+            });
+
+            // Logout
+            logoutButton.addEventListener('click', logoutUser);
+        }
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeEventListeners();
+            checkAuth(); // Verifica autenticação ao carregar a página
+            
+            // Atualiza o estado do jogo periodicamente
+            setInterval(async () => {
+                if (localStorage.getItem('token')) {
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/api/game/state`, {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                            }
+                        });
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            updateGameState(data);
+                        }
+                    } catch (error) {
+                        console.error('Erro ao atualizar estado do jogo:', error);
+                    }
+                }
+            }, 5000); // Atualiza a cada 5 segundos
+        });
+    </script>
 </body>
 </html>
