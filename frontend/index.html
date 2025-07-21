@@ -1107,11 +1107,12 @@
         }
 
         function updateGameUI(data) {
-            lulaCoins = data.lulaCoins;
-            level = data.level;
-            totalHashrate = data.totalHashrate;
-            inventory = data.inventory;
-            placedGpus = data.placedGpus;
+            console.log('Dados do estado do jogo recebidos:', data); // LOG PARA DEBUG
+            lulaCoins = data.lulaCoins || 0;
+            level = data.level || 1;
+            totalHashrate = data.totalHashrate || 0;
+            inventory = data.inventory || { gpus: [], upgrades: [] };
+            placedGpus = data.placedGpus || {};
 
             usernameDisplay.textContent = localStorage.getItem('username') || 'Visitante';
             lulaCoinsDisplay.textContent = lulaCoins.toFixed(2);
@@ -1370,15 +1371,20 @@
             }
 
             items.forEach(item => {
+                // Adiciona verificação para item nulo/undefined
+                if (!item) {
+                    console.warn('Item nulo/undefined encontrado na loja para a categoria:', category);
+                    return; // Pula este item
+                }
                 const itemElement = document.createElement('div');
                 itemElement.classList.add('shop-item');
                 itemElement.innerHTML = `
                     <div class="item-info">
-                        <img src="${item.img}" alt="${item.name}">
-                        <h3>${item.name}</h3>
-                        ${item.hashrate ? `<p class="hashrate">Hashrate: ${item.hashrate} H/s</p>` : ''}
+                        <img src="${item.img || ''}" alt="${item.name || 'Item'}">
+                        <h3>${item.name || 'Nome Desconhecido'}</h3>
+                        ${item.hashrate !== undefined ? `<p class="hashrate">Hashrate: ${item.hashrate} H/s</p>` : ''}
                         ${item.effect ? `<p class="effect">Efeito: ${item.effect}</p>` : ''}
-                        <p class="cost">Custo: ${item.cost.toFixed(2)} <i class="fas fa-coins"></i></p>
+                        <p class="cost">Custo: ${(item.cost || 0).toFixed(2)} <i class="fas fa-coins"></i></p>
                     </div>
                     <button onclick="buyItem('${item.id}', '${category}')">Comprar</button>
                 `;
@@ -1413,15 +1419,20 @@
             }
 
             items.forEach(item => {
+                // Adiciona verificação para item nulo/undefined
+                if (!item) {
+                    console.warn('Item nulo/undefined encontrado no inventário para a categoria:', category);
+                    return; // Pula este item
+                }
                 const itemElement = document.createElement('div');
                 itemElement.classList.add('inventory-item');
                 itemElement.innerHTML = `
                     <div class="item-info">
-                        <img src="${item.img}" alt="${item.name}">
-                        <h3>${item.name}</h3>
-                        ${item.hashrate ? `<p class="hashrate">Hashrate: ${item.hashrate} H/s</p>` : ''}
+                        <img src="${item.img || ''}" alt="${item.name || 'Item'}">
+                        <h3>${item.name || 'Nome Desconhecido'}</h3>
+                        ${item.hashrate !== undefined ? `<p class="hashrate">Hashrate: ${item.hashrate} H/s</p>` : ''}
                         ${item.effect ? `<p class="effect">Efeito: ${item.effect}</p>` : ''}
-                        <p>Quantidade: ${item.quantity}</p>
+                        <p>Quantidade: ${item.quantity || 0}</p>
                     </div>
                     <div class="action-buttons">
                         ${category === 'gpus' && !item.placed ? `<button onclick="prepareToPlaceGpu('${item.instanceId}', '${item.id}', '${item.name}', '${item.hashrate}', '${item.img}')">Colocar</button>` : ''}
@@ -1463,13 +1474,13 @@
                 const slotId = slot.dataset.slot;
                 const slotKey = `rack-${rackId}-slot-${slotId}`;
 
-                if (placedGpus[slotKey]) {
-                    const gpu = placedGpus[slotKey];
+                const gpu = placedGpus[slotKey];
+                if (gpu && typeof gpu === 'object') { // Adiciona verificação para garantir que 'gpu' é um objeto válido
                     slot.classList.add('occupied');
                     slot.innerHTML = `
                         <div class="gpu-display">
-                            <img src="${gpu.img}" alt="${gpu.name}">
-                            <span>${gpu.name} (${gpu.hashrate} H/s)</span>
+                            <img src="${gpu.img || ''}" alt="${gpu.name || 'GPU'}">
+                            <span>${gpu.name || 'GPU Desconhecida'} (${gpu.hashrate !== undefined ? gpu.hashrate : 'N/A'} H/s)</span>
                         </div>
                         <button class="remove-gpu-btn" onclick="removeGpu(${rackId}, ${slotId})">X</button>
                     `;
@@ -1506,7 +1517,12 @@
                     if (isPlacingGpu && !slot.classList.contains('occupied')) {
                         const rackId = slot.dataset.rack;
                         const slotId = slot.dataset.slot;
-                        placeGpu(selectedGpuToPlace.instanceId, parseInt(rackId), parseInt(slotId));
+                        if (selectedGpuToPlace && selectedGpuToPlace.instanceId) { // Garante que a GPU selecionada e seu ID de instância existem
+                           placeGpu(selectedGpuToPlace.instanceId, parseInt(rackId), parseInt(slotId));
+                        } else {
+                           showOverlayMessage("Nenhuma GPU selecionada para colocar ou dados inválidos.", "error");
+                           console.error("Erro: selectedGpuToPlace ou instanceId é nulo/undefined.");
+                        }
                     }
                 });
             });
