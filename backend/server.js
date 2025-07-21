@@ -15,15 +15,12 @@ app.use(cors());
 app.use(express.json());
 
 // Conexão com o MongoDB
-// As opções `useNewUrlParser` e `useUnifiedTopology` não são mais necessárias nas versões recentes do Mongoose.
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('Conectado ao MongoDB Atlas'))
   .catch(err => console.error('Erro ao conectar ao MongoDB Atlas:', err));
 
 // Definição das rotas da API
-// Todas as rotas começando com /api/auth serão gerenciadas pelo authRoutes
 app.use('/api/auth', authRoutes);
-// Todas as rotas começando com /api/game serão gerenciadas pelo gameRoutes
 app.use('/api/game', gameRoutes);
 
 // Rota de teste para verificar se o servidor está online
@@ -37,4 +34,3 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
 });
-

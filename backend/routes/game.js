@@ -19,14 +19,12 @@ const RACKS = [
 ];
 
 // ROTA: GET /api/game/state
-// Função: Obter o estado atual do jogo do usuário.
-// A rota é protegida, ou seja, só funciona se o usuário estiver logado.
 router.get('/state', protect, async (req, res) => {
     try {
-        // O usuário é obtido pelo middleware `protect` (req.user)
         res.json({
             username: req.user.username,
-            gameState: req.user.gameState
+            gameState: req.user.gameState,
+            currentRoomIndex: req.user.currentRoomIndex || 0
         });
     } catch (err) {
         console.error(err.message);
@@ -35,21 +33,23 @@ router.get('/state', protect, async (req, res) => {
 });
 
 // ROTA: POST /api/game/update
-// Função: Salvar o estado completo do jogo vindo do cliente.
 router.post('/update', protect, async (req, res) => {
     try {
-        const { gameState } = req.body;
+        const { gameState, currentRoomIndex } = req.body;
 
-        // Validação básica para garantir que gameState foi enviado
         if (!gameState) {
             return res.status(400).json({ message: 'Nenhum estado de jogo fornecido.' });
         }
 
-        // Atualiza o gameState do usuário no banco de dados
         const user = await User.findByIdAndUpdate(
             req.user.id,
-            { $set: { gameState: gameState } },
-            { new: true } // Retorna o documento atualizado
+            { 
+                $set: { 
+                    gameState: gameState,
+                    currentRoomIndex: currentRoomIndex || 0
+                } 
+            },
+            { new: true }
         ).select('-password');
 
         res.json({
@@ -64,7 +64,6 @@ router.post('/update', protect, async (req, res) => {
 });
 
 // ROTA: POST /api/game/buy-item
-// Função: Comprar um item da loja.
 router.post('/buy-item', protect, async (req, res) => {
     const { itemId, category } = req.body;
     const user = req.user;
@@ -79,10 +78,8 @@ router.post('/buy-item', protect, async (req, res) => {
         return res.status(400).json({ message: 'Saldo insuficiente.' });
     }
 
-    // Deduz o preço do saldo
     user.gameState.balance -= itemConfig.price;
 
-    // Adiciona o item ao inventário
     const inventoryList = category === 'miners' ? user.gameState.inventory.miners : user.gameState.inventory.racks;
     const existingItem = inventoryList.find(i => i.id === itemId);
 
@@ -92,7 +89,6 @@ router.post('/buy-item', protect, async (req, res) => {
         inventoryList.push({ id: itemId, quantity: 1 });
     }
     
-    // Marca o caminho do gameState como modificado para o Mongoose salvar corretamente
     user.markModified('gameState');
     await user.save();
 
@@ -102,6 +98,101 @@ router.post('/buy-item', protect, async (req, res) => {
     });
 });
 
+// ROTA: POST /api/game/buy-room
+router.post('/buy-room', protect, async (req, res) => {
+    const { cost } = req.body;
+    try {
+        const user = await User.findById(req.user.id);
+        if (user.gameState.balance < cost) {
+            return res.status(400).json({ message: "Saldo insuficiente!" });
+        }
+        user.gameState.balance -= cost;
+        user.gameState.placedRacksPerRoom.push(Array(4).fill(null));
+
+        user.markModified('gameState');
+        await user.save();
+        res.json({ 
+            gameState: user.gameState, 
+            message: `Sala comprada por ${cost} LCO!` 
+        });
+
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Erro no servidor ao comprar sala.');
+    }
+});
+
+// ROTA: POST /api/game/place-rack
+router.post('/place-rack', protect, async (req, res) => {
+    const { rackId, slotIndex, roomIndex } = req.body;
+    try {
+        const user = await User.findById(req.user.id);
+        const { gameState } = user;
+
+        const invRack = gameState.inventory.racks.find(r => r.id === rackId);
+        if (!invRack || invRack.quantity <= 0) {
+            return res.status(400).json({ message: "Rack não encontrado no inventário." });
+        }
+        invRack.quantity--;
+        if (invRack.quantity === 0) {
+            user.gameState.inventory.racks = user.gameState.inventory.racks.filter(r => r.id !== rackId);
+        }
+
+        const selectedRack = RACKS.find(r => r.id === rackId);
+
+        gameState.placedRacksPerRoom[roomIndex][slotIndex] = {
+            id: rackId,
+            slots: selectedRack.slots,
+            placedMiners: Array(selectedRack.slots).fill(null)
+        };
+
+        user.markModified('gameState');
+        await user.save();
+        res.json({ 
+            gameState: user.gameState, 
+            message: "Rack posicionado com sucesso!" 
+        });
+
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Erro no servidor ao posicionar o rack.');
+    }
+});
+
+// ROTA: POST /api/game/place-miner
+router.post('/place-miner', protect, async (req, res) => {
+    const { minerId, rackSlotIndex, minerSlotIndex, roomIndex } = req.body;
+    try {
+        const user = await User.findById(req.user.id);
+        const { gameState } = user;
+
+        const invMiner = gameState.inventory.miners.find(m => m.id === minerId);
+        if (!invMiner || invMiner.quantity <= 0) {
+            return res.status(400).json({ message: "Mineradora não encontrada no inventário." });
+        }
+        invMiner.quantity--;
+        if (invMiner.quantity === 0) {
+            user.gameState.inventory.miners = user.gameState.inventory.miners.filter(m => m.id !== minerId);
+        }
+
+        const selectedMiner = MINERS.find(m => m.id === minerId);
+
+        gameState.placedRacksPerRoom[roomIndex][rackSlotIndex].placedMiners[minerSlotIndex] = {
+            id: minerId,
+            power: selectedMiner.power
+        };
+
+        user.markModified('gameState');
+        await user.save();
+        res.json({ 
+            gameState: user.gameState, 
+            message: "Mineradora instalada!" 
+        });
+
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Erro no servidor ao instalar a mineradora.');
+    }
+});
 
 module.exports = router;
-
