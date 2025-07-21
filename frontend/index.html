@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lula Coin Miner</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
+        /* Variáveis CSS para fácil tematização */
         :root {
-            --primary-color: #ff3b3b;
-            --secondary-color: #2e008a;
-            --tertiary-color: #0a0e2a;
+            --primary-color: #ff3b3b; /* Ciano Neon */
+            --secondary-color: #2e008a; /* Azul Escuro */
+            --tertiary-color: #0a0e2a; /* Azul Quase Preto */
             --text-color: #e0e0e0;
             --dark-gray: #1a1a1a;
             --medium-gray: #333;
@@ -17,17 +19,35 @@
             --red-alert: #ff4500;
             --border-color: rgba(255, 59, 59, 0.3);
             --glow-color: rgba(255, 59, 59, 0.6);
-            --wall-color-dark: #3a4750;
-            --wall-color-light: #52636d;
-            --floor-color-dark: #2a343a;
-            --floor-color-light: #444f56;
-            --shelf-color: #607d8b;
-            --monitor-screen: #0f1c2c;
+
+            /* Cores para o ambiente do galpão */
+            --wall-color-dark: #3a4750; /* Cinza Metálico Escuro */
+            --wall-color-light: #52636d; /* Cinza Metálico Claro */
+            --floor-color-dark: #2a343a; /* Cinza de Concreto Escuro */
+            --floor-color-light: #444f56; /* Cinza de Concreto Claro */
+            --shelf-color: #607d8b; /* Azul Acinzentado */
+            --monitor-screen: #0f1c2c; /* Tela escura azulada */
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Share Tech Mono', monospace; }
-        body { background-color: #0a0a0a; color: var(--text-color); overflow: hidden; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        
-        /* --- Tela de Autenticação --- */
+
+        /* Reset Básico para consistência entre navegadores */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Share Tech Mono', monospace; /* Fonte para o corpo do texto */
+        }
+
+        body {
+            background-color: #0a0a0a;
+            color: var(--text-color);
+            overflow: hidden; /* Evita barras de rolagem indesejadas no corpo */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* --- Tela de Autenticação (Adicionada) --- */
         #auth-container {
             display: flex; /* Mostra por padrão */
             flex-direction: column;
@@ -61,57 +81,489 @@
         #register-form { display: none; }
         #auth-message { margin-top: 15px; color: var(--red-alert); font-weight: bold; min-height: 20px; }
 
-        /* --- Estrutura Principal do Jogo --- */
-        #app { display: none; /* Escondido por padrão, mostrado após login */ flex-direction: column; width: 100vw; height: 100vh; max-width: 1920px; max-height: 1080px; border: 2px solid var(--border-color); box-shadow: 0 0 20px var(--glow-color); background-color: var(--dark-gray); position: relative; overflow: hidden; }
-        header { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background-color: var(--tertiary-color); border-bottom: 1px solid var(--border-color); z-index: 10; }
-        .logo h1 { font-family: 'Orbitron', sans-serif; font-size: 2em; color: var(--primary-color); text-shadow: 0 0 8px var(--primary-color); }
+
+        #app {
+            display: none; /* Escondido por padrão, mostrado após login */
+            flex-direction: column;
+            width: 100vw;
+            height: 100vh;
+            max-width: 1920px; /* Limite máximo para telas muito grandes */
+            max-height: 1080px; /* Limite máximo para telas muito grandes */
+            border: 2px solid var(--border-color);
+            box-shadow: 0 0 20px var(--glow-color);
+            background-color: var(--dark-gray);
+            position: relative;
+            overflow: hidden; /* Garante que o conteúdo não vaze da aplicação */
+        }
+
+        /* Animações reutilizáveis */
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-5px); } 100% { transform: translateY(0px); } }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes pulse { 0%, 100% { box-shadow: 0 0 5px var(--primary-color), 0 0 10px var(--primary-color); } 50% { box-shadow: 0 0 10px var(--primary-color), 0 0 20px var(--primary-color); } }
+        @keyframes scanline { 0% { background-position: 0 0; } 100% { background-position: 0 100%; } }
+        @keyframes glow-text { 0%, 100% { text-shadow: 0 0 5px var(--primary-color), 0 0 15px var(--primary-color); } 50% { text-shadow: 0 0 10px var(--primary-color), 0 0 30px var(--primary-color); } }
+
+        
+        .room-btn {
+            padding: 5px 10px;
+            background-color: var(--primary-color);
+            border: none;
+            border-radius: 5px;
+            color: var(--dark-gray);
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 0 8px var(--primary-color);
+            transition: all 0.2s ease;
+        }
+        .room-btn.active { background-color: #fff; color: var(--primary-color); }
+
+
+        /* --- Header --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 25px;
+            background-color: var(--tertiary-color);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 10;
+            position: relative;
+        }
+
+        .logo h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2em;
+            color: var(--primary-color);
+            text-shadow: 0 0 8px var(--primary-color);
+            letter-spacing: 2px;
+            animation: glow-text 3s ease-in-out infinite;
+        }
+
         .user-profile { display: flex; align-items: center; }
-        .user-avatar { width: 40px; height: 40px; background-color: var(--primary-color); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.5em; margin-right: 15px; box-shadow: 0 0 10px var(--primary-color); }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background-color: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5em;
+            margin-right: 15px;
+            box-shadow: 0 0 10px var(--primary-color);
+        }
+
         .user-stats { display: flex; gap: 20px; }
         .stat-item { display: flex; flex-direction: column; align-items: flex-end; }
         .stat-label { font-size: 0.8em; color: var(--light-gray); margin-bottom: 3px; }
         .stat-value { font-size: 1.1em; color: var(--text-color); font-weight: bold; display: flex; align-items: center; }
         .stat-value .icon { margin-right: 5px; color: var(--primary-color); text-shadow: 0 0 5px var(--primary-color); }
+
+        /* --- Main Content --- */
         .main-content { flex-grow: 1; display: flex; position: relative; overflow: hidden; }
-        .mining-room { flex-grow: 1; display: flex; justify-content: center; align-items: flex-end; position: relative; overflow: hidden; background-color: var(--wall-color-dark); background-image: linear-gradient(to bottom, var(--wall-color-light) 1px, transparent 1px); background-size: 100% 50px; background-repeat: repeat-y; }
-        .mining-room::before { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 30%; background-color: var(--floor-color-dark); background-image: linear-gradient(to right, var(--floor-color-light) 2px, transparent 2px), linear-gradient(to bottom, var(--floor-color-light) 2px, transparent 2px); background-size: 80px 80px; background-repeat: repeat; z-index: 0; }
+
+        /* --- Mining Room (Novo Background e Layout) --- */
+        .mining-room {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            position: relative;
+            overflow: hidden;
+            background-color: var(--wall-color-dark);
+            background-image: linear-gradient(to bottom, var(--wall-color-light) 1px, transparent 1px);
+            background-size: 100% 50px;
+            background-repeat: repeat-y;
+        }
+
+        .mining-room::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 30%;
+            background-color: var(--floor-color-dark);
+            background-image: linear-gradient(to right, var(--floor-color-light) 2px, transparent 2px), linear-gradient(to bottom, var(--floor-color-light) 2px, transparent 2px);
+            background-size: 80px 80px;
+            background-repeat: repeat;
+            z-index: 0;
+        }
+
         .mining-room.placing-item { cursor: cell; }
-        #rack-placement-area { position: absolute; bottom: 30px; width: calc(100% - 350px); left: 280px; height: calc(70% - 100px); display: flex; justify-content: space-around; align-items: flex-end; padding-bottom: 80px; z-index: 1; }
-        .rack-placement-slot { width: 220px; height: 300px; border: 2px dashed rgba(255, 59, 59, 0.4); border-radius: 8px; display: flex; justify-content: center; align-items: flex-end; padding: 10px; position: relative; transition: all 0.3s ease; cursor: pointer; z-index: 2; }
-        .rack-placement-slot.occupied { border: none; cursor: default; }
+
+        #rack-placement-area {
+            position: absolute;
+            bottom: 30px;
+            width: calc(100% - 350px);
+            left: 280px;
+            height: calc(70% - 100px);
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            padding-bottom: 80px;
+            z-index: 1;
+        }
+
+        .rack-placement-slot {
+            width: 220px;
+            height: 300px;
+            border: 2px dashed rgba(255, 59, 59, 0.4);
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            padding: 10px;
+            position: relative;
+            transition: border-color 0.3s ease, background-color 0.3s ease;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .rack-placement-slot.occupied { border: none; background-color: transparent; cursor: default; }
         .rack-placement-slot.available:hover { border-color: var(--primary-color); background-color: rgba(255, 59, 59, 0.1); }
-        .rack { width: 200px; min-height: 200px; background-color: var(--medium-gray); border: 2px solid var(--border-color); border-radius: 8px; padding: 15px; display: flex; flex-direction: column; gap: 10px; position: relative; margin-top: 20px; z-index: 1; }
-        .rack-label { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background-color: var(--primary-color); color: var(--dark-gray); padding: 5px 10px; border-radius: 5px; font-size: 0.9em; font-weight: bold; }
-        .slot { width: 100%; height: 60px; background-color: var(--dark-gray); border: 1px dashed var(--border-color); border-radius: 5px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: all 0.3s ease; position: relative; }
+        .rack-placement-slot.available::after {
+            content: 'CLIQUE PARA COLOCAR RACK';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.9em;
+            color: rgba(255, 59, 59, 0.6);
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .rack-placement-slot.available:hover::after { opacity: 1; }
+        
+        .rack {
+            width: 200px;
+            min-height: 200px;
+            background-color: var(--medium-gray);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 224, 255, 0.2);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            position: relative;
+            margin-top: 20px;
+            z-index: 1;
+        }
+        .rack[data-slots="2"] { min-height: 120px; }
+        .rack[data-slots="3"] { min-height: 180px; }
+        .rack[data-slots="4"] { min-height: 240px; }
+
+        .rack::before, .rack::after {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            width: 10px;
+            height: 20px;
+            background-color: var(--light-gray);
+            border-radius: 2px;
+            box-shadow: inset 0 -3px 5px rgba(0,0,0,0.3);
+            z-index: 0;
+        }
+        .rack::before { left: 15px; }
+        .rack::after { right: 15px; }
+
+        .rack-label {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--primary-color);
+            color: var(--dark-gray);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            font-weight: bold;
+            white-space: nowrap;
+            box-shadow: 0 0 8px var(--primary-color);
+        }
+
+        .slot {
+            width: 100%;
+            height: 60px;
+            background-color: var(--dark-gray);
+            border: 1px dashed var(--border-color);
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: border-color 0.3s ease, background-color 0.3s ease;
+            position: relative;
+        }
         .slot.empty:hover { border-color: var(--primary-color); background-color: rgba(255, 59, 59, 0.1); }
-        .miner-gpu { width: 90%; height: 90%; display: flex; flex-direction: column; justify-content: center; align-items: center; background-color: #222; border: 2px solid; border-radius: 5px; position: relative; overflow: hidden; cursor: pointer; }
-        .gpu-body { width: 90%; height: 70%; background-color: #111; border-radius: 3px; display: flex; justify-content: space-around; align-items: center; }
-        .gpu-fan { width: 30px; height: 30px; border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .computer-setup { position: absolute; left: 20px; bottom: 30px; width: 200px; height: 200px; display: flex; justify-content: center; align-items: flex-end; z-index: 2; }
+
+        .miner-gpu {
+            width: 90%;
+            height: 90%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #222;
+            border: 2px solid;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(255, 59, 59, 0.3);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .gpu-body {
+            width: 90%;
+            height: 70%;
+            background-color: #111;
+            border-radius: 3px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            position: relative;
+        }
+
+        .gpu-fan {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+            animation: spin 1s linear infinite;
+        }
+
+        .gpu-fan-blades {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .gpu-fan-blade { position: absolute; width: 4px; height: 18px; background-color: rgba(0, 0, 0, 0.3); border-radius: 1px; }
+        .gpu-fan-blade:nth-child(1) { transform: rotate(0deg) translateY(-8px); }
+        .gpu-fan-blade:nth-child(2) { transform: rotate(90deg) translateY(-8px); }
+        .gpu-fan-blade:nth-child(3) { transform: rotate(180deg) translateY(-8px); }
+        .gpu-fan-blade:nth-child(4) { transform: rotate(270deg) translateY(-8px); }
+
+        .gpu-details { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+        .gpu-led { width: 8px; height: 8px; border-radius: 50%; background-color: var(--primary-color); box-shadow: 0 0 5px var(--primary-color); animation: pulse 1.5s ease-in-out infinite; }
+        .gpu-power { position: absolute; bottom: 5px; right: 5px; font-size: 0.7em; color: var(--text-color); background-color: rgba(0,0,0,0.5); padding: 2px 5px; border-radius: 3px; }
+
+        .rack-sprite {
+            width: 90%;
+            height: 90%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #222;
+            border: 2px solid;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(255, 59, 59, 0.3);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .rack-body {
+            width: 90%;
+            height: 70%;
+            background-color: #111;
+            border-radius: 3px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            align-items: center;
+            position: relative;
+            padding: 5px;
+        }
+
+        .rack-slot-representation { width: 80%; height: 15px; background-color: #333; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 2px; margin: 2px 0; }
+        .rack-led { width: 10px; height: 10px; border-radius: 50%; background-color: var(--primary-color); box-shadow: 0 0 5px var(--primary-color); animation: pulse 1.5s ease-in-out infinite; margin-top: 5px; }
+        .rack-indicator { position: absolute; top: 5px; right: 5px; font-size: 0.7em; color: var(--text-color); background-color: rgba(0,0,0,0.5); padding: 2px 5px; border-radius: 3px; }
+
+        .computer-setup {
+            position: absolute;
+            left: 20px;
+            bottom: 30px;
+            width: 200px;
+            height: 200px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .desk { width: 150px; height: 80px; background-color: #4e342e; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); border-radius: 5px 5px 0 0; z-index: 0; box-shadow: 0 -5px 10px rgba(0,0,0,0.3); pointer-events: auto; }
+        .desk::before, .desk::after { content: ''; position: absolute; bottom: -50px; width: 10px; height: 50px; background-color: #3e2723; box-shadow: inset 0 -3px 5px rgba(0,0,0,0.3); }
+        .desk::before { left: 10px; }
+        .desk::after { right: 10px; }
+
+        .monitor { width: 120px; height: 90px; background-color: #222; border: 2px solid #555; border-radius: 5px; position: absolute; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1; box-shadow: 0 0 15px rgba(0, 0, 0, 0.5); pointer-events: auto; }
         .monitor-screen { width: calc(100% - 10px); height: calc(100% - 10px); background-color: var(--monitor-screen); position: absolute; top: 5px; left: 5px; border-radius: 3px; overflow: hidden; }
-        .monitor-text { color: lime; font-size: 0.6em; padding: 5px; white-space: pre-wrap; }
-        .stats-bar { display: flex; justify-content: space-around; padding: 10px 20px; background-color: var(--tertiary-color); border-top: 1px solid var(--border-color); z-index: 10; }
-        .stats-bar .action-btn { background-color: var(--primary-color); color: var(--dark-gray); border: none; border-radius: 5px; padding: 10px 20px; cursor: pointer; font-weight: bold; text-transform: uppercase; box-shadow: 0 0 10px var(--primary-color); }
-        .shop-modal, .inventory-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.8); display: none; justify-content: center; align-items: center; z-index: 100; }
-        .shop-content, .inventory-content { background-color: var(--dark-gray); border: 2px solid var(--primary-color); border-radius: 10px; padding: 30px; width: 90%; max-width: 900px; height: 90%; max-height: 700px; display: flex; flex-direction: column; position: relative; box-shadow: 0 0 25px var(--glow-color); overflow: hidden; }
+        .scanline-effect { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(0, 0, 0, 0.1) 50%, transparent 50%); background-size: 100% 2px; animation: scanline 5s linear infinite; }
+        .monitor-text { color: lime; font-size: 0.6em; padding: 5px; white-space: pre-wrap; animation: blink 2s steps(1) infinite; }
+
+        .mouse { width: 15px; height: 20px; background-color: #aaa; border-radius: 0 0 5px 5px; position: absolute; top: 60px; right: 20px; z-index: 2; transform: rotate(20deg); box-shadow: 0 2px 5px rgba(0,0,0,0.3); pointer-events: auto; }
+        .mouse-cable { width: 2px; height: 30px; background-color: #777; position: absolute; top: 30px; right: 25px; transform: rotate(-30deg); transform-origin: bottom; }
+        
+        .keyboard { width: 120px; height: 15px; background-color: #999; position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%); border-radius: 3px; box-shadow: 0 2px 5px rgba(0,0,0,0.4); }
+        .cpu-box { width: 60px; height: 80px; background-color: #444; position: absolute; bottom: -90px; left: 10px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.6); }
+
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            padding: 10px 20px;
+            background-color: var(--tertiary-color);
+            border-top: 1px solid var(--border-color);
+            z-index: 10;
+        }
+
+        .stats-bar .action-btn {
+            background-color: var(--primary-color);
+            color: var(--dark-gray);
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            box-shadow: 0 0 10px var(--primary-color);
+            transition: all 0.3s ease;
+        }
+        .stats-bar .action-btn:hover { filter: brightness(1.2); transform: scale(1.05); }
+
+        .miner-selection {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 70px;
+            background-color: rgba(0, 0, 0, 0.9);
+            border-top: 1px solid var(--primary-color);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            padding: 0 20px;
+            box-shadow: 0 -5px 20px rgba(255, 59, 59, 0.3);
+            z-index: 20;
+            transform: translateY(100%);
+            transition: transform 0.3s ease-out;
+        }
+        .miner-selection.active { transform: translateY(0%); display: flex; }
+        .selection-title { font-size: 1em; color: var(--primary-color); margin-right: 10px; white-space: nowrap; }
+        .available-items-list { display: flex; gap: 10px; flex-wrap: nowrap; overflow-x: auto; -ms-overflow-style: none; scrollbar-width: none; }
+        .available-items-list::-webkit-scrollbar { display: none; }
+
+        .selection-item {
+            flex-shrink: 0;
+            width: 50px;
+            height: 50px;
+            background-color: var(--dark-gray);
+            border: 2px solid var(--border-color);
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        .selection-item:hover { border-color: var(--primary-color); transform: translateY(-3px); box-shadow: 0 0 10px var(--primary-color); }
+        .selection-item.selected { border-color: var(--primary-color); box-shadow: 0 0 15px var(--primary-color), inset 0 0 5px var(--primary-color); transform: scale(1.05); }
+        .selection-item-icon { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
+
+        .selection-item .miner-gpu, .selection-item .rack-sprite { width: 90%; height: 90%; border: none; animation: none; box-shadow: none; }
+        .selection-item .miner-gpu .gpu-fan { animation: spin 1s linear infinite; }
+        .selection-item .miner-gpu .gpu-led, .selection-item .rack-sprite .rack-led { animation: pulse 1.5s ease-in-out infinite; }
+
+        .selection-item-name { position: absolute; top: -20px; font-size: 0.7em; white-space: nowrap; color: var(--light-gray); background-color: rgba(0, 0, 0, 0.8); padding: 2px 5px; border-radius: 3px; }
+        .cancel-selection-btn { background-color: var(--red-alert); color: #fff; border: none; border-radius: 5px; padding: 8px 15px; cursor: pointer; font-weight: bold; margin-left: 20px; transition: background-color 0.2s ease; }
+        .cancel-selection-btn:hover { background-color: #ff6347; }
+
+        .shop-modal, .inventory-modal {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.8); display: none; justify-content: center; align-items: center; z-index: 100;
+        }
+        .shop-content, .inventory-content {
+            background-color: var(--dark-gray); border: 2px solid var(--primary-color); border-radius: 10px; padding: 30px; width: 90%; max-width: 900px; height: 90%; max-height: 700px; display: flex; flex-direction: column; position: relative; box-shadow: 0 0 25px var(--glow-color); overflow: hidden;
+        }
         .shop-header, .inventory-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
         .shop-title, .inventory-title { font-family: 'Orbitron', sans-serif; font-size: 2em; color: var(--primary-color); text-shadow: 0 0 10px var(--primary-color); }
-        .close-shop-btn, .close-inventory-btn { background: none; border: none; font-size: 2em; color: var(--light-gray); cursor: pointer; }
+        .close-shop-btn, .close-inventory-btn { background: none; border: none; font-size: 2em; color: var(--light-gray); cursor: pointer; transition: color 0.2s ease; }
+        .close-shop-btn:hover, .close-inventory-btn:hover { color: var(--red-alert); }
         .shop-categories, .inventory-categories { display: flex; gap: 15px; margin-bottom: 20px; }
-        .shop-category-btn, .inventory-category-btn { background-color: var(--medium-gray); color: var(--text-color); border: 1px solid var(--border-color); padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .shop-category-btn.active, .inventory-category-btn.active { background-color: var(--primary-color); color: var(--dark-gray); box-shadow: 0 0 10px var(--primary-color); }
+        .shop-category-btn, .inventory-category-btn { background-color: var(--medium-gray); color: var(--text-color); border: 1px solid var(--border-color); padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: all 0.2s ease; }
+        .shop-category-btn.active, .shop-category-btn:hover, .inventory-category-btn.active, .inventory-category-btn:hover { background-color: var(--primary-color); color: var(--dark-gray); box-shadow: 0 0 10px var(--primary-color); }
+
         .shop-content-area, .inventory-content-area { flex-grow: 1; overflow-y: auto; padding-right: 10px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; align-content: start; }
-        .shop-item, .inventory-item { background-color: var(--tertiary-color); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; }
-        .item-icon { width: 80px; height: 80px; display: flex; justify-content: center; align-items: center; }
-        .item-name { font-size: 1.1em; font-weight: bold; }
+        .shop-content-area::-webkit-scrollbar, .inventory-content-area::-webkit-scrollbar { width: 8px; }
+        .shop-content-area::-webkit-scrollbar-track, .inventory-content-area::-webkit-scrollbar-track { background: var(--tertiary-color); border-radius: 10px; }
+        .shop-content-area::-webkit-scrollbar-thumb, .inventory-content-area::-webkit-scrollbar-thumb { background: var(--primary-color); border-radius: 10px; box-shadow: 0 0 5px var(--primary-color); }
+        .shop-item, .inventory-item { background-color: var(--tertiary-color); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .shop-item:hover { transform: translateY(-5px); box-shadow: 0 0 20px rgba(255, 59, 59, 0.4); }
+        .inventory-item.selected { border-color: var(--primary-color); box-shadow: 0 0 15px var(--primary-color), inset 0 0 5px var(--primary-color); transform: scale(1.05); }
+        .item-icon { width: 80px; height: 80px; display: flex; justify-content: center; align-items: center; font-size: 3em; color: var(--primary-color); margin-bottom: 5px; position: relative; }
+        .item-icon .miner-gpu, .item-icon .rack-sprite { width: 100%; height: 100%; border: none; box-shadow: none; }
+
+        .inventory-content-area .inventory-item { padding: 10px; gap: 5px; }
+        .inventory-content-area .item-icon { width: 60px; height: 60px; font-size: 2em; margin-bottom: 0; }
+        .inventory-content-area .item-name { font-size: 0.9em; }
+        .inventory-content-area .item-stats { font-size: 0.8em; }
+        .inventory-content-area .use-item-btn { padding: 8px 15px; font-size: 0.8em; }
+
+        .item-name { font-size: 1.1em; font-weight: bold; color: var(--text-color); }
         .item-stats { font-size: 0.9em; color: var(--light-gray); }
         .item-price { font-size: 1.2em; color: limegreen; font-weight: bold; margin-top: auto; }
-        .buy-btn, .use-item-btn { background-color: var(--primary-color); color: var(--dark-gray); border: none; border-radius: 5px; padding: 10px 20px; margin-top: 10px; cursor: pointer; font-weight: bold; text-transform: uppercase; width: 100%; }
-        .buy-btn:disabled { background-color: var(--medium-gray); color: var(--light-gray); cursor: not-allowed; }
-        .miner-selection { position: absolute; bottom: 0; left: 0; width: 100%; height: 70px; background-color: rgba(0, 0, 0, 0.9); border-top: 1px solid var(--primary-color); display: none; align-items: center; justify-content: center; gap: 15px; padding: 0 20px; z-index: 20; }
-        .miner-selection.active { display: flex; }
-        .cancel-selection-btn { background-color: var(--red-alert); color: #fff; border: none; border-radius: 5px; padding: 8px 15px; cursor: pointer; font-weight: bold; margin-left: 20px; }
+        .buy-btn, .use-item-btn { background-color: var(--primary-color); color: var(--dark-gray); border: none; border-radius: 5px; padding: 10px 20px; margin-top: 10px; cursor: pointer; font-weight: bold; text-transform: uppercase; box-shadow: 0 0 10px var(--primary-color); transition: all 0.3s ease; width: 100%; }
+        .buy-btn:hover, .use-item-btn:hover { filter: brightness(1.2); transform: scale(1.02); }
+        .buy-btn:disabled, .use-item-btn:disabled { background-color: var(--medium-gray); color: var(--light-gray); cursor: not-allowed; box-shadow: none; filter: grayscale(0.5); transform: none; }
+
+        .particle { position: absolute; background-color: var(--primary-color); border-radius: 50%; animation: fadeOut 1.5s forwards, moveParticle 1.5s forwards; opacity: 0.8; pointer-events: none; z-index: 99; }
+        @keyframes fadeOut { from { opacity: 0.8; transform: scale(1); } to { opacity: 0; transform: scale(0); } }
+        @keyframes moveParticle { from { transform: translate(var(--x-from), var(--y-from)); } to { transform: translate(var(--x-to), var(--y-to)); } }
+
+        @media (max-width: 768px) {
+            header { flex-direction: column; gap: 10px; padding: 10px; }
+            .user-profile { width: 100%; justify-content: center; }
+            .user-stats { width: 100%; justify-content: space-around; }
+            .stat-item { align-items: center; }
+            .mining-room { align-items: stretch; }
+            #rack-placement-area { flex-direction: column; gap: 20px; padding: 10px; max-height: calc(100% - 120px); justify-content: flex-start; overflow-y: auto; -ms-overflow-style: none; scrollbar-width: none; }
+            #rack-placement-area::-webkit-scrollbar { display: none; }
+            .rack-placement-slot { width: 100%; max-width: 220px; margin: 0 auto; }
+            .rack { width: 100%; max-width: 200px; margin-top: 15px; }
+            .stats-bar { flex-wrap: wrap; gap: 5px; padding: 8px; }
+            .stats-bar .action-btn { width: 48%; margin-top: 5px; }
+            .shop-content, .inventory-content { width: 95%; height: 95%; padding: 20px; }
+            .shop-title, .inventory-title { font-size: 1.5em; }
+            .shop-content-area, .inventory-content-area { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
+            .shop-item, .inventory-item { padding: 10px; }
+            .item-icon { width: 60px; height: 60px; font-size: 2em; }
+            .item-name { font-size: 1em; }
+            .item-price { font-size: 1em; }
+            .buy-btn, .use-item-btn { padding: 8px 15px; font-size: 0.9em; }
+            .miner-selection { height: 60px; gap: 10px; }
+            .selection-title { font-size: 0.9em; }
+            .selection-item { width: 45px; height: 45px; }
+            .cancel-selection-btn { padding: 5px 10px; font-size: 0.8em; }
+            .computer-setup { left: 50%; transform: translateX(-50%); bottom: 10%; }
+            .mining-room::before { height: 20%; }
+        }
     </style>
 </head>
 <body>
@@ -154,10 +606,22 @@
             </div>
         </header>
 
+        <div id="room-controls" style="position: absolute; top: 70px; left: 50%; transform: translateX(-50%); z-index: 20; display: flex; gap: 10px;"></div>
+
         <main class="main-content">
             <div class="mining-room" id="mining-room">
                 <div class="computer-setup">
-                     <div class="monitor"><div class="monitor-screen"><pre class="monitor-text" id="terminal-text"></pre></div></div>
+                    <div class="desk"></div>
+                    <div class="monitor">
+                        <div class="monitor-screen">
+                            <div class="scanline-effect"></div>
+                            <pre class="monitor-text" id="terminal-text"></pre>
+                        </div>
+                    </div>
+                    <div class="keyboard"></div>
+                    <div class="cpu-box"></div>
+                    <div class="mouse"></div>
+                    <div class="mouse-cable"></div>
                 </div>
                 <div id="rack-placement-area"></div>
             </div>
@@ -171,15 +635,15 @@
         </div>
 
         <div class="miner-selection" id="selection-bar">
-            <span id="selection-title">Selecione um item:</span>
-            <div id="available-items-list"></div>
+            <span class="selection-title" id="selection-title">Selecione um item:</span>
+            <div id="available-items-list" class="available-items-list"></div>
             <button class="cancel-selection-btn" id="cancel-selection-btn">Cancelar</button>
         </div>
-        
+
         <div class="shop-modal" id="shop-modal">
             <div class="shop-content">
                 <div class="shop-header">
-                    <h2 class="shop-title">Loja</h2>
+                    <h2 class="shop-title">Loja do Minerador</h2>
                     <button class="close-shop-btn" id="close-shop-btn">&times;</button>
                 </div>
                 <div class="shop-categories">
@@ -194,7 +658,7 @@
         <div class="inventory-modal" id="inventory-modal">
             <div class="inventory-content">
                 <div class="inventory-header">
-                    <h2 class="inventory-title">Inventário</h2>
+                    <h2 class="inventory-title">Meus Itens</h2>
                     <button class="close-inventory-btn" id="close-inventory-btn">&times;</button>
                 </div>
                 <div class="inventory-categories">
@@ -209,43 +673,8 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // !!! IMPORTANTE: MUDE ESTA URL PARA A URL DO SEU BACKEND NO RENDER !!!
-        const API_BASE_URL = 'https://lula-coin-backend.onrender.com';
-
-        // --- Elementos da UI ---
-        const authContainer = document.getElementById('auth-container');
-        const appContainer = document.getElementById('app');
-        const loginForm = document.getElementById('login-form');
-        const registerForm = document.getElementById('register-form');
-        const loginBtn = document.getElementById('login-btn');
-        const registerBtn = document.getElementById('register-btn');
-        const showRegisterLink = document.getElementById('show-register-link');
-        const showLoginLink = document.getElementById('show-login-link');
-        const authMessage = document.getElementById('auth-message');
-        const logoutBtn = document.getElementById('logout-btn');
-        const userAvatar = document.getElementById('user-avatar');
-        const balanceElement = document.getElementById('balance');
-        const totalPowerElement = document.getElementById('total-power');
-        const rackPlacementArea = document.getElementById('rack-placement-area');
-        const miningRoom = document.getElementById('mining-room');
-        const terminalTextElement = document.getElementById('terminal-text');
-        const openShopBtn = document.getElementById('open-shop-btn');
-        const openInventoryBtn = document.getElementById('open-inventory-btn');
-        const saveGameBtn = document.getElementById('save-game-btn');
-        const shopModal = document.getElementById('shop-modal');
-        const inventoryModal = document.getElementById('inventory-modal');
-        const closeShopBtn = document.getElementById('close-shop-btn');
-        const closeInventoryBtn = document.getElementById('close-inventory-btn');
-        const shopCategoryBtns = document.querySelectorAll('.shop-category-btn');
-        const inventoryCategoryBtns = document.querySelectorAll('.inventory-category-btn');
-        const minersShopContent = document.getElementById('miners-shop-content');
-        const racksShopContent = document.getElementById('racks-shop-content');
-        const minersInventoryContent = document.getElementById('miners-inventory-content');
-        const racksInventoryContent = document.getElementById('racks-inventory-content');
-        const selectionBar = document.getElementById('selection-bar');
-        const cancelSelectionBtn = document.getElementById('cancel-selection-btn');
-
-        // --- Definições do Jogo (constantes) ---
+        // --- CONFIGURAÇÕES E CONSTANTES ---
+        const API_BASE_URL = 'https://lula-coin-backend.onrender.com'; // URL do backend
         const LCO_PER_THS_PER_MINUTE = 0.1;
         const NUM_RACK_PLACEMENT_SLOTS = 4;
         const MINERS = [
@@ -259,15 +688,55 @@
             { id: 'rack002', name: 'Rack Médio', slots: 4, price: 30, color: '#4e626e' },
             { id: 'rack003', name: 'Rack Grande', slots: 6, price: 100, color: '#3a4750' },
         ];
-        
-        let gameState = null; // O estado do jogo virá do backend
-        let placingItem = null;
-        let currentRoomIndex = 0; // Simplificado para uma sala por enquanto
+        const ROOM_PRICES = [500, 1500, 5000];
 
-        // --- Funções de API ---
+        // --- ESTADO DO JOGO (INICIALIZADO COMO NULO) ---
+        let gameState = null;
+        let currentRoomIndex = 0;
+        let placingItem = null;
+
+        // --- ELEMENTOS DO DOM ---
+        const authContainer = document.getElementById('auth-container');
+        const appContainer = document.getElementById('app');
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const loginBtn = document.getElementById('login-btn');
+        const registerBtn = document.getElementById('register-btn');
+        const showRegisterLink = document.getElementById('show-register-link');
+        const showLoginLink = document.getElementById('show-login-link');
+        const authMessage = document.getElementById('auth-message');
+        const logoutBtn = document.getElementById('logout-btn');
+        const saveGameBtn = document.getElementById('save-game-btn');
+        
+        const userAvatar = document.getElementById('user-avatar');
+        const balanceElement = document.getElementById('balance');
+        const totalPowerElement = document.getElementById('total-power');
+        const rackPlacementArea = document.getElementById('rack-placement-area');
+        const miningRoom = document.getElementById('mining-room');
+        const terminalTextElement = document.getElementById('terminal-text');
+        const roomControls = document.getElementById('room-controls');
+
+        const shopModal = document.getElementById('shop-modal');
+        const closeShopBtn = document.getElementById('close-shop-btn');
+        const openShopBtn = document.getElementById('open-shop-btn');
+        const shopCategoryBtns = document.querySelectorAll('.shop-category-btn');
+        const minersShopContent = document.getElementById('miners-shop-content');
+        const racksShopContent = document.getElementById('racks-shop-content');
+
+        const inventoryModal = document.getElementById('inventory-modal');
+        const closeInventoryBtn = document.getElementById('close-inventory-btn');
+        const openInventoryBtn = document.getElementById('open-inventory-btn');
+        const inventoryCategoryBtns = document.querySelectorAll('.inventory-category-btn');
+        const minersInventoryContent = document.getElementById('miners-inventory-content');
+        const racksInventoryContent = document.getElementById('racks-inventory-content');
+
+        const selectionBar = document.getElementById('selection-bar');
+        const availableItemsList = document.getElementById('available-items-list');
+        const cancelSelectionBtn = document.getElementById('cancel-selection-btn');
+        
+        // --- FUNÇÕES DE API (LÓGICA DO BACKEND) ---
         const apiRequest = async (endpoint, method = 'GET', body = null) => {
             const token = localStorage.getItem('token');
-            // Ajustado para permitir rotas sem token
             if (!token && !endpoint.startsWith('/api/auth')) {
                 showAuthMessage('Sessão expirada. Faça login novamente.');
                 handleLogout();
@@ -289,10 +758,14 @@
 
             try {
                 const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
-                if (response.status === 401) { // Token inválido/expirado
+                if (response.status === 401) {
                     handleLogout();
                     showAuthMessage('Sessão inválida. Faça login novamente.');
                     return null;
+                }
+                // Para POST sem retorno de conteúdo (como update), não tenta fazer .json()
+                if (response.status === 204 || response.headers.get("content-length") === "0") {
+                    return { success: true, message: "Operação bem-sucedida." };
                 }
                 const data = await response.json();
                 if (!response.ok) {
@@ -300,27 +773,23 @@
                 }
                 return data;
             } catch (error) {
-                console.error(`Erro na API [${method} ${endpoint}]:`, error);
-                // A mensagem de erro da sintaxe JSON é um sintoma, o erro real é a resposta não ser JSON.
                 const messageArea = appContainer.style.display === 'flex' ? terminalTextElement : authMessage;
-                // Exibe uma mensagem mais clara para o usuário.
                 if (error instanceof SyntaxError) {
-                     messageArea.textContent = 'Erro de comunicação com o servidor. A rota pode estar incorreta.';
+                     messageArea.textContent = 'Erro de comunicação. O servidor pode estar offline.';
                 } else {
-                     messageArea.textContent = error.message;
+                     messageArea.textContent = `Erro: ${error.message}`;
                 }
                 messageArea.style.color = 'var(--red-alert)';
                 return null;
             }
         };
 
-        // --- Funções de Autenticação ---
+        // --- FUNÇÕES DE AUTENTICAÇÃO ---
         const handleLogin = async () => {
             const username = document.getElementById('login-username').value;
             const password = document.getElementById('login-password').value;
             if (!username || !password) return showAuthMessage('Preencha todos os campos.');
             
-            // CORREÇÃO: Adicionado /api/ ao caminho
             const data = await apiRequest('/api/auth/login', 'POST', { username, password });
             if (data && data.token) {
                 localStorage.setItem('token', data.token);
@@ -333,11 +802,10 @@
             const password = document.getElementById('register-password').value;
             if (!username || !password) return showAuthMessage('Preencha todos os campos.');
             
-            // CORREÇÃO: Adicionado /api/ ao caminho
             const data = await apiRequest('/api/auth/register', 'POST', { username, password });
             if (data) {
                 showAuthMessage(data.message, 'lime');
-                toggleForms(); // Volta para o login
+                toggleForms();
             }
         };
 
@@ -346,6 +814,7 @@
             authContainer.style.display = 'flex';
             appContainer.style.display = 'none';
             gameState = null;
+            if (gameLoopInterval) clearInterval(gameLoopInterval);
         };
 
         const showAuthMessage = (msg, color = 'var(--red-alert)') => {
@@ -354,71 +823,166 @@
         };
 
         const toggleForms = () => {
-            const isLoginVisible = loginForm.style.display !== 'none';
-            loginForm.style.display = isLoginVisible ? 'none' : 'block';
-            registerForm.style.display = isLoginVisible ? 'block' : 'none';
+            loginForm.style.display = loginForm.style.display === 'none' ? 'block' : 'none';
+            registerForm.style.display = registerForm.style.display === 'none' ? 'block' : 'none';
             authMessage.textContent = '';
         };
 
-        // --- Funções do Jogo ---
+        // --- FUNÇÕES DE GERENCIAMENTO DO JOGO ---
         const initializeGame = async () => {
-            // CORREÇÃO: Adicionado /api/ ao caminho
             const data = await apiRequest('/api/game/state');
             if (data && data.gameState) {
                 gameState = data.gameState;
+                currentRoomIndex = data.currentRoomIndex || 0; // Carrega a sala atual
+                
+                // Validação para garantir que o estado do jogo carregado é válido
+                if (!gameState.placedRacksPerRoom || gameState.placedRacksPerRoom.length === 0) {
+                    gameState.placedRacksPerRoom = [Array(NUM_RACK_PLACEMENT_SLOTS).fill(null)];
+                    currentRoomIndex = 0;
+                }
+
                 authContainer.style.display = 'none';
                 appContainer.style.display = 'flex';
                 userAvatar.textContent = data.username.charAt(0).toUpperCase();
+                
                 updateUI();
-                gameLoop();
+                startLoops(); // Inicia os loops do jogo
+            } else {
+                handleLogout(); // Se não conseguir carregar o estado, desloga.
             }
         };
 
         const saveGame = async () => {
             if (!gameState) return;
-            displayTerminalMessage('Salvando jogo...', 'yellow');
-            // CORREÇÃO: Adicionado /api/ ao caminho
-            const data = await apiRequest('/api/game/update', 'POST', { gameState });
+            displayTerminalMessage('Salvando progresso no servidor...', 'yellow');
+            const data = await apiRequest('/api/game/update', 'POST', { gameState, currentRoomIndex });
             if (data) {
-                displayTerminalMessage(data.message, 'lime');
-            }
-        };
-        
-        const buyItem = async (itemId, category) => {
-            displayTerminalMessage('Processando compra...', 'yellow');
-            // CORREÇÃO: Adicionado /api/ ao caminho
-            const data = await apiRequest('/api/game/buy-item', 'POST', { itemId, category });
-            if (data) {
-                gameState = data.gameState;
-                displayTerminalMessage(data.message, 'lime');
-                updateUI(); // Atualiza toda a UI, incluindo loja e inventário
+                displayTerminalMessage('Jogo salvo com sucesso!', 'lime');
             }
         };
 
-        // --- Funções de UI do Jogo (adaptadas do seu jogo.html) ---
+        // --- FUNÇÕES DE UI E RENDERIZAÇÃO (DO SEU 'jogo.html') ---
+
+        // Funções de Sprite (mantidas do seu original)
+        function createGpuSprite(miner, size = 'normal') {
+            const gpu = document.createElement('div');
+            gpu.className = 'miner-gpu';
+            gpu.style.borderColor = miner.color;
+            gpu.innerHTML = `<div class="gpu-body"><div class="gpu-fan" style="background-color:${miner.color};"><div class="gpu-fan-blades"><div class="gpu-fan-blade"></div><div class="gpu-fan-blade"></div><div class="gpu-fan-blade"></div><div class="gpu-fan-blade"></div></div></div></div><div style="font-size: 0.7em; color: var(--text-color);">${miner.power} TH/s</div>`;
+            return gpu;
+        }
+
+        function createRackSprite(rack, size = 'normal') {
+            let slotsHtml = '';
+            for (let i = 0; i < rack.slots; i++) {
+                slotsHtml += '<div class="rack-slot-representation"></div>';
+            }
+            const rackSprite = document.createElement('div');
+            rackSprite.className = 'rack-sprite';
+            rackSprite.style.borderColor = rack.color;
+            rackSprite.innerHTML = `<span class="rack-indicator">${rack.slots} slots</span><div class="rack-body">${slotsHtml}<div class="rack-led" style="background-color:${rack.color}; box-shadow:0 0 5px ${rack.color};"></div></div>`;
+            return rackSprite;
+        }
+        
         function updateUI() {
             if (!gameState) return;
             updateBalance();
             updateTotalPower();
+            renderRoomControls();
             renderRackPlacementArea();
-            renderShop('miners');
-            renderInventory('miners');
+            updateAddRoomButtonState();
         }
 
         function updateBalance() { balanceElement.textContent = gameState.balance.toFixed(2); }
+
         function updateTotalPower() {
-            let totalPower = 0;
-            gameState.placedRacksPerRoom.forEach(room => {
-                room.forEach(rack => {
-                    if (rack && rack.placedMiners) {
-                        rack.placedMiners.forEach(miner => {
-                            if(miner) totalPower += miner.power;
+            let totalPowerAcrossAllRooms = 0;
+            gameState.placedRacksPerRoom.forEach(roomRacks => {
+                roomRacks.forEach(rackSlot => {
+                    if (rackSlot && rackSlot.placedMiners) {
+                        rackSlot.placedMiners.forEach(miner => {
+                            if (miner) totalPowerAcrossAllRooms += miner.power;
                         });
                     }
                 });
             });
-            gameState.totalPower = totalPower;
+            gameState.totalPower = totalPowerAcrossAllRooms;
             totalPowerElement.textContent = `${gameState.totalPower} TH/s`;
+        }
+
+        function displayTerminalMessage(message, color = 'lime') {
+            terminalTextElement.innerHTML = `> ${message}`;
+            terminalTextElement.style.color = color;
+        }
+
+        // Funções de Sala (mantidas do seu original)
+        function renderRoomControls() {
+            roomControls.innerHTML = '';
+            gameState.placedRacksPerRoom.forEach((room, index) => {
+                const roomBtn = document.createElement('button');
+                roomBtn.id = `room-${index + 1}`;
+                roomBtn.className = 'room-btn';
+                roomBtn.textContent = (index + 1).toString();
+                if (index === currentRoomIndex) {
+                    roomBtn.classList.add('active');
+                }
+                roomBtn.addEventListener('click', () => switchRoom(index));
+                roomControls.appendChild(roomBtn);
+            });
+            const addRoomButton = document.createElement('button');
+            addRoomButton.id = 'add-room';
+            addRoomButton.className = 'room-btn';
+            addRoomButton.addEventListener('click', buyRoom);
+            roomControls.appendChild(addRoomButton);
+            updateAddRoomButtonState();
+        }
+
+        function switchRoom(index) {
+            if (index === currentRoomIndex) return;
+            currentRoomIndex = index;
+            renderRackPlacementArea();
+            updateRoomControlsActiveState();
+            saveGame();
+        }
+
+        async function buyRoom() {
+            const nextRoomIndex = gameState.placedRacksPerRoom.length;
+            const roomCost = ROOM_PRICES[nextRoomIndex - 1];
+
+            if (roomCost === undefined) {
+                displayTerminalMessage("Todas as salas já foram compradas!", "yellow");
+                return;
+            }
+            if (gameState.balance >= roomCost) {
+                const data = await apiRequest('/api/game/buy-room', 'POST', { cost: roomCost });
+                if (data && data.gameState) {
+                    gameState = data.gameState; // Atualiza o estado com a resposta do servidor
+                    currentRoomIndex = gameState.placedRacksPerRoom.length - 1;
+                    displayTerminalMessage(`Sala ${currentRoomIndex + 1} comprada!`, "lime");
+                    updateUI(); // Atualiza toda a UI
+                }
+            } else {
+                displayTerminalMessage(`LCO insuficiente! Necessário ${roomCost} LCO.`, "red");
+            }
+        }
+
+        function updateAddRoomButtonState() {
+            const addRoomButton = document.getElementById('add-room');
+            if (!addRoomButton) return;
+            const nextRoomPrice = ROOM_PRICES[gameState.placedRacksPerRoom.length - 1];
+            if (nextRoomPrice === undefined) {
+                addRoomButton.textContent = 'MAX SALAS';
+                addRoomButton.disabled = true;
+            } else {
+                addRoomButton.textContent = `+ (${nextRoomPrice} LCO)`;
+                addRoomButton.disabled = gameState.balance < nextRoomPrice;
+            }
+        }
+
+        function updateRoomControlsActiveState() {
+            document.querySelectorAll('.room-btn').forEach(btn => btn.classList.remove('active'));
+            const activeRoomBtn = document.getElementById(`room-${currentRoomIndex + 1}`);
+            if (activeRoomBtn) activeRoomBtn.classList.add('active');
         }
 
         function renderRackPlacementArea() {
@@ -429,7 +993,6 @@
                 const slotDiv = document.createElement('div');
                 slotDiv.className = 'rack-placement-slot';
                 slotDiv.dataset.slotIndex = i;
-
                 if (rackData) {
                     slotDiv.classList.add('occupied');
                     const rackElement = document.createElement('div');
@@ -441,8 +1004,7 @@
                         minerSlotDiv.dataset.rackSlotIndex = i;
                         minerSlotDiv.dataset.minerSlotIndex = minerIdx;
                         if (miner) {
-                            const minerConfig = MINERS.find(m => m.id === miner.id);
-                            minerSlotDiv.appendChild(createGpuSprite(minerConfig));
+                            minerSlotDiv.appendChild(createGpuSprite(MINERS.find(m => m.id === miner.id)));
                         } else {
                             minerSlotDiv.classList.add('empty');
                             minerSlotDiv.addEventListener('click', handleSlotClick);
@@ -457,129 +1019,80 @@
                 rackPlacementArea.appendChild(slotDiv);
             }
         }
-        
-        function createGpuSprite(miner) {
-            const gpu = document.createElement('div');
-            gpu.className = 'miner-gpu';
-            gpu.style.borderColor = miner.color;
-            gpu.innerHTML = `<div class="gpu-body"><div class="gpu-fan" style="background-color:${miner.color}"></div></div>`;
-            return gpu;
+
+        async function buyItem(itemId, category) {
+            displayTerminalMessage('Processando compra...', 'yellow');
+            const itemData = (category === 'miners' ? MINERS : RACKS).find(i => i.id === itemId);
+            if(gameState.balance < itemData.price) {
+                displayTerminalMessage('Saldo insuficiente!', 'red');
+                return;
+            }
+            const data = await apiRequest('/api/game/buy-item', 'POST', { itemId, category, price: itemData.price });
+            if (data && data.gameState) {
+                gameState = data.gameState;
+                displayTerminalMessage(data.message, 'lime');
+                updateUI();
+                renderShop(category);
+                renderInventory(category);
+            }
         }
 
         function renderShop(category) {
+            minersShopContent.style.display = 'none';
+            racksShopContent.style.display = 'none';
             const contentArea = category === 'miners' ? minersShopContent : racksShopContent;
             const itemsToRender = category === 'miners' ? MINERS : RACKS;
-            minersShopContent.style.display = category === 'miners' ? 'grid' : 'none';
-            racksShopContent.style.display = category === 'racks' ? 'grid' : 'none';
+            contentArea.style.display = 'grid';
             contentArea.innerHTML = '';
-
             itemsToRender.forEach(item => {
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'shop-item';
                 itemDiv.innerHTML = `
-                    <div class="item-icon">${category === 'miners' ? createGpuSprite(item).outerHTML : 'RACK'}</div>
+                    <div class="item-icon">${category === 'miners' ? createGpuSprite(item, 'shop').outerHTML : createRackSprite(item, 'shop').outerHTML}</div>
                     <div class="item-name">${item.name}</div>
                     <div class="item-stats">${item.power ? `Poder: ${item.power} TH/s` : `Slots: ${item.slots}`}</div>
                     <div class="item-price">◎ ${item.price}</div>
-                    <button class="buy-btn" data-id="${item.id}" data-category="${category}">Comprar</button>
+                    <button class="buy-btn" data-id="${item.id}" data-category="${category}" ${gameState.balance < item.price ? 'disabled' : ''}>Comprar</button>
                 `;
                 contentArea.appendChild(itemDiv);
             });
             contentArea.querySelectorAll('.buy-btn').forEach(btn => {
-                btn.disabled = gameState.balance < (itemsToRender.find(i => i.id === btn.dataset.id)?.price || Infinity);
                 btn.addEventListener('click', () => buyItem(btn.dataset.id, btn.dataset.category));
             });
         }
-        
+
         function renderInventory(category) {
+            minersInventoryContent.style.display = 'none';
+            racksInventoryContent.style.display = 'none';
             const contentArea = category === 'miners' ? minersInventoryContent : racksInventoryContent;
             const itemsToRender = category === 'miners' ? gameState.inventory.miners : gameState.inventory.racks;
-            minersInventoryContent.style.display = category === 'miners' ? 'grid' : 'none';
-            racksInventoryContent.style.display = category === 'racks' ? 'grid' : 'none';
+            contentArea.style.display = 'grid';
             contentArea.innerHTML = '';
 
             if (!itemsToRender || itemsToRender.length === 0) {
-                contentArea.innerHTML = '<p>Vazio</p>';
+                contentArea.innerHTML = '<p style="grid-column: 1 / -1; text-align: center;">Vazio</p>';
                 return;
             }
-
             itemsToRender.forEach(invItem => {
                 const itemConfig = (category === 'miners' ? MINERS : RACKS).find(i => i.id === invItem.id);
                 if (!itemConfig) return;
-
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'inventory-item';
                 itemDiv.innerHTML = `
-                    <div class="item-icon">${category === 'miners' ? createGpuSprite(itemConfig).outerHTML : 'RACK'}</div>
+                    <div class="item-icon">${category === 'miners' ? createGpuSprite(itemConfig, 'inventory').outerHTML : createRackSprite(itemConfig, 'inventory').outerHTML}</div>
                     <div class="item-name">${itemConfig.name} (x${invItem.quantity})</div>
                     <button class="use-item-btn" data-id="${itemConfig.id}" data-category="${category}">Usar</button>
                 `;
                 contentArea.appendChild(itemDiv);
             });
             contentArea.querySelectorAll('.use-item-btn').forEach(btn => {
-                btn.addEventListener('click', () => startPlacement(btn.dataset.id, btn.dataset.category));
+                btn.addEventListener('click', () => {
+                    const type = btn.dataset.category === 'miners' ? 'miner' : 'rack';
+                    const itemConfig = (type === 'miner' ? MINERS : RACKS).find(i => i.id === btn.dataset.id);
+                    startPlacement(itemConfig, type);
+                    closeInventory();
+                });
             });
-        }
-
-        function startPlacement(itemId, category) {
-            const itemConfig = (category === 'miners' ? MINERS : RACKS).find(i => i.id === itemId);
-            placingItem = { item: itemConfig, type: category.slice(0, -1) }; // 'miner' or 'rack'
-            miningRoom.classList.add('placing-item');
-            selectionBar.classList.add('active');
-            displayTerminalMessage(`Clique em um local para colocar ${itemConfig.name}.`, 'blue');
-            closeInventory();
-        }
-        
-        function cancelPlacement() {
-            placingItem = null;
-            miningRoom.classList.remove('placing-item');
-            selectionBar.classList.remove('active');
-        }
-        
-        function handleSlotClick(event) {
-            if (!placingItem) return;
-            const target = event.currentTarget;
-            
-            if (placingItem.type === 'rack' && target.classList.contains('available')) {
-                placeRack(parseInt(target.dataset.slotIndex), placingItem.item.id);
-            } else if (placingItem.type === 'miner' && target.classList.contains('empty')) {
-                placeMiner(parseInt(target.dataset.rackSlotIndex), parseInt(target.dataset.minerSlotIndex), placingItem.item.id);
-            }
-            cancelPlacement();
-        }
-
-        function placeRack(slotIndex, rackId) {
-            const invRack = gameState.inventory.racks.find(r => r.id === rackId);
-            if (!invRack || invRack.quantity <= 0) return;
-            invRack.quantity--;
-            if(invRack.quantity === 0) gameState.inventory.racks = gameState.inventory.racks.filter(r => r.id !== rackId);
-
-            const rackConfig = RACKS.find(r => r.id === rackId);
-            gameState.placedRacksPerRoom[currentRoomIndex][slotIndex] = {
-                id: rackId,
-                slots: rackConfig.slots,
-                placedMiners: Array(rackConfig.slots).fill(null)
-            };
-            updateUI();
-        }
-        
-        function placeMiner(rackSlotIndex, minerSlotIndex, minerId) {
-            const invMiner = gameState.inventory.miners.find(m => m.id === minerId);
-            if (!invMiner || invMiner.quantity <= 0) return;
-            invMiner.quantity--;
-            if(invMiner.quantity === 0) gameState.inventory.miners = gameState.inventory.miners.filter(m => m.id !== minerId);
-
-            const minerConfig = MINERS.find(m => m.id === minerId);
-            gameState.placedRacksPerRoom[currentRoomIndex][rackSlotIndex].placedMiners[minerSlotIndex] = {
-                id: minerId,
-                power: minerConfig.power
-            };
-            updateUI();
-        }
-
-        function displayTerminalMessage(message, color = 'lime') {
-            terminalTextElement.textContent = `> ${message}`;
-            terminalTextElement.style.color = color;
         }
         
         function openShop() { shopModal.style.display = 'flex'; renderShop('miners'); }
@@ -587,19 +1100,77 @@
         function openInventory() { inventoryModal.style.display = 'flex'; renderInventory('miners'); }
         function closeInventory() { inventoryModal.style.display = 'none'; }
         
-        // --- Game Loop ---
-        let lastUpdateTime = Date.now();
-        function gameLoop() {
-            if (!gameState) return; // Para o loop se o usuário deslogar
-            const now = Date.now();
-            const deltaTime = (now - lastUpdateTime) / 1000;
-            lastUpdateTime = now;
-            gameState.balance += (gameState.totalPower * (LCO_PER_THS_PER_MINUTE / 60)) * deltaTime;
-            updateBalance();
-            requestAnimationFrame(gameLoop);
+        // Funções de posicionamento
+        function startPlacement(item, type) {
+            placingItem = { item, type };
+            miningRoom.classList.add('placing-item');
+            selectionBar.classList.add('active');
+            displayTerminalMessage(`Clique em um local para colocar ${item.name}.`, "blue");
         }
 
-        // --- Listeners de Eventos ---
+        function cancelPlacement() {
+            placingItem = null;
+            miningRoom.classList.remove('placing-item');
+            selectionBar.classList.remove('active');
+        }
+        
+        async function handleSlotClick(event) {
+            if (!placingItem) return;
+            const target = event.currentTarget;
+            let endpoint = '';
+            let body = {};
+            
+            if (placingItem.type === 'rack' && target.classList.contains('available')) {
+                endpoint = '/api/game/place-rack';
+                body = { rackId: placingItem.item.id, slotIndex: parseInt(target.dataset.slotIndex), roomIndex: currentRoomIndex };
+            } else if (placingItem.type === 'miner' && target.classList.contains('empty')) {
+                endpoint = '/api/game/place-miner';
+                body = { minerId: placingItem.item.id, rackSlotIndex: parseInt(target.dataset.rackSlotIndex), minerSlotIndex: parseInt(target.dataset.minerSlotIndex), roomIndex: currentRoomIndex };
+            } else {
+                return; // Não faz nada se o clique for inválido
+            }
+
+            const data = await apiRequest(endpoint, 'POST', body);
+            if(data && data.gameState) {
+                gameState = data.gameState;
+                displayTerminalMessage(data.message, 'lime');
+                updateUI();
+                renderInventory(placingItem.type === 'rack' ? 'racks' : 'miners');
+            }
+            cancelPlacement();
+        }
+
+        // --- LOOPS DO JOGO ---
+        let gameLoopInterval;
+        let terminalLoopInterval;
+        function startLoops() {
+            // Limpa loops antigos para evitar duplicação
+            if (gameLoopInterval) clearInterval(gameLoopInterval);
+            if (terminalLoopInterval) clearInterval(terminalLoopInterval);
+
+            // Loop principal para ganhos
+            lastUpdateTime = Date.now();
+            gameLoopInterval = setInterval(() => {
+                if (!gameState) return;
+                const now = Date.now();
+                const deltaTime = (now - lastUpdateTime) / 1000;
+                lastUpdateTime = now;
+                gameState.balance += (gameState.totalPower * (LCO_PER_THS_PER_MINUTE / 60)) * deltaTime;
+                updateBalance();
+            }, 1000);
+
+            // Loop para mensagens do terminal
+            let terminalMessageIndex = 0;
+            const terminalMessages = ["Conectando ao núcleo...", "Minerando blocos...", "Sincronizando...", "Verificando integridade...", "Aguardando transações..."];
+            const updateTerminal = () => {
+                displayTerminalMessage(terminalMessages[terminalMessageIndex]);
+                terminalMessageIndex = (terminalMessageIndex + 1) % terminalMessages.length;
+            };
+            updateTerminal(); // Chama uma vez imediatamente
+            terminalLoopInterval = setInterval(updateTerminal, 5000);
+        }
+
+        // --- LISTENERS DE EVENTOS ---
         loginBtn.addEventListener('click', handleLogin);
         registerBtn.addEventListener('click', handleRegister);
         showRegisterLink.addEventListener('click', toggleForms);
@@ -611,7 +1182,7 @@
         openInventoryBtn.addEventListener('click', openInventory);
         closeInventoryBtn.addEventListener('click', closeInventory);
         cancelSelectionBtn.addEventListener('click', cancelPlacement);
-
+        
         shopCategoryBtns.forEach(btn => btn.addEventListener('click', () => {
             shopCategoryBtns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
@@ -623,9 +1194,11 @@
             renderInventory(btn.dataset.category);
         }));
 
-        // Inicia a verificação de autenticação
+        // --- INICIALIZAÇÃO ---
         if (localStorage.getItem('token')) {
             initializeGame();
+        } else {
+            authContainer.style.display = 'flex';
         }
     });
     </script>
