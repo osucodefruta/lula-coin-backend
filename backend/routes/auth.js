@@ -3,12 +3,16 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const User = require('../models/User'); // Certifique-se de que o caminho para o modelo User está correto
-const jwtSecret = process.env.JWT_SECRET; // Carrega o segredo JWT do .env
+const User = require('../models/User');
+const jwtSecret = process.env.JWT_SECRET;
 
 // Rota de Registro
 router.post('/register', async (req, res) => {
-    const { username, password } = req.body; // 'username' será o email
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+        return res.status(400).json({ message: 'Preencha usuário e senha.' });
+    }
 
     try {
         let user = await User.findOne({ username });
@@ -16,11 +20,9 @@ router.post('/register', async (req, res) => {
             return res.status(400).json({ message: 'Usuário já existe.' });
         }
 
-        // Hash da senha
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // Criação de um novo usuário com dados iniciais para o jogo
         user = new User({
             username,
             password: hashedPassword,
@@ -32,10 +34,13 @@ router.post('/register', async (req, res) => {
             placedGpus: {}
         });
 
-        await user.save(); // Salva o novo usuário diretamente
+        await user.save();
 
-        res.status(201).json({ message: 'Usuário registrado com sucesso!' });
+        // Gera token JWT após registro também
+        const payload = { user: { id: user.id } };
+        const token = jwt.sign(payload, jwtSecret, { expiresIn: '1h' });
 
+        res.status(201).json({ token, username: user.username });
     } catch (err) {
         console.error('Erro no registro:', err.message);
         res.status(500).json({ message: 'Erro no servidor. Tente novamente mais tarde.' });
@@ -45,6 +50,10 @@ router.post('/register', async (req, res) => {
 // Rota de Login
 router.post('/login', async (req, res) => {
     const { username, password } = req.body;
+
+    if (!username || !password) {
+        return res.status(400).json({ message: 'Preencha usuário e senha.' });
+    }
 
     try {
         const user = await User.findOne({ username });
@@ -57,23 +66,10 @@ router.post('/login', async (req, res) => {
             return res.status(400).json({ message: 'Credenciais inválidas.' });
         }
 
-        // Se as credenciais estiverem corretas, gera o token JWT
-        const payload = {
-            user: {
-                id: user.id
-            }
-        };
+        const payload = { user: { id: user.id } };
+        const token = jwt.sign(payload, jwtSecret, { expiresIn: '1h' });
 
-        jwt.sign(
-            payload,
-            jwtSecret,
-            { expiresIn: '1h' }, // Token expira em 1 hora
-            (err, token) => {
-                if (err) throw err;
-                res.json({ token, username: user.username }); // Retorna o token e o username (email)
-            }
-        );
-
+        res.json({ token, username: user.username });
     } catch (err) {
         console.error('Erro no login:', err.message);
         res.status(500).json({ message: 'Erro no servidor. Tente novamente mais tarde.' });
@@ -81,3 +77,4 @@ router.post('/login', async (req, res) => {
 });
 
 module.exports = router;
+
