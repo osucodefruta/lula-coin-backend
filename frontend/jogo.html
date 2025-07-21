@@ -572,6 +572,17 @@
         </div>
     </div>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+            const username = localStorage.getItem('username');
+            if (!token || !username) {
+                // Se não houver token ou username, redireciona para a página de login
+                window.location.href = 'index.html';
+            }
+            // Se estiver logado, o game.js será carregado e iniciará o jogo
+        });
+    </script>
     <script src="js/game.js"></script> <script>
         // Função para criar partículas de fundo animadas
         function createParticle() {

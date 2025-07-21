@@ -291,6 +291,9 @@
                     showOverlayMessage(data.message || "Registrado com sucesso! Faça login.", 'success');
                     authMessageDisplay.className = 'message success';
                     authMessageDisplay.innerText = data.message || "Registrado com sucesso! Faça login.";
+                    // Limpar campos de registro após sucesso
+                    registerUsernameInput.value = '';
+                    registerPasswordInput.value = '';
                 } else {
                     showOverlayMessage(data.message || "Erro no registro.", 'error');
                     authMessageDisplay.className = 'message error';
@@ -320,6 +323,9 @@
                     showOverlayMessage("Login realizado com sucesso!", 'success');
                     authMessageDisplay.className = 'message success';
                     authMessageDisplay.innerText = "Login realizado!";
+                    // Limpar campos de login após sucesso
+                    loginUsernameInput.value = '';
+                    loginPasswordInput.value = '';
                     // Redireciona para a página do jogo
                     setTimeout(() => {
                         window.location.href = 'jogo.html'; // Certifique-se que o nome do seu arquivo HTML do jogo é 'jogo.html'
