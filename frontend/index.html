@@ -81,6 +81,35 @@
         #register-form { display: none; }
         #auth-message { margin-top: 15px; color: var(--red-alert); font-weight: bold; min-height: 20px; }
 
+        /* Novas classes para feedback visual */
+        .rack-placement-slot.placing {
+            animation: pulse 0.5s infinite;
+            pointer-events: none;
+        }
+
+        .mining-room.placing-item .rack-placement-slot.available {
+            border-color: var(--primary-color);
+            background-color: rgba(255, 59, 59, 0.2);
+        }
+
+        .mining-room.placing-item .rack-placement-slot.available::after {
+            opacity: 1;
+            color: var(--primary-color);
+        }
+
+        .mining-room.placing-item .slot.empty {
+            border-color: var(--primary-color);
+            background-color: rgba(255, 59, 59, 0.2);
+        }
+
+        @keyframes pulse-border {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 59, 59, 0.7); }
+            50% { box-shadow: 0 0 0 10px rgba(255, 59, 59, 0); }
+        }
+
+        .placing-highlight {
+            animation: pulse-border 1.5s infinite;
+        }
 
         #app {
             display: none; /* Escondido por padrão, mostrado após login */
@@ -824,8 +853,14 @@
         };
 
         const toggleForms = () => {
-            loginForm.style.display = loginForm.style.display === 'none' ? 'block' : 'none';
-            registerForm.style.display = registerForm.style.display === 'none' ? 'block' : 'none';
+            const loginDisplay = window.getComputedStyle(loginForm).display;
+            if (loginDisplay === 'none') {
+                loginForm.style.display = 'block';
+                registerForm.style.display = 'none';
+            } else {
+                loginForm.style.display = 'none';
+                registerForm.style.display = 'block';
+            }
             authMessage.textContent = '';
         };
 
@@ -1008,7 +1043,6 @@
                     slotDiv.appendChild(rackElement);
                 } else {
                     slotDiv.classList.add('available');
-                    // BUG FIX: Adicionando o event listener que faltava para os slots de rack vazios.
                     slotDiv.addEventListener('click', handleSlotClick);
                 }
                 rackPlacementArea.appendChild(slotDiv);
@@ -1109,28 +1143,56 @@
         
         async function handleSlotClick(event) {
             if (!placingItem) return;
+            
+            // Previne múltiplos cliques acidentais
+            if (event.currentTarget.classList.contains('placing')) return;
+            event.currentTarget.classList.add('placing');
+
             const target = event.currentTarget;
             let endpoint = '';
             let body = {};
             
-            if (placingItem.type === 'rack' && target.classList.contains('available')) {
-                endpoint = '/api/game/place-rack';
-                body = { rackId: placingItem.item.id, slotIndex: parseInt(target.dataset.slotIndex), roomIndex: currentRoomIndex };
-            } else if (placingItem.type === 'miner' && target.classList.contains('empty')) {
-                endpoint = '/api/game/place-miner';
-                body = { minerId: placingItem.item.id, rackSlotIndex: parseInt(target.dataset.rackSlotIndex), minerSlotIndex: parseInt(target.dataset.minerSlotIndex), roomIndex: currentRoomIndex };
-            } else {
-                return;
-            }
+            try {
+                if (placingItem.type === 'rack' && target.classList.contains('available')) {
+                    endpoint = '/api/game/place-rack';
+                    body = {
+                        rackId: placingItem.item.id, 
+                        slotIndex: parseInt(target.dataset.slotIndex), 
+                        roomIndex: currentRoomIndex
+                    };
+                } else if (placingItem.type === 'miner' && target.classList.contains('empty')) {
+                    endpoint = '/api/game/place-miner';
+                    body = {
+                        minerId: placingItem.item.id, 
+                        rackSlotIndex: parseInt(target.dataset.rackSlotIndex), 
+                        minerSlotIndex: parseInt(target.dataset.minerSlotIndex), 
+                        roomIndex: currentRoomIndex
+                    };
+                } else {
+                    return;
+                }
 
-            const data = await apiRequest(endpoint, 'POST', body);
-            if (data && data.gameState) {
-                gameState = data.gameState;
-                displayTerminalMessage(data.message, 'lime');
-                updateUI();
-                renderInventory(placingItem.type === 'rack' ? 'racks' : 'miners');
+                displayTerminalMessage(`Posicionando ${placingItem.item.name}...`, "yellow");
+                
+                const data = await apiRequest(endpoint, 'POST', body);
+                if (data && data.gameState) {
+                    gameState = data.gameState;
+                    displayTerminalMessage(data.message, 'lime');
+                    updateUI();
+                    renderInventory(placingItem.type === 'rack' ? 'racks' : 'miners');
+                }
+            } catch (error) {
+                console.error("Erro ao posicionar item:", error);
+                displayTerminalMessage("Erro ao posicionar item. Tente novamente.", "red");
+            } finally {
+                cancelPlacement();
+                // Remove a classe após um pequeno delay para evitar cliques acidentais
+                setTimeout(() => {
+                    if (target.classList.contains('placing')) {
+                        target.classList.remove('placing');
+                    }
+                }, 500);
             }
-            cancelPlacement();
         }
 
         // --- LOOPS DO JOGO ---
