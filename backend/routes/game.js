@@ -1,7 +1,7 @@
 // backend/routes/game.js
 const express = require('express');
 const router = express.Router();
-const auth = require('../middleware/auth'); // Middleware de autenticação
+const auth = require('../middleware/authMiddleware'); // Middleware de autenticação
 const User = require('../models/User'); // Modelo do usuário
 
 // Mock de itens da loja (deveria vir de um banco de dados ou configuração separada)
