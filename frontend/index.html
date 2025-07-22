@@ -104,10 +104,11 @@
             background-position: 0px 2px, 4px 35px, 29px 31px, 34px 6px;
         }
         .mining-room::before {
-            content: ''; position: absolute;
+            content: '';
+            position: absolute;
             bottom: -5%;
-            left: -5%;
-            width: 110%;
+            left: 0;
+            width: 100%;
             height: 40%;
             background-color: var(--floor-plate-dark);
             background-image:
@@ -194,10 +195,9 @@
         #energy-btn.rechargeable { cursor: pointer; animation: pulse 1.5s infinite; }
         #energy-btn:disabled { cursor: not-allowed; filter: grayscale(0.7); }
         
-        .energy-label { color: #fff; text-shadow: 1px 1px 2px black; }
-        .energy-icon, .energy-value {
+        .energy-label, .energy-icon, .energy-value {
             color: var(--energy-full);
-            text-shadow: 0 0 5px var(--energy-full), 0 0 8px #fff;
+            text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
         }
 
 
