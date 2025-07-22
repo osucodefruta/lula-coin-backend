@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lula Coin Miner 3.8 (Energia)</title>
+    <title>Lula Coin Miner 3.9 (UI/UX)</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
@@ -82,20 +82,31 @@
 
         /* --- Header --- */
         header { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background-color: var(--tertiary-color); border-bottom: 1px solid var(--border-color); z-index: 10; position: relative; }
-        .user-profile { display: flex; align-items: center; }
+        .user-profile { display: flex; align-items: center; justify-content: flex-end; flex-grow: 1; }
         .user-avatar { width: 40px; height: 40px; background-color: var(--primary-color); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.8em; font-weight: bold; margin-right: 15px; box-shadow: 0 0 10px var(--primary-color); }
-        .user-stats { display: flex; gap: 25px; }
-        .stat-item { display: flex; flex-direction: column; align-items: flex-end; }
+        .user-stats { display: flex; gap: 25px; align-items: center; }
+        .stat-item { display: flex; flex-direction: column; align-items: flex-end; min-width: 140px; text-align: right; }
         .stat-label { font-size: 0.8em; color: var(--light-gray); margin-bottom: 3px; }
         .stat-value { font-size: 1.1em; color: var(--text-color); font-weight: bold; display: flex; align-items: center; }
-        .stat-value .icon { margin-right: 8px; font-size: 1.2em; color: var(--text-color); width: 24px; height: 24px; background-color: var(--primary-color); border-radius: 50%; display: inline-flex; justify-content: center; align-items: center; }
+        .stat-value .icon { margin-right: 8px; font-size: 1.2em; color: var(--text-color); width: 24px; height: 24px; background-color: var(--primary-color); border-radius: 50%; display: inline-flex; justify-content: center; align-items: center; flex-shrink: 0; }
 
         /* --- Main Content --- */
         .main-content { flex-grow: 1; display: flex; position: relative; overflow: hidden; }
 
         /* --- Mining Room (CENÁRIO) --- */
         .mining-room { flex-grow: 1; display: flex; justify-content: center; align-items: flex-end; position: relative; overflow: hidden; background-color: var(--brick-mortar); background-image: linear-gradient(var(--brick-color) 33.3%, transparent 33.3%), linear-gradient(90deg, transparent 50%, var(--brick-mortar) 50%), linear-gradient(transparent 66.6%, var(--brick-color) 66.6%), linear-gradient(90deg, var(--brick-mortar) 50%, transparent 50%); background-size: 80px 40px, 80px 40px, 80px 40px, 80px 40px; background-position: 0 0, 40px 0px, 0 20px, 0 20px; }
-        .mining-room::before { content: ''; position: absolute; bottom: -5%; left: 0; width: 100%; height: 40%; background-color: var(--floor-plate-dark); background-image: linear-gradient(45deg, var(--floor-plate-light) 25%, transparent 25%), linear-gradient(-45deg, var(--floor-plate-light) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, var(--floor-plate-light) 75%), linear-gradient(-45deg, transparent 75%, var(--floor-plate-light) 75%); background-size: 80px 80px; transform: perspective(150px) rotateX(25deg); border-top: 5px solid var(--floor-gap); z-index: 0; }
+        .mining-room::before {
+            content: ''; position: absolute; bottom: -5%; left: -5%;
+            width: 110%; height: 40%;
+            background-color: var(--floor-plate-dark);
+            background-image:
+                linear-gradient(45deg, var(--floor-plate-light) 25%, transparent 25%),
+                linear-gradient(-45deg, var(--floor-plate-light) 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, var(--floor-plate-light) 75%),
+                linear-gradient(-45deg, transparent 75%, var(--floor-plate-light) 75%);
+            background-size: 80px 80px; transform: perspective(150px) rotateX(25deg);
+            border-top: 5px solid var(--floor-gap); z-index: 0;
+        }
 
         #rack-placement-area { position: absolute; bottom: 30px; width: calc(100% - 350px); left: 280px; height: calc(80% - 60px); display: flex; justify-content: space-around; align-items: flex-end; padding-bottom: 80px; z-index: 1; }
         .rack-placement-slot { width: 220px; height: 100%; border: 2px dashed rgba(255, 59, 59, 0.4); border-radius: 8px; display: flex; justify-content: center; align-items: flex-end; padding: 10px; position: relative; transition: border-color 0.3s ease, background-color 0.3s ease; cursor: pointer; z-index: 2; }
@@ -152,21 +163,25 @@
 
         /* --- BARRAS e MODAIS --- */
         .stats-bar { display: flex; justify-content: center; align-items: center; gap: 15px; padding: 10px 20px; background-color: var(--tertiary-color); border-top: 1px solid var(--border-color); z-index: 10; }
-        .stats-bar .action-btn { background-color: var(--primary-color); color: var(--dark-gray); border: none; border-radius: 5px; padding: 10px 20px; cursor: pointer; font-weight: bold; text-transform: uppercase; box-shadow: 0 0 10px var(--primary-color); transition: all 0.3s ease; }
+        .stats-bar .action-btn { background-color: var(--primary-color); color: var(--dark-gray); border: none; border-radius: 5px; padding: 10px 15px; font-size: 0.9em; cursor: pointer; font-weight: bold; text-transform: uppercase; box-shadow: 0 0 10px var(--primary-color); transition: all 0.3s ease; }
         .stats-bar .action-btn:hover { filter: brightness(1.2); transform: scale(1.05); }
-        /* Botão de Energia */
+        
+        /* Botão de Energia ATUALIZADO */
         #energy-btn {
             background-color: var(--medium-gray);
-            color: var(--text-color);
+            color: #ffd700; /* Cor amarela para o texto */
             border: 1px solid var(--energy-full);
             box-shadow: 0 0 8px var(--energy-full);
             position: relative;
             overflow: hidden;
+            padding: 10px 20px;
+            font-size: 1em;
+            margin-left: auto; /* Empurra para a direita */
         }
         #energy-bar {
             position: absolute;
             bottom: 0; left: 0;
-            width: 100%; /* Será controlado pelo JS */
+            width: 100%;
             height: 100%;
             background-color: var(--energy-full);
             z-index: 0;
@@ -174,7 +189,7 @@
         }
         #energy-text {
             position: relative;
-            z-index: 1;
+            z-index: 1; /* Garante que o texto fique sobre a barra */
         }
         #energy-btn.rechargeable {
             cursor: pointer;
@@ -184,7 +199,6 @@
             cursor: not-allowed;
             filter: grayscale(0.7);
         }
-
 
         .room-btn { padding: 5px 10px; background-color: var(--medium-gray); border: none; border-radius: 5px; color: var(--text-color); font-weight: bold; cursor: pointer; transition: all 0.2s ease; }
         .room-btn.active { background-color: #fff; color: var(--primary-color); box-shadow: 0 0 8px #fff; }
@@ -262,7 +276,7 @@
                         <span class="stat-value"><span class="icon">⚡</span><span id="total-power">0 TH/s</span></span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-label">Mineração por Hora</span>
+                        <span class="stat-label">LCO por Hora</span>
                         <span class="stat-value"><span class="icon">💰</span><span id="lco-per-hour">0.00</span></span>
                     </div>
                 </div>
@@ -294,11 +308,11 @@
         <div class="stats-bar">
             <button class="action-btn" id="open-shop-btn">Loja</button>
             <button class="action-btn" id="open-inventory-btn">Inventário</button>
+            <button class="action-btn" id="logout-btn">Sair</button>
             <button class="action-btn" id="energy-btn" disabled>
                 <div id="energy-bar"></div>
                 <span id="energy-text">⚡ Energia: 100%</span>
             </button>
-            <button class="action-btn" id="logout-btn" style="background-color: var(--red-alert);">Sair</button>
         </div>
 
         <div class="shop-modal" id="shop-modal">
@@ -342,7 +356,7 @@
         const API_BASE_URL = 'https://lula-coin-backend.onrender.com';
         const LCO_PER_THS_PER_MINUTE = 0.1;
         const NUM_RACK_PLACEMENT_SLOTS = 4;
-        const ENERGY_CONSUMPTION_RATE = 100 / 3600; // 100% em 1 hora (3600 segundos)
+        const ENERGY_CONSUMPTION_RATE = 100 / 600; // 100% em 10 minutos (600 segundos)
         const MINERS = [
             { id: 'miner001', name: 'GPU Básica', power: 1, price: 10, color: '#00e0ff' },
             { id: 'miner002', name: 'ASIC Médio', power: 5, price: 30, color: '#ff00e0' },
@@ -392,7 +406,6 @@
         const inventoryCategoryBtns = document.querySelectorAll('.inventory-category-btn');
         const minersInventoryContent = document.getElementById('miners-inventory-content');
         const racksInventoryContent = document.getElementById('racks-inventory-content');
-        // Novos elementos de Energia
         const energyBtn = document.getElementById('energy-btn');
         const energyBar = document.getElementById('energy-bar');
         const energyText = document.getElementById('energy-text');
@@ -459,7 +472,6 @@
             if (data && data.gameState) {
                 gameState = data.gameState; currentRoomIndex = data.currentRoomIndex || 0;
                 
-                // Inicializa a energia se não existir
                 if (typeof gameState.energy === 'undefined') {
                     gameState.energy = 100;
                     gameState.lastEnergyUpdate = Date.now();
@@ -475,10 +487,18 @@
         };
         const saveGame = async () => {
             if (!gameState) return;
-            // Garante que o tempo de atualização da energia seja salvo
             gameState.lastEnergyUpdate = Date.now();
             await apiRequest('/api/game/update', 'POST', { gameState, currentRoomIndex });
         };
+
+        // --- FUNÇÕES DE EFEITOS E ANIMAÇÕES ---
+        function playSound(soundId) {
+            const sound = document.getElementById(soundId);
+            if(sound) {
+                sound.currentTime = 0;
+                sound.play().catch(e => console.error("Erro ao tocar som:", e));
+            }
+        }
 
         // --- FUNÇÕES DE UI E RENDERIZAÇÃO ---
         function createGpuSprite(miner) {
@@ -496,7 +516,7 @@
             let rackHeight = rack.slots * 60 + 60; rackSprite.style.height = `${rackHeight}px`;
             let slotsHtml = '';
             for (let i = 0; i < rack.slots; i++) { slotsHtml += '<div class="slot empty"></div>'; }
-            rackSprite.innerHTML = `<div class="rack-top" style="background-color: ${rack.color};"></div><div class="rack-side" style="background-color: ${rack.color}; filter: brightness(0.6);"></div><div class="rack-front" style="border-color: ${rack.color};"><div class="rack-label">${rack.name}</div>${slotsHtml}<div class="rack-leg front-left"></div><div class="rack-leg front-right"></div></div>`;
+            rackSprite.innerHTML = `<div class="rack-top" style="background-color: ${rack.color};"></div><div class="rack-side" style="background-color: ${rack.color}; filter: brightness(0.6);"></div><div class="rack-front" style="border-color: ${rack.color};"><div class="rack-label">${rack.name}</div><div class="slots-container">${slotsHtml}</div><div class="rack-leg front-left"></div><div class="rack-leg front-right"></div></div>`;
             return rackSprite;
         }
         
@@ -504,7 +524,6 @@
         function updateBalance() { balanceElement.textContent = gameState.balance.toFixed(2); }
         function updateTotalPower() {
             let totalPower = 0;
-            // A mineração só acontece se houver energia
             if (gameState.energy > 0) {
                 gameState.placedRacksPerRoom.forEach(room => {
                     if(room) room.forEach(rackSlot => {
@@ -580,6 +599,7 @@
                     const rackLabel = document.createElement('div'); rackLabel.className = 'rack-label'; rackLabel.textContent = rackConfig.name; rackLabel.dataset.rackSlotIndex = i;
                     rackLabel.addEventListener('click', handleWorldClick);
                     const slotsContainer = document.createElement('div');
+                    slotsContainer.className = 'slots-container'; // BUG FIX: Adicionado container
                     for (let j = 0; j < rackConfig.slots; j++) {
                         const miner = rackData.placedMiners[j];
                         const minerSlotDiv = document.createElement('div');
