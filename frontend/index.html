@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lula Coin Miner 3.9 (Inventory FIX)</title>
+    <title>Lula Coin Miner 3.9 (Stable)</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
@@ -368,3 +368,487 @@
             { id: 'rack002', name: 'Rack Médio', slots: 3, price: 30, color: '#4e626e' },
             { id: 'rack003', name: 'Rack Grande', slots: 4, price: 100, color: '#3a4750' },
         ];
+        
+        // --- ESTADO DO JOGO ---
+        let gameState = null;
+        let currentRoomIndex = 0;
+        let placingItem = null;
+        let isTransactionInProgress = false;
+        
+        // --- ELEMENTOS DO DOM ---
+        const lcoPerHourElement = document.getElementById('lco-per-hour');
+        const authContainer = document.getElementById('auth-container');
+        const appContainer = document.getElementById('app');
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const loginBtn = document.getElementById('login-btn');
+        const registerBtn = document.getElementById('register-btn');
+        const showRegisterLink = document.getElementById('show-register-link');
+        const showLoginLink = document.getElementById('show-login-link');
+        const authMessage = document.getElementById('auth-message');
+        const logoutBtn = document.getElementById('logout-btn');
+        const userAvatar = document.getElementById('user-avatar');
+        const balanceElement = document.getElementById('balance');
+        const totalPowerElement = document.getElementById('total-power');
+        const rackPlacementArea = document.getElementById('rack-placement-area');
+        const miningRoom = document.getElementById('mining-room');
+        const terminalTextElement = document.getElementById('terminal-text');
+        const roomControls = document.getElementById('room-controls');
+        const shopModal = document.getElementById('shop-modal');
+        const closeShopBtn = document.getElementById('close-shop-btn');
+        const openShopBtn = document.getElementById('open-shop-btn');
+        const shopCategoryBtns = document.querySelectorAll('.shop-category-btn');
+        const minersShopContent = document.getElementById('miners-shop-content');
+        const racksShopContent = document.getElementById('racks-shop-content');
+        const inventoryModal = document.getElementById('inventory-modal');
+        const closeInventoryBtn = document.getElementById('close-inventory-btn');
+        const openInventoryBtn = document.getElementById('open-inventory-btn');
+        const inventoryCategoryBtns = document.querySelectorAll('.inventory-category-btn');
+        const minersInventoryContent = document.getElementById('miners-inventory-content');
+        const racksInventoryContent = document.getElementById('racks-inventory-content');
+        const energyBtn = document.getElementById('energy-btn');
+        const energyBar = document.getElementById('energy-bar');
+        const energyText = document.getElementById('energy-text');
+
+        // --- FUNÇÕES DE API ---
+        const apiRequest = async (endpoint, method = 'GET', body = null) => {
+            const token = localStorage.getItem('token');
+            if (!token && !endpoint.startsWith('/api/auth')) { showAuthMessage('Sessão expirada. Faça login novamente.'); handleLogout(); return null; }
+            const options = { method, headers: { 'Content-Type': 'application/json' } };
+            if (token) { options.headers['Authorization'] = `Bearer ${token}`; }
+            if (body) { options.body = JSON.stringify(body); }
+            try {
+                const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+                if (response.status === 401) { handleLogout(); showAuthMessage('Sessão inválida. Faça login novamente.'); return null; }
+                if (response.status === 204 || response.headers.get("content-length") === "0") { return { success: true, message: "Operação bem-sucedida." }; }
+                const data = await response.json();
+                if (!response.ok) { throw new Error(data.message || 'Ocorreu um erro.'); }
+                return data;
+            } catch (error) {
+                const messageArea = appContainer.style.display === 'flex' ? terminalTextElement : authMessage;
+                messageArea.textContent = `Erro: ${error.message}`; messageArea.style.color = 'var(--red-alert)'; return null;
+            }
+        };
+
+        // --- FUNÇÕES DE AUTENTICAÇÃO ---
+        const handleLogin = async () => {
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            if (!username || !password) return showAuthMessage('Preencha todos os campos.');
+            const data = await apiRequest('/api/auth/login', 'POST', { username, password });
+            if (data && data.token) { localStorage.setItem('token', data.token); await initializeGame(); }
+        };
+        const handleRegister = async () => {
+            const username = document.getElementById('register-username').value;
+            const password = document.getElementById('register-password').value;
+            if (!username || !password) return showAuthMessage('Preencha todos os campos.');
+            const data = await apiRequest('/api/auth/register', 'POST', { username, password });
+            if (data) { showAuthMessage(data.message, 'lime'); toggleForms(); }
+        };
+        
+        let autoSaveInterval = null;
+        
+        const handleLogout = () => {
+            if (gameState) { saveGame(); }
+            if (autoSaveInterval) clearInterval(autoSaveInterval);
+            localStorage.removeItem('token'); 
+            authContainer.style.display = 'flex'; 
+            appContainer.style.display = 'none';
+            gameState = null; 
+            if (gameLoopInterval) clearInterval(gameLoopInterval); 
+            if (terminalLoopInterval) clearInterval(terminalLoopInterval);
+        };
+        const showAuthMessage = (msg, color = 'var(--red-alert)') => { authMessage.textContent = msg; authMessage.style.color = color; };
+        const toggleForms = () => {
+            const loginDisplay = window.getComputedStyle(loginForm).display;
+            loginForm.style.display = loginDisplay === 'none' ? 'block' : 'none';
+            registerForm.style.display = loginDisplay === 'none' ? 'none' : 'block';
+            authMessage.textContent = '';
+        };
+
+        // --- FUNÇÕES DE GERENCIAMENTO DO JOGO ---
+        const initializeGame = async () => {
+            const data = await apiRequest('/api/game/state');
+            if (data && data.gameState) {
+                gameState = data.gameState; currentRoomIndex = data.currentRoomIndex || 0;
+                
+                if (typeof gameState.energy === 'undefined') {
+                    gameState.energy = 100;
+                    gameState.lastEnergyUpdate = Date.now();
+                }
+
+                if (!gameState.placedRacksPerRoom || gameState.placedRacksPerRoom.length === 0) {
+                    gameState.placedRacksPerRoom = [Array(NUM_RACK_PLACEMENT_SLOTS).fill(null)]; currentRoomIndex = 0;
+                }
+                authContainer.style.display = 'none'; appContainer.style.display = 'flex';
+                userAvatar.textContent = 'L';
+                updateUI(); startLoops();
+            } else { handleLogout(); }
+        };
+        const saveGame = async () => {
+            if (!gameState) return;
+            gameState.lastEnergyUpdate = Date.now();
+            await apiRequest('/api/game/update', 'POST', { gameState, currentRoomIndex });
+        };
+
+        // --- FUNÇÕES DE EFEITOS E ANIMAÇÕES ---
+        function playSound(soundId) {
+            const sound = document.getElementById(soundId);
+            if(sound) {
+                sound.currentTime = 0;
+                sound.play().catch(e => console.error("Erro ao tocar som:", e));
+            }
+        }
+
+        // --- FUNÇÕES DE UI E RENDERIZAÇÃO ---
+        function createGpuSprite(miner) {
+            const gpu = document.createElement('div');
+            gpu.className = 'miner-gpu';
+            let fanCount = 1; if (miner.power >= 5 && miner.power < 20) fanCount = 2; if (miner.power >= 20) fanCount = 3;
+            let fansHtml = '';
+            for (let i = 0; i < fanCount; i++) { fansHtml += `<div class="gpu-fan"><div class="gpu-fan-blades" style="background-color: ${miner.color};"><div class="gpu-fan-blade"></div><div class="gpu-fan-blade"></div><div class="gpu-fan-blade"></div></div></div>`; }
+            gpu.innerHTML = `<div class="gpu-shroud" style="border-color: ${miner.color};"><div class="gpu-pcb"></div><div class="gpu-fans-container">${fansHtml}</div><div class="gpu-leds-container"><div class="gpu-led" style="background-color: ${miner.color}; --glow-color: ${miner.color}; animation-delay: 0s;"></div>${fanCount > 1 ? `<div class="gpu-led" style="background-color: ${miner.color}; --glow-color: ${miner.color}; animation-delay: 0.5s;"></div>` : ''}</div></div>`;
+            return gpu;
+        }
+        function createRackSprite(rack) {
+            const rackSprite = document.createElement('div');
+            rackSprite.className = 'rack-2-5d';
+            let rackHeight = rack.slots * 60 + 60; rackSprite.style.height = `${rackHeight}px`;
+            let slotsHtml = '';
+            for (let i = 0; i < rack.slots; i++) { slotsHtml += '<div class="slot empty"></div>'; }
+            rackSprite.innerHTML = `<div class="rack-top" style="background-color: ${rack.color};"></div><div class="rack-side" style="background-color: ${rack.color}; filter: brightness(0.6);"></div><div class="rack-front" style="border-color: ${rack.color};"><div class="rack-label">${rack.name}</div><div class="slots-container">${slotsHtml}</div><div class="rack-leg front-left"></div><div class="rack-leg front-right"></div></div>`;
+            return rackSprite;
+        }
+        
+        function updateUI() { if (!gameState) return; updateBalance(); updateTotalPower(); renderRoomControls(); renderRackPlacementArea(); updateAddRoomButtonState(); updateEnergyUI(); }
+        function updateBalance() { balanceElement.textContent = gameState.balance.toFixed(2); }
+        function updateTotalPower() {
+            let totalPower = 0;
+            if (gameState.energy > 0) {
+                gameState.placedRacksPerRoom.forEach(room => {
+                    if(room) room.forEach(rackSlot => {
+                        if (rackSlot && rackSlot.placedMiners) {
+                            rackSlot.placedMiners.forEach(miner => {
+                                if (miner) totalPower += MINERS.find(m => m.id === miner.id)?.power || 0;
+                            });
+                        }
+                    });
+                });
+            }
+            gameState.totalPower = totalPower;
+            totalPowerElement.textContent = `${gameState.totalPower} TH/s`;
+            updateLcoPerHour(); 
+        }
+        function updateLcoPerHour() { if (!gameState) return; const perHour = (gameState.totalPower * LCO_PER_THS_PER_MINUTE) * 60; lcoPerHourElement.textContent = perHour.toFixed(2); }
+        function displayTerminalMessage(message, color = 'lime') { terminalTextElement.innerHTML = `> ${message}`; terminalTextElement.style.color = color; }
+        
+        function renderRoomControls() {
+            roomControls.innerHTML = '';
+            gameState.placedRacksPerRoom.forEach((room, index) => {
+                const roomBtn = document.createElement('button');
+                roomBtn.textContent = (index + 1).toString();
+                roomBtn.className = `room-btn ${index === currentRoomIndex ? 'active' : ''}`;
+                roomBtn.addEventListener('click', () => switchRoom(index));
+                roomControls.appendChild(roomBtn);
+            });
+            const addRoomButton = document.createElement('button');
+            addRoomButton.id = 'add-room';
+            addRoomButton.addEventListener('click', buyRoom);
+            roomControls.appendChild(addRoomButton);
+            updateAddRoomButtonState();
+        }
+        function switchRoom(index) { if (index === currentRoomIndex) return; currentRoomIndex = index; renderRackPlacementArea(); renderRoomControls(); }
+        async function buyRoom() {
+            const nextRoomIndex = gameState.placedRacksPerRoom.length;
+            const roomCost = nextRoomIndex * 50; 
+            if (gameState.balance >= roomCost) {
+                const data = await apiRequest('/api/game/buy-room', 'POST', { cost: roomCost });
+                if (data && data.gameState) {
+                    gameState = data.gameState; currentRoomIndex = gameState.placedRacksPerRoom.length - 1;
+                    displayTerminalMessage(`Sala ${currentRoomIndex + 1} comprada!`, "lime");
+                    updateUI(); saveGame();
+                }
+            } else { displayTerminalMessage(`LCO insuficiente! Necessário ${roomCost} LCO.`, "red"); }
+        }
+        function updateAddRoomButtonState() {
+            const addRoomButton = document.getElementById('add-room');
+            if (!addRoomButton) return;
+            const nextRoomPrice = gameState.placedRacksPerRoom.length * 50;
+            addRoomButton.textContent = `+ Sala (${nextRoomPrice} LCO)`;
+        }
+        
+        function renderRackPlacementArea() {
+            rackPlacementArea.innerHTML = '';
+            const currentRoomData = gameState.placedRacksPerRoom[currentRoomIndex];
+            for (let i = 0; i < NUM_RACK_PLACEMENT_SLOTS; i++) {
+                const rackData = currentRoomData[i];
+                const slotDiv = document.createElement('div');
+                slotDiv.className = 'rack-placement-slot';
+                slotDiv.dataset.slotIndex = i;
+                if (rackData) {
+                    slotDiv.classList.add('occupied');
+                    const rackConfig = RACKS.find(r => r.id === rackData.id);
+                    const rackElement = document.createElement('div');
+                    rackElement.className = 'rack-2-5d';
+                    rackElement.style.height = `${rackConfig.slots * 60 + 60}px`;
+                    if (rackData.isNew) { rackElement.classList.add('item-placed'); delete rackData.isNew; }
+
+                    const rackTop = document.createElement('div'); rackTop.className = 'rack-top'; rackTop.style.backgroundColor = rackConfig.color;
+                    const rackSide = document.createElement('div'); rackSide.className = 'rack-side'; rackSide.style.backgroundColor = rackConfig.color; rackSide.style.filter = 'brightness(0.6)';
+                    const rackFront = document.createElement('div'); rackFront.className = 'rack-front'; rackFront.style.borderColor = rackConfig.color;
+                    const rackLabel = document.createElement('div'); rackLabel.className = 'rack-label'; rackLabel.textContent = rackConfig.name; rackLabel.dataset.rackSlotIndex = i;
+                    rackLabel.addEventListener('click', handleWorldClick);
+                    const slotsContainer = document.createElement('div');
+                    slotsContainer.className = 'slots-container';
+                    for (let j = 0; j < rackConfig.slots; j++) {
+                        const miner = rackData.placedMiners[j];
+                        const minerSlotDiv = document.createElement('div');
+                        minerSlotDiv.className = 'slot';
+                        if (miner) {
+                            minerSlotDiv.classList.add('occupied');
+                            const gpuSprite = createGpuSprite(MINERS.find(m => m.id === miner.id));
+                            if (miner.isNew) { gpuSprite.classList.add('item-placed'); delete miner.isNew; }
+                            minerSlotDiv.appendChild(gpuSprite);
+                        } else {
+                            minerSlotDiv.classList.add('empty');
+                        }
+                        minerSlotDiv.dataset.rackSlotIndex = i; minerSlotDiv.dataset.minerSlotIndex = j;
+                        minerSlotDiv.addEventListener('click', handleWorldClick);
+                        slotsContainer.appendChild(minerSlotDiv);
+                    }
+                    const legLeft = document.createElement('div'); legLeft.className = 'rack-leg front-left';
+                    const legRight = document.createElement('div'); legRight.className = 'rack-leg front-right';
+                    rackFront.append(rackLabel, slotsContainer, legLeft, legRight);
+                    rackElement.append(rackTop, rackSide, rackFront);
+                    slotDiv.appendChild(rackElement);
+                } else {
+                    slotDiv.classList.add('available');
+                    slotDiv.addEventListener('click', handleWorldClick);
+                }
+                rackPlacementArea.appendChild(slotDiv);
+            }
+        }
+        
+        async function buyItem(itemId, category) {
+            if (isTransactionInProgress) { displayTerminalMessage("Aguarde a transação anterior...", "orange"); return; }
+            isTransactionInProgress = true;
+            try {
+                displayTerminalMessage('Processando compra...', 'yellow');
+                const itemData = (category === 'miners' ? MINERS : RACKS).find(i => i.id === itemId);
+                if (gameState.balance < itemData.price) { displayTerminalMessage('Saldo insuficiente!', 'red'); return; }
+                const data = await apiRequest('/api/game/buy-item', 'POST', { itemId, category, price: itemData.price });
+                if (data && data.gameState) {
+                    gameState = data.gameState; displayTerminalMessage(data.message, 'lime');
+                    updateUI(); renderShop(category); renderInventory(category);
+                    saveGame();
+                }
+            } finally {
+                isTransactionInProgress = false;
+                const activeCategory = document.querySelector('.shop-category-btn.active').dataset.category;
+                renderShop(activeCategory);
+            }
+        }
+        
+        function renderShop(category) {
+            minersShopContent.style.display = 'none'; racksShopContent.style.display = 'none'; const contentArea = category === 'miners' ? minersShopContent : racksShopContent; const itemsToRender = category === 'miners' ? MINERS : RACKS; contentArea.style.display = 'grid'; contentArea.innerHTML = ''; itemsToRender.forEach(item => { const itemDiv = document.createElement('div'); itemDiv.className = 'shop-item'; itemDiv.innerHTML = `<div class="item-icon">${category === 'miners' ? createGpuSprite(item).outerHTML : createRackSprite(item).outerHTML}</div><div class="item-name">${item.name}</div><div class="item-stats">${item.power ? `Poder: ${item.power} TH/s` : `Slots: ${item.slots}`}</div><div class="item-price">◎ ${item.price}</div><button class="buy-btn" data-id="${item.id}" data-category="${category}" ${gameState.balance < item.price ? 'disabled' : ''}>Comprar</button>`; contentArea.appendChild(itemDiv); }); contentArea.querySelectorAll('.buy-btn').forEach(btn => { btn.addEventListener('click', () => buyItem(btn.dataset.id, btn.dataset.category)); });
+        }
+        function renderInventory(category) {
+            minersInventoryContent.style.display = 'none'; racksInventoryContent.style.display = 'none'; const contentArea = category === 'miners' ? minersInventoryContent : racksInventoryContent; const itemsToRender = category === 'miners' ? gameState.inventory.miners : gameState.inventory.racks; contentArea.style.display = 'grid'; contentArea.innerHTML = ''; if (!itemsToRender || itemsToRender.length === 0) { contentArea.innerHTML = '<p style="grid-column: 1 / -1; text-align: center;">Vazio</p>'; return; } itemsToRender.forEach(invItem => { const itemConfig = (category === 'miners' ? MINERS : RACKS).find(i => i.id === invItem.id); if (!itemConfig) return; const itemDiv = document.createElement('div'); itemDiv.className = 'inventory-item'; itemDiv.innerHTML = `<div class="item-icon">${category === 'miners' ? createGpuSprite(itemConfig).outerHTML : createRackSprite(itemConfig).outerHTML}</div><div class="item-name">${itemConfig.name} (x${invItem.quantity})</div><button class="use-item-btn" data-id="${itemConfig.id}" data-category="${category}" ${invItem.quantity === 0 ? 'disabled' : ''}>Usar</button>`; contentArea.appendChild(itemDiv); }); contentArea.querySelectorAll('.use-item-btn').forEach(btn => btn.addEventListener('click', startPlacement));
+        }
+        function openShop() { shopModal.style.display = 'flex'; renderShop('miners'); cancelPlacement(); }
+        function closeShop() { shopModal.style.display = 'none'; }
+        function openInventory() { inventoryModal.style.display = 'flex'; renderInventory('miners'); cancelPlacement();}
+        function closeInventory() { inventoryModal.style.display = 'none'; }
+        
+        // --- LÓGICA DE INTERAÇÃO ---
+        
+        function startPlacement(event) { const button = event.currentTarget; const itemId = button.dataset.id; const category = button.dataset.category; const itemConfig = category === 'miners' ? MINERS.find(i=>i.id === itemId) : RACKS.find(i=>i.id === itemId); placingItem = { item: itemConfig, type: category === 'miners' ? 'miner' : 'rack' }; miningRoom.classList.add('placing-item'); displayTerminalMessage(`Modo de Colocação: Selecione um local para ${itemConfig.name}.`, 'yellow'); closeInventory(); }
+        function cancelPlacement() { if (placingItem) { placingItem = null; miningRoom.classList.remove('placing-item'); displayTerminalMessage('Modo de Colocação cancelado.', 'orange'); } }
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { cancelPlacement(); } });
+
+        function handlePlacement(target) {
+            if (placingItem.type === 'rack' && target.classList.contains('available')) {
+                const slotIndex = parseInt(target.dataset.slotIndex);
+                const invItem = gameState.inventory.racks.find(r => r.id === placingItem.item.id);
+                invItem.quantity--;
+                const newRackData = { id: placingItem.item.id, placedMiners: Array(placingItem.item.slots).fill(null), isNew: true };
+                gameState.placedRacksPerRoom[currentRoomIndex][slotIndex] = newRackData;
+                displayTerminalMessage(`Rack ${placingItem.item.name} colocado!`, 'lime');
+                playSound('rack-place-sound');
+                cancelPlacement(); updateUI(); saveGame();
+            }
+            else if (placingItem.type === 'miner' && target.classList.contains('empty')) {
+                const rackSlotIndex = parseInt(target.dataset.rackSlotIndex);
+                const minerSlotIndex = parseInt(target.dataset.minerSlotIndex);
+                const invItem = gameState.inventory.miners.find(m => m.id === placingItem.item.id);
+                invItem.quantity--;
+                gameState.placedRacksPerRoom[currentRoomIndex][rackSlotIndex].placedMiners[minerSlotIndex] = { id: placingItem.item.id, isNew: true };
+                displayTerminalMessage(`GPU ${placingItem.item.name} instalada!`, 'lime');
+                playSound('gpu-place-sound');
+                cancelPlacement(); updateUI(); saveGame();
+            } else {
+                displayTerminalMessage(`Local inválido para ${placingItem.item.name}!`, 'red');
+            }
+        }
+        
+        // BUG FIX: Lógica de retorno ao inventário corrigida
+        function returnItemToInventory(itemId, category) { 
+            const inventoryCategory = category === 'miner' ? gameState.inventory.miners : gameState.inventory.racks;
+            let invItem = inventoryCategory.find(i => i.id === itemId);
+            if (invItem) {
+                invItem.quantity++;
+            } else {
+                inventoryCategory.push({ id: itemId, quantity: 1 });
+            }
+        }
+
+        async function handleWorldClick(event) {
+            const target = event.currentTarget;
+            if (placingItem) { handlePlacement(target); return; }
+
+            if (target.classList.contains('slot') && target.classList.contains('occupied')) {
+                const rackSlotIndex = parseInt(target.dataset.rackSlotIndex);
+                const minerSlotIndex = parseInt(target.dataset.minerSlotIndex);
+                const minerData = gameState.placedRacksPerRoom[currentRoomIndex][rackSlotIndex].placedMiners[minerSlotIndex];
+                if (window.confirm("Deseja guardar esta GPU no inventário?")) {
+                    target.querySelector('.miner-gpu').classList.add('item-removed');
+                    playSound('gpu-place-sound');
+                    setTimeout(() => {
+                        returnItemToInventory(minerData.id, 'miner');
+                        gameState.placedRacksPerRoom[currentRoomIndex][rackSlotIndex].placedMiners[minerSlotIndex] = null;
+                        displayTerminalMessage('GPU guardada no inventário!', 'lime');
+                        updateUI(); saveGame();
+                    }, 300);
+                }
+            }
+            else if (target.classList.contains('rack-label')) {
+                const rackSlotIndex = parseInt(target.dataset.rackSlotIndex);
+                const rackData = gameState.placedRacksPerRoom[currentRoomIndex][rackSlotIndex];
+                const isOccupied = rackData.placedMiners.some(miner => miner !== null);
+                if (isOccupied) { displayTerminalMessage("Esvazie o rack antes de guardá-lo.", "red"); return; }
+                if (window.confirm("Deseja guardar este Rack no inventário?")) {
+                    returnItemToInventory(rackData.id, 'rack');
+                    gameState.placedRacksPerRoom[currentRoomIndex][rackSlotIndex] = null;
+                    displayTerminalMessage('Rack guardado no inventário!', 'lime');
+                    updateUI(); saveGame();
+                }
+            }
+        }
+
+        // --- LÓGICA DE ENERGIA ---
+        function updateEnergyUI() {
+            const energyPercent = gameState.energy;
+            energyBar.style.width = `${energyPercent}%`;
+            energyText.textContent = `⚡ Energia: ${energyPercent.toFixed(0)}%`;
+
+            if (energyPercent <= 0) {
+                energyBar.style.backgroundColor = 'var(--energy-empty)';
+                energyBtn.style.borderColor = 'var(--energy-empty)';
+                energyBtn.classList.add('rechargeable');
+                energyText.textContent = `Recarregar (1 LCO)`;
+                energyBtn.disabled = false;
+                miningRoom.classList.add('no-energy');
+            } else if (energyPercent <= 20) {
+                energyBar.style.backgroundColor = 'var(--energy-low)';
+                energyBtn.style.borderColor = 'var(--energy-low)';
+                energyBtn.classList.add('rechargeable');
+                energyText.textContent = `Recarregar Grátis`;
+                energyBtn.disabled = false;
+                miningRoom.classList.remove('no-energy');
+            } else {
+                energyBar.style.backgroundColor = 'var(--energy-full)';
+                energyBtn.style.borderColor = 'var(--energy-full)';
+                energyBtn.classList.remove('rechargeable');
+                energyBtn.disabled = true;
+                miningRoom.classList.remove('no-energy');
+            }
+        }
+
+        function handleEnergyRecharge() {
+            if (gameState.energy <= 0) { // Custo de 1 LCO
+                if (gameState.balance >= 1) {
+                    gameState.balance -= 1;
+                    gameState.energy = 100;
+                    gameState.lastEnergyUpdate = Date.now();
+                    displayTerminalMessage("Energia restaurada!", "lime");
+                    updateUI();
+                } else {
+                    displayTerminalMessage("LCO insuficiente para recarregar!", "red");
+                }
+            } else if (gameState.energy <= 20) { // Recarga grátis
+                gameState.energy = 100;
+                gameState.lastEnergyUpdate = Date.now();
+                displayTerminalMessage("Energia restaurada gratuitamente!", "lime");
+                updateUI();
+            }
+        }
+
+
+        // --- LOOPS DO JOGO ---
+        let gameLoopInterval, terminalLoopInterval;
+        function startLoops() {
+            if (gameLoopInterval) clearInterval(gameLoopInterval);
+            if (terminalLoopInterval) clearInterval(terminalLoopInterval);
+            if (autoSaveInterval) clearInterval(autoSaveInterval);
+
+            let lastUpdateTime = Date.now();
+            gameLoopInterval = setInterval(() => {
+                if (!gameState) return;
+                const now = Date.now();
+                const deltaTime = (now - lastUpdateTime) / 1000;
+                lastUpdateTime = now;
+
+                // Consome energia
+                if (gameState.energy > 0) {
+                    gameState.energy -= ENERGY_CONSUMPTION_RATE * deltaTime;
+                    if (gameState.energy < 0) {
+                        gameState.energy = 0;
+                        updateTotalPower(); // Recalcula a potência para 0
+                    }
+                }
+                
+                // Gera moedas se tiver energia
+                if (gameState.energy > 0) {
+                    gameState.balance += (gameState.totalPower * (LCO_PER_THS_PER_MINUTE / 60)) * deltaTime;
+                }
+                
+                updateBalance();
+                updateEnergyUI();
+
+            }, 1000);
+            
+            const terminalMessages = ["Conectando ao núcleo...", "Minerando blocos...", "Sincronizando...", "Verificando integridade...", "Aguardando transações..."];
+            let terminalMessageIndex = 0;
+            const updateTerminal = () => {
+                displayTerminalMessage(terminalMessages[terminalMessageIndex]);
+                terminalMessageIndex = (terminalMessageIndex + 1) % terminalMessages.length;
+            };
+            updateTerminal(); 
+            terminalLoopInterval = setInterval(updateTerminal, 4000);
+            
+            autoSaveInterval = setInterval(() => { if(gameState) { saveGame(); } }, 30000);
+        }
+
+        // --- LISTENERS DE EVENTOS ---
+        loginBtn.addEventListener('click', handleLogin);
+        registerBtn.addEventListener('click', handleRegister);
+        showRegisterLink.addEventListener('click', toggleForms);
+        showLoginLink.addEventListener('click', toggleForms);
+        logoutBtn.addEventListener('click', handleLogout);
+        openShopBtn.addEventListener('click', openShop);
+        closeShopBtn.addEventListener('click', closeShop);
+        openInventoryBtn.addEventListener('click', openInventory);
+        closeInventoryBtn.addEventListener('click', closeInventory);
+        energyBtn.addEventListener('click', handleEnergyRecharge);
+        shopCategoryBtns.forEach(btn => btn.addEventListener('click', () => { shopCategoryBtns.forEach(b => b.classList.remove('active')); btn.classList.add('active'); renderShop(btn.dataset.category); }));
+        inventoryCategoryBtns.forEach(btn => btn.addEventListener('click', () => { inventoryCategoryBtns.forEach(b => b.classList.remove('active')); btn.classList.add('active'); renderInventory(btn.dataset.category); }));
+        
+        window.addEventListener('beforeunload', () => { if (gameState) { saveGame(); } });
+
+        // --- INICIALIZAÇÃO ---
+        if (localStorage.getItem('token')) { initializeGame(); } 
+        else { authContainer.style.display = 'flex'; }
+    });
+    </script>
+</body>
+</html>
