@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lula Coin Miner 4.4 (Wall Reverted)</title>
+    <title>Lula Coin Miner 4.4 (Procedural Audio)</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
@@ -19,11 +19,10 @@
             --red-alert: #ff4500;
             --border-color: rgba(255, 59, 59, 0.3);
             --glow-color: rgba(255, 59, 59, 0.6);
-            /* --- INÍCIO DAS CORES DO CENÁRIO ATUALIZADO --- */
+            /* Cores da Parede e Chão */
             --brick-color-1: #2c1d1d;
             --brick-color-2: #3a2a2a;
             --brick-mortar: #1a1a1a;
-            /* --- FIM DAS CORES DO CENÁRIO ATUALIZADO --- */
             --floor-plate-dark: #2a343a;
             --floor-plate-light: #444f56;
             --floor-gap: #111;
@@ -69,11 +68,9 @@
 
         #app { display: none; flex-direction: column; width: 100vw; height: 100vh; max-width: 1920px; max-height: 1080px; border: 2px solid var(--border-color); box-shadow: 0 0 20px var(--glow-color); background-color: var(--dark-gray); position: relative; overflow: hidden; }
         
-        /* Classe para feedback de modo de colocação */
         .placing-item .rack-placement-slot.available,
         .placing-item .slot.empty { border-color: var(--primary-color); background-color: rgba(255, 59, 59, 0.2); animation: pulse 1.5s infinite; }
 
-        /* Animações reutilizáveis */
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes pulse { 0%, 100% { box-shadow: 0 0 15px var(--glow-color), 0 0 5px var(--glow-color); } 50% { box-shadow: 0 0 30px var(--glow-color), 0 0 10px var(--glow-color); } }
         @keyframes place-item-anim { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -83,7 +80,6 @@
         @keyframes blink-red { 0%, 48%, 100% { background-color: #4d0000; box-shadow: none; } 50% { background-color: #ff0000; box-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000; } }
         
 
-        /* --- Header --- */
         header { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background-color: var(--tertiary-color); border-bottom: 1px solid var(--border-color); z-index: 10; position: relative; }
         .user-profile { display: flex; align-items: center; justify-content: flex-end; flex-grow: 1; }
         .user-avatar { width: 40px; height: 40px; background-color: var(--primary-color); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.8em; font-weight: bold; margin-right: 15px; box-shadow: 0 0 10px var(--primary-color); }
@@ -93,10 +89,8 @@
         .stat-value { font-size: 1.1em; color: var(--text-color); font-weight: bold; display: flex; align-items: center; }
         .stat-value .icon { margin-right: 8px; font-size: 1.2em; color: var(--text-color); width: 24px; height: 24px; background-color: var(--primary-color); border-radius: 50%; display: inline-flex; justify-content: center; align-items: center; flex-shrink: 0; }
 
-        /* --- Main Content --- */
         .main-content { flex-grow: 1; display: flex; position: relative; overflow: hidden; }
 
-        /* --- INÍCIO DA ATUALIZAÇÃO DO CENÁRIO --- */
         .mining-room {
             flex-grow: 1; display: flex; justify-content: center; align-items: flex-end;
             position: relative; overflow: hidden;
@@ -126,7 +120,6 @@
             border-top: 5px solid var(--floor-gap); 
             z-index: 0;
         }
-        /* --- FIM DA ATUALIZAÇÃO DO CENÁRIO --- */
 
         #rack-placement-area { position: absolute; bottom: 30px; width: calc(100% - 350px); left: 280px; height: calc(80% - 60px); display: flex; justify-content: space-around; align-items: flex-end; padding-bottom: 80px; z-index: 1; }
         .rack-placement-slot { width: 220px; height: 100%; border: 2px dashed rgba(255, 59, 59, 0.4); border-radius: 8px; display: flex; justify-content: center; align-items: flex-end; padding: 10px; position: relative; transition: border-color 0.3s ease, background-color 0.3s ease; cursor: pointer; z-index: 2; }
@@ -137,7 +130,6 @@
         .placing-item .rack-placement-slot.available::after { content: 'CLIQUE PARA COLOCAR'; opacity: 1; color: var(--primary-color); }
         .placing-item .slot.empty::after { content: 'CLIQUE'; position: absolute; font-size: 0.8em; color: var(--primary-color); opacity: 1;}
 
-        /* --- RACK 2.5D --- */
         .rack-2-5d { width: 200px; position: relative; transform-style: preserve-3d; z-index: 1; }
         .rack-front { width: 100%; height: 100%; background-color: var(--medium-gray); border: 2px solid var(--border-color); border-radius: 8px; padding: 15px; padding-bottom: 25px; display: flex; flex-direction: column; gap: 10px; position: relative; transform: translateZ(10px); }
         .rack-side, .rack-top { position: absolute; background-color: var(--rack-side-color); border-radius: 2px; }
@@ -151,7 +143,6 @@
         .slot.empty:not(.placing-item .slot.empty):hover { border-color: var(--primary-color); background-color: rgba(255, 59, 59, 0.1); }
         .slot.occupied:hover { background-color: rgba(255, 59, 59, 0.2); }
 
-        /* --- GPUS --- */
         .miner-gpu { width: 95%; height: 95%; display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 5px; position: relative; cursor: pointer; }
         .gpu-shroud { width: 100%; height: 100%; background-color: #222; border: 2px solid; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.5), inset 0 0 8px rgba(0,0,0,0.7); padding: 4px; display: flex; flex-direction: column; justify-content: space-between; }
         .gpu-pcb { width: 100%; height: 4px; background-color: #004d40; }
@@ -165,7 +156,6 @@
         .gpu-led { width: 6px; height: 6px; border-radius: 50%; animation: pulse 1.5s ease-in-out infinite; }
         .no-energy .gpu-led { animation: none; background-color: #333; }
 
-        /* --- COMPUTER SETUP --- */
         .computer-setup { position: absolute; left: 20px; bottom: 30px; width: 250px; height: 250px; z-index: 2; }
         .desk { width: 180px; height: 10px; background-color: #4e342e; position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%) perspective(150px) rotateX(15deg); border-radius: 2px; box-shadow: 0 15px 10px rgba(0,0,0,0.4); }
         .desk::before, .desk::after { content: ''; position: absolute; bottom: -60px; width: 10px; height: 60px; background-color: #3e2723; }
@@ -180,12 +170,10 @@
         .cpu-box::before { content: ''; position: absolute; top: 0; right: -10px; width: 10px; height: 100%; background-color: #222; border-radius: 0 5px 5px 0; transform: skewY(-10deg); }
         .cpu-led-light { width: 8px; height: 8px; border-radius: 50%; position: absolute; bottom: 10px; left: 15px; animation: blink-red 2s linear infinite; }
 
-        /* --- BARRAS e MODAIS --- */
         .stats-bar { display: flex; justify-content: center; align-items: center; gap: 15px; padding: 10px 20px; background-color: var(--tertiary-color); border-top: 1px solid var(--border-color); z-index: 10; }
         .stats-bar .action-btn { background-color: var(--primary-color); color: var(--dark-gray); border: none; border-radius: 5px; padding: 10px 15px; font-size: 0.9em; cursor: pointer; font-weight: bold; text-transform: uppercase; box-shadow: 0 0 10px var(--primary-color); transition: all 0.3s ease; }
         .stats-bar .action-btn:hover { filter: brightness(1.2); transform: scale(1.05); }
         
-        /* Botão de Energia ATUALIZADO */
         #energy-btn {
             background-color: var(--medium-gray);
             border: 1px solid var(--energy-full);
@@ -206,7 +194,6 @@
         #energy-btn.rechargeable { cursor: pointer; animation: pulse 1.5s infinite; }
         #energy-btn:disabled { cursor: not-allowed; filter: grayscale(0.7); }
         
-        /* Estilos para o texto de Energia */
         .energy-label { color: #fff; text-shadow: 1px 1px 2px black; }
         .energy-icon, .energy-value {
             color: var(--energy-full);
@@ -242,16 +229,14 @@
         .item-stats { font-size: 0.9em; color: var(--light-gray); }
         .item-price { font-size: 1.2em; color: limegreen; font-weight: bold; margin-top: auto; }
 
-        /* Estilos de Botões ATUALIZADOS */
         .buy-btn {
             background-color: var(--primary-color); color: var(--dark-gray);
             padding: 12px 20px; width: 100%; border-radius: 5px;
             border: none; cursor: pointer; font-weight: bold; text-transform: uppercase;
             box-shadow: 0 0 10px var(--primary-color); transition: all 0.2s ease;
         }
-        /* Hover verde para comprar */
         .buy-btn:not(:disabled):hover {
-            background-color: #28a745; /* Verde */
+            background-color: #28a745; 
             box-shadow: 0 0 15px #28a745;
             filter: brightness(1.1);
         }
@@ -272,14 +257,13 @@
             filter: brightness(1.2); transform: scale(1.02); 
         }
 
-        /* Botão desabilitado ATUALIZADO */
         .buy-btn:disabled, .use-item-btn[disabled], .sell-item-btn[disabled] { 
             background-color: var(--medium-gray); 
             color: var(--light-gray); 
             box-shadow: none; 
             filter: grayscale(0.8); 
             transform: none;
-            cursor: default; /* Remove o cursor de 'proibido' */
+            cursor: default;
         }
 
     </style>
@@ -397,8 +381,6 @@
         </div>
     </div>
 
-    <audio id="gpu-place-sound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_249496b996.mp3"></audio>
-    <audio id="rack-place-sound" src="https://cdn.pixabay.com/download/audio/2022/02/22/audio_1739454191.mp3"></audio>
     <audio id="sell-sound" src="https://cdn.pixabay.com/download/audio/2022/03/10/audio_c394c55a5b.mp3"></audio>
 
 
@@ -544,6 +526,36 @@
         };
 
         // --- FUNÇÕES DE EFEITOS E ANIMAÇÕES ---
+        // Cria o contexto de áudio global uma única vez
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        /**
+         * Toca um tom gerado por código usando a Web Audio API.
+         * @param {object} options - Opções para o tom.
+         * @param {number} options.frequency - A frequência do tom em Hz (ex: 440).
+         * @param {number} options.duration - A duração do som em milissegundos (ex: 100).
+         * @param {number} options.volume - O volume do som (de 0.0 a 1.0).
+         * @param {string} options.type - O tipo de onda ('sine', 'square', 'sawtooth', 'triangle').
+         */
+        function playTone({ frequency = 440, duration = 100, volume = 0.5, type = 'sine' }) {
+            if (!audioCtx) return;
+
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            oscillator.type = type;
+            oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+            
+            gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration / 1000);
+
+            oscillator.start(audioCtx.currentTime);
+            oscillator.stop(audioCtx.currentTime + duration / 1000);
+        }
+
         function playSound(soundId) {
             const sound = document.getElementById(soundId);
             if(sound) {
@@ -704,7 +716,6 @@
             }
         }
 
-        // --- LÓGICA DE VENDA ---
         function sellItem(event) {
             const button = event.currentTarget;
             const itemId = button.dataset.id;
@@ -778,7 +789,6 @@
         function openInventory() { inventoryModal.style.display = 'flex'; renderInventory('miners'); cancelPlacement();}
         function closeInventory() { inventoryModal.style.display = 'none'; }
         
-        // --- LÓGICA DE INTERAÇÃO ---
         function startPlacement(event) { const button = event.currentTarget; const itemId = button.dataset.id; const category = button.dataset.category; const itemConfig = category === 'miners' ? MINERS.find(i=>i.id === itemId) : RACKS.find(i=>i.id === itemId); placingItem = { item: itemConfig, type: category === 'miners' ? 'miner' : 'rack' }; miningRoom.classList.add('placing-item'); displayTerminalMessage(`Modo de Colocação: Selecione um local para ${itemConfig.name}.`, 'yellow'); closeInventory(); }
         function cancelPlacement() { if (placingItem) { placingItem = null; miningRoom.classList.remove('placing-item'); displayTerminalMessage('Modo de Colocação cancelado.', 'orange'); } }
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { cancelPlacement(); } });
@@ -791,7 +801,7 @@
                 const newRackData = { id: placingItem.item.id, placedMiners: Array(placingItem.item.slots).fill(null), isNew: true };
                 gameState.placedRacksPerRoom[currentRoomIndex][slotIndex] = newRackData;
                 displayTerminalMessage(`Rack ${placingItem.item.name} colocado!`, 'lime');
-                playSound('rack-place-sound');
+                playTone({ frequency: 220, duration: 150, type: 'square', volume: 0.2 });
                 cancelPlacement(); updateUI(); saveGame();
             }
             else if (placingItem.type === 'miner' && target.classList.contains('empty')) {
@@ -801,7 +811,7 @@
                 invItem.quantity--;
                 gameState.placedRacksPerRoom[currentRoomIndex][rackSlotIndex].placedMiners[minerSlotIndex] = { id: placingItem.item.id, isNew: true };
                 displayTerminalMessage(`GPU ${placingItem.item.name} instalada!`, 'lime');
-                playSound('gpu-place-sound');
+                playTone({ frequency: 880, duration: 100, type: 'sine', volume: 0.3 });
                 cancelPlacement(); updateUI(); saveGame();
             } else {
                 displayTerminalMessage(`Local inválido para ${placingItem.item.name}!`, 'red');
@@ -828,7 +838,7 @@
                 const minerData = gameState.placedRacksPerRoom[currentRoomIndex][rackSlotIndex].placedMiners[minerSlotIndex];
                 if (window.confirm("Deseja guardar esta GPU no inventário?")) {
                     target.querySelector('.miner-gpu').classList.add('item-removed');
-                    playSound('gpu-place-sound');
+                    playTone({ frequency: 660, duration: 100, type: 'sine', volume: 0.2 });
                     setTimeout(() => {
                         returnItemToInventory(minerData.id, 'miner');
                         gameState.placedRacksPerRoom[currentRoomIndex][rackSlotIndex].placedMiners[minerSlotIndex] = null;
@@ -843,6 +853,7 @@
                 const isOccupied = rackData.placedMiners.some(miner => miner !== null);
                 if (isOccupied) { displayTerminalMessage("Esvazie o rack antes de guardá-lo.", "red"); return; }
                 if (window.confirm("Deseja guardar este Rack no inventário?")) {
+                    playTone({ frequency: 180, duration: 150, type: 'square', volume: 0.15 });
                     returnItemToInventory(rackData.id, 'rack');
                     gameState.placedRacksPerRoom[currentRoomIndex][rackSlotIndex] = null;
                     displayTerminalMessage('Rack guardado no inventário!', 'lime');
@@ -851,26 +862,23 @@
             }
         }
 
-        // --- LÓGICA DE ENERGIA ATUALIZADA ---
         function updateEnergyUI() {
             const energyPercent = gameState.energy;
             energyBar.style.width = `${energyPercent}%`;
-
-            // Atualiza o texto usando innerHTML para permitir estilização
             energyText.innerHTML = `<span class="energy-icon">⚡</span> <span class="energy-label">Energia:</span> <span class="energy-value">${energyPercent.toFixed(0)}%</span>`;
 
             if (energyPercent <= 0) {
                 energyBar.style.backgroundColor = 'var(--energy-empty)';
                 energyBtn.style.borderColor = 'var(--energy-empty)';
                 energyBtn.classList.add('rechargeable');
-                energyText.innerHTML = `Recarregar (<span class="energy-value">1 LCO</span>)`; // Adapta o texto para recarga
+                energyText.innerHTML = `Recarregar (<span class="energy-value">1 LCO</span>)`;
                 energyBtn.disabled = false;
                 miningRoom.classList.add('no-energy');
             } else if (energyPercent <= 20) {
                 energyBar.style.backgroundColor = 'var(--energy-low)';
                 energyBtn.style.borderColor = 'var(--energy-low)';
                 energyBtn.classList.add('rechargeable');
-                energyText.innerHTML = `<span class="energy-label">Recarregar Grátis</span>`; // Adapta o texto para recarga
+                energyText.innerHTML = `<span class="energy-label">Recarregar Grátis</span>`;
                 energyBtn.disabled = false;
                 miningRoom.classList.remove('no-energy');
             } else {
@@ -901,7 +909,6 @@
             }
         }
 
-        // --- LOOPS DO JOGO ---
         let gameLoopInterval, terminalLoopInterval;
         function startLoops() {
             if (gameLoopInterval) clearInterval(gameLoopInterval);
@@ -947,7 +954,6 @@
             autoSaveInterval = setInterval(() => { if(gameState) { saveGame(); } }, 30000);
         }
 
-        // --- LISTENERS DE EVENTOS ---
         loginBtn.addEventListener('click', handleLogin);
         registerBtn.addEventListener('click', handleRegister);
         showRegisterLink.addEventListener('click', toggleForms);
@@ -963,7 +969,6 @@
         
         window.addEventListener('beforeunload', () => { if (gameState) { saveGame(); } });
 
-        // --- INICIALIZAÇÃO ---
         if (localStorage.getItem('token')) { initializeGame(); } 
         else { authContainer.style.display = 'flex'; }
     });
