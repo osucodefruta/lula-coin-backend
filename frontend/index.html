@@ -691,9 +691,10 @@
             }
         }
         
+        // BUG FIX: Lógica de retorno ao inventário corrigida
         function returnItemToInventory(itemId, category) { 
             const inventoryCategory = category === 'miner' ? gameState.inventory.miners : gameState.inventory.racks;
-            const invItem = inventoryCategory.find(i => i.id === itemId);
+            let invItem = inventoryCategory.find(i => i.id === itemId);
             if (invItem) {
                 invItem.quantity++;
             } else {
