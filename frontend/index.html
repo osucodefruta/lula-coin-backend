@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lula Coin Miner 4.3 (Pixel Art Update)</title>
+    <title>Lula Coin Miner 4.4 (Wall Reverted)</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
@@ -20,8 +20,8 @@
             --border-color: rgba(255, 59, 59, 0.3);
             --glow-color: rgba(255, 59, 59, 0.6);
             /* Cores da Parede e Chão */
-            --pixel-brick-color: #b25817; /* Marrom-tijolo para pixel art */
-            --pixel-mortar-color: #e6ddd2; /* Rejunte claro */
+            --wall-bg-color: #1c1c1c;
+            --wall-line-color: rgba(255, 59, 59, 0.2);
             --floor-plate-dark: #2a343a;
             --floor-plate-light: #444f56;
             --floor-gap: #111;
@@ -98,17 +98,21 @@
         .mining-room {
             flex-grow: 1; display: flex; justify-content: center; align-items: flex-end;
             position: relative; overflow: hidden;
-            
-            --brick-height: 25px;
-            --brick-width: 70px;
-            --mortar-gap: 3px;
-
-            background-color: var(--pixel-brick-color);
-            background-image:
-                repeating-linear-gradient(0deg, var(--pixel-mortar-color), var(--pixel-mortar-color) var(--mortar-gap), transparent var(--mortar-gap), transparent var(--brick-height)),
-                repeating-linear-gradient(90deg, var(--pixel-brick-color), var(--pixel-brick-color) var(--brick-width), var(--pixel-mortar-color) var(--brick-width), var(--pixel-mortar-color) calc(var(--brick-width) + var(--mortar-gap)));
-            background-size: calc(var(--brick-width) + var(--mortar-gap)) calc(var(--brick-height) + var(--mortar-gap)), calc(var(--brick-width) + var(--mortar-gap)) calc(var(--brick-height) + var(--mortar-gap));
-            background-position: 0 0, calc(var(--brick-width) / 2) var(--brick-height);
+            background-color: var(--wall-bg-color);
+            background-image: repeating-linear-gradient(
+                0deg,
+                var(--wall-line-color),
+                var(--wall-line-color) 1px,
+                transparent 1px,
+                transparent 40px
+            ),
+            repeating-linear-gradient(
+                90deg,
+                var(--wall-line-color),
+                var(--wall-line-color) 1px,
+                transparent 1px,
+                transparent 40px
+            );
         }
         .mining-room::before {
             content: ''; position: absolute;
