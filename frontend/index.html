@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lula Coin Miner 3.1</title>
+    <title>Lula Coin Miner 3.2 (FIX)</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
@@ -237,7 +237,7 @@
         .item-price { font-size: 1.2em; color: limegreen; font-weight: bold; margin-top: auto; }
         .buy-btn, .use-item-btn { background-color: var(--primary-color); color: var(--dark-gray); border: none; border-radius: 5px; padding: 10px 20px; margin-top: 10px; cursor: pointer; font-weight: bold; text-transform: uppercase; box-shadow: 0 0 10px var(--primary-color); transition: all 0.3s ease; width: 100%; }
         .buy-btn:hover, .use-item-btn:hover { filter: brightness(1.2); transform: scale(1.02); }
-        .buy-btn:disabled { background-color: var(--medium-gray); color: var(--light-gray); cursor: not-allowed; box-shadow: none; filter: grayscale(0.5); transform: none; }
+        .buy-btn:disabled, .use-item-btn[disabled] { background-color: var(--medium-gray); color: var(--light-gray); cursor: not-allowed; box-shadow: none; filter: grayscale(0.5); transform: none; }
     </style>
 </head>
 <body>
@@ -370,14 +370,13 @@
         // --- ESTADO DO JOGO ---
         let gameState = null;
         let currentRoomIndex = 0;
-        let placingItem = null; // Variável de estado para o modo de colocação
+        let placingItem = null; 
         
         // --- ELEMENTOS DO DOM ---
         const lcoPerHourElement = document.getElementById('lco-per-hour');
         const authContainer = document.getElementById('auth-container');
         const appContainer = document.getElementById('app');
         const loginForm = document.getElementById('login-form');
-        // ...(resto dos elementos)
         const registerForm = document.getElementById('register-form');
         const loginBtn = document.getElementById('login-btn');
         const registerBtn = document.getElementById('register-btn');
@@ -582,13 +581,35 @@
                 const slotDiv = document.createElement('div');
                 slotDiv.className = 'rack-placement-slot';
                 slotDiv.dataset.slotIndex = i;
+                
                 if (rackData) {
                     slotDiv.classList.add('occupied');
                     const rackConfig = RACKS.find(r => r.id === rackData.id);
                     const rackElement = document.createElement('div');
                     rackElement.className = 'rack-2-5d';
                     rackElement.style.height = `${rackConfig.slots * 60 + 60}px`;
-                    let minerSlotsHtml = '';
+                    
+                    const rackTop = document.createElement('div');
+                    rackTop.className = 'rack-top';
+                    rackTop.style.backgroundColor = rackConfig.color;
+                    
+                    const rackSide = document.createElement('div');
+                    rackSide.className = 'rack-side';
+                    rackSide.style.backgroundColor = rackConfig.color;
+                    rackSide.style.filter = 'brightness(0.6)';
+                    
+                    const rackFront = document.createElement('div');
+                    rackFront.className = 'rack-front';
+                    rackFront.style.borderColor = rackConfig.color;
+
+                    const rackLabel = document.createElement('div');
+                    rackLabel.className = 'rack-label';
+                    rackLabel.textContent = rackConfig.name;
+                    rackLabel.dataset.rackSlotIndex = i;
+                    rackLabel.addEventListener('click', handleWorldClick);
+                    
+                    const slotsContainer = document.createElement('div');
+                    
                     for (let j = 0; j < rackConfig.slots; j++) {
                         const miner = rackData.placedMiners[j];
                         const minerSlotDiv = document.createElement('div');
@@ -599,22 +620,22 @@
                         } else {
                             minerSlotDiv.classList.add('empty');
                         }
-                        minerSlotDiv.dataset.type = 'minerslot';
                         minerSlotDiv.dataset.rackSlotIndex = i; 
                         minerSlotDiv.dataset.minerSlotIndex = j;
                         minerSlotDiv.addEventListener('click', handleWorldClick);
-                        minerSlotsHtml += minerSlotDiv.outerHTML;
+                        slotsContainer.appendChild(minerSlotDiv);
                     }
-
-                    const rackLabelHtml = `<div class="rack-label" data-type="racklabel" data-rack-slot-index="${i}">${rackConfig.name}</div>`;
-                    rackElement.innerHTML = `<div class="rack-top" style="background-color: ${rackConfig.color};"></div><div class="rack-side" style="background-color: ${rackConfig.color}; filter: brightness(0.6);"></div><div class="rack-front" style="border-color: ${rackConfig.color};">${rackLabelHtml}<div class="slots-container">${minerSlotsHtml}</div><div class="rack-leg front-left"></div><div class="rack-leg front-right"></div></div>`;
                     
+                    const legLeft = document.createElement('div');
+                    legLeft.className = 'rack-leg front-left';
+                    const legRight = document.createElement('div');
+                    legRight.className = 'rack-leg front-right';
+                    
+                    rackFront.append(rackLabel, slotsContainer, legLeft, legRight);
+                    rackElement.append(rackTop, rackSide, rackFront);
                     slotDiv.appendChild(rackElement);
-                    slotDiv.querySelector('.rack-label').addEventListener('click', handleWorldClick);
-
                 } else {
                     slotDiv.classList.add('available');
-                    slotDiv.dataset.type = 'rackslot';
                     slotDiv.addEventListener('click', handleWorldClick);
                 }
                 rackPlacementArea.appendChild(slotDiv);
@@ -665,7 +686,7 @@
         function openInventory() { inventoryModal.style.display = 'flex'; renderInventory('miners'); cancelPlacement();}
         function closeInventory() { inventoryModal.style.display = 'none'; }
         
-        // ############### NOVA LÓGICA DE INTERAÇÃO ###############
+        // ############### LÓGICA DE INTERAÇÃO ATUALIZADA ###############
         
         function startPlacement(event) {
             const button = event.currentTarget;
@@ -738,15 +759,12 @@
         async function handleWorldClick(event) {
             const target = event.currentTarget;
             
-            // Se estiver em modo de colocação, delega para a função de placement
             if (placingItem) {
                 handlePlacement(target);
                 return;
             }
 
-            // --- Lógica de Remoção ---
-
-            // REMOVER GPU
+            // Lógica de Remoção
             if (target.classList.contains('slot') && target.classList.contains('occupied')) {
                 const rackSlotIndex = parseInt(target.dataset.rackSlotIndex);
                 const minerSlotIndex = parseInt(target.dataset.minerSlotIndex);
@@ -760,8 +778,7 @@
                     saveGame();
                 }
             }
-            // REMOVER RACK
-            else if (target.dataset.type === 'racklabel') {
+            else if (target.classList.contains('rack-label')) {
                 const rackSlotIndex = parseInt(target.dataset.rackSlotIndex);
                 const rackData = gameState.placedRacksPerRoom[currentRoomIndex][rackSlotIndex];
                 
