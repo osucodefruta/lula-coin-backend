@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lula Coin Miner 4.2 (Wall & Floor Update)</title>
+    <title>Lula Coin Miner 4.3 (Pixel Art Update)</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
@@ -19,9 +19,9 @@
             --red-alert: #ff4500;
             --border-color: rgba(255, 59, 59, 0.3);
             --glow-color: rgba(255, 59, 59, 0.6);
-            /* Cores da Parede ATUALIZADAS */
-            --brick-color: #b84814; /* Marrom avermelhado para tijolos */
-            --brick-mortar: #f0f0f0; /* Bege claro para o rejunte */
+            /* Cores da Parede e Chão */
+            --pixel-brick-color: #b25817; /* Marrom-tijolo para pixel art */
+            --pixel-mortar-color: #e6ddd2; /* Rejunte claro */
             --floor-plate-dark: #2a343a;
             --floor-plate-light: #444f56;
             --floor-gap: #111;
@@ -49,7 +49,7 @@
         .auth-toggle a:hover { text-decoration: underline; }
         #register-form { display: none; }
         #auth-message { margin-top: 15px; color: var(--red-alert); font-weight: bold; min-height: 20px; }
-
+        
         #falling-coins-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
         .coin-fall { position: absolute; top: -10%; background-color: #ffd700; color: #b8860b; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-family: 'Orbitron', sans-serif; animation: fall linear infinite; }
         @keyframes fall { to { transform: translateY(110vh) rotate(360deg); } }
@@ -66,7 +66,7 @@
 
 
         #app { display: none; flex-direction: column; width: 100vw; height: 100vh; max-width: 1920px; max-height: 1080px; border: 2px solid var(--border-color); box-shadow: 0 0 20px var(--glow-color); background-color: var(--dark-gray); position: relative; overflow: hidden; }
-
+        
         /* Classe para feedback de modo de colocação */
         .placing-item .rack-placement-slot.available,
         .placing-item .slot.empty { border-color: var(--primary-color); background-color: rgba(255, 59, 59, 0.2); animation: pulse 1.5s infinite; }
@@ -79,7 +79,7 @@
         .item-placed { animation: place-item-anim 0.3s ease-out; }
         .item-removed { animation: remove-item-anim 0.3s ease-out; }
         @keyframes blink-red { 0%, 48%, 100% { background-color: #4d0000; box-shadow: none; } 50% { background-color: #ff0000; box-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000; } }
-
+        
 
         /* --- Header --- */
         header { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background-color: var(--tertiary-color); border-bottom: 1px solid var(--border-color); z-index: 10; position: relative; }
@@ -98,26 +98,34 @@
         .mining-room {
             flex-grow: 1; display: flex; justify-content: center; align-items: flex-end;
             position: relative; overflow: hidden;
-            background-color: var(--brick-mortar);
+            
+            --brick-height: 25px;
+            --brick-width: 70px;
+            --mortar-gap: 3px;
+
+            background-color: var(--pixel-brick-color);
             background-image:
-                linear-gradient(var(--brick-color) 2px, transparent 2px),
-                linear-gradient(90deg, var(--brick-color) 2px, transparent 2px);
-            background-size: 75px 40px;
+                repeating-linear-gradient(0deg, var(--pixel-mortar-color), var(--pixel-mortar-color) var(--mortar-gap), transparent var(--mortar-gap), transparent var(--brick-height)),
+                repeating-linear-gradient(90deg, var(--pixel-brick-color), var(--pixel-brick-color) var(--brick-width), var(--pixel-mortar-color) var(--brick-width), var(--pixel-mortar-color) calc(var(--brick-width) + var(--mortar-gap)));
+            background-size: calc(var(--brick-width) + var(--mortar-gap)) calc(var(--brick-height) + var(--mortar-gap)), calc(var(--brick-width) + var(--mortar-gap)) calc(var(--brick-height) + var(--mortar-gap));
+            background-position: 0 0, calc(var(--brick-width) / 2) var(--brick-height);
         }
         .mining-room::before {
-            content: ''; position: absolute; bottom: -5%;
-            /* Ajuste para preencher a tela */
+            content: ''; position: absolute;
+            /* Piso Reto - ATUALIZADO */
+            bottom: 0;
             left: 0;
             width: 100%;
-            height: 40%;
+            height: 30%;
             background-color: var(--floor-plate-dark);
             background-image:
                 linear-gradient(45deg, var(--floor-plate-light) 25%, transparent 25%),
                 linear-gradient(-45deg, var(--floor-plate-light) 25%, transparent 25%),
                 linear-gradient(45deg, transparent 75%, var(--floor-plate-light) 75%),
                 linear-gradient(-45deg, transparent 75%, var(--floor-plate-light) 75%);
-            background-size: 80px 80px; transform: perspective(150px) rotateX(25deg);
-            border-top: 5px solid var(--floor-gap); z-index: 0;
+            background-size: 80px 80px;
+            border-top: 5px solid var(--floor-gap); 
+            z-index: 0;
         }
 
         #rack-placement-area { position: absolute; bottom: 30px; width: calc(100% - 350px); left: 280px; height: calc(80% - 60px); display: flex; justify-content: space-around; align-items: flex-end; padding-bottom: 80px; z-index: 1; }
@@ -176,7 +184,7 @@
         .stats-bar { display: flex; justify-content: center; align-items: center; gap: 15px; padding: 10px 20px; background-color: var(--tertiary-color); border-top: 1px solid var(--border-color); z-index: 10; }
         .stats-bar .action-btn { background-color: var(--primary-color); color: var(--dark-gray); border: none; border-radius: 5px; padding: 10px 15px; font-size: 0.9em; cursor: pointer; font-weight: bold; text-transform: uppercase; box-shadow: 0 0 10px var(--primary-color); transition: all 0.3s ease; }
         .stats-bar .action-btn:hover { filter: brightness(1.2); transform: scale(1.05); }
-
+        
         /* Botão de Energia ATUALIZADO */
         #energy-btn {
             background-color: var(--medium-gray);
@@ -197,7 +205,7 @@
         #energy-text { position: relative; z-index: 1; font-weight: bold; }
         #energy-btn.rechargeable { cursor: pointer; animation: pulse 1.5s infinite; }
         #energy-btn:disabled { cursor: not-allowed; filter: grayscale(0.7); }
-
+        
         /* Estilos para o texto de Energia */
         .energy-label { color: #fff; text-shadow: 1px 1px 2px black; }
         .energy-icon, .energy-value {
@@ -209,7 +217,7 @@
         .room-btn { padding: 5px 10px; background-color: var(--medium-gray); border: none; border-radius: 5px; color: var(--text-color); font-weight: bold; cursor: pointer; transition: all 0.2s ease; }
         .room-btn.active { background-color: #fff; color: var(--primary-color); box-shadow: 0 0 8px #fff; }
         #add-room { background-color: var(--primary-color); color: var(--dark-gray); padding: 7px 15px; font-size: 1.1em; box-shadow: 0 0 10px var(--primary-color); }
-
+        
         .shop-modal, .inventory-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.8); display: none; justify-content: center; align-items: center; z-index: 100; }
         .shop-content, .inventory-content { background-color: var(--dark-gray); border: 2px solid var(--primary-color); border-radius: 10px; padding: 30px; width: 90%; max-width: 900px; height: 90%; max-height: 700px; display: flex; flex-direction: column; position: relative; box-shadow: 0 0 25px var(--glow-color); overflow: hidden; }
         .shop-header, .inventory-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
@@ -247,29 +255,29 @@
             box-shadow: 0 0 15px #28a745;
             filter: brightness(1.1);
         }
-
+        
         .item-sell-price { font-size: 1.0em; color: var(--energy-low); font-weight: bold; margin-bottom: 5px; }
         .item-actions { display: flex; gap: 5px; width: 100%; margin-top: auto; }
-        .use-item-btn, .sell-item-btn {
-            background-color: var(--primary-color); color: var(--dark-gray);
+        .use-item-btn, .sell-item-btn { 
+            background-color: var(--primary-color); color: var(--dark-gray); 
             border: none; border-radius: 5px; padding: 8px 10px;
-            cursor: pointer; font-weight: bold; text-transform: uppercase;
-            box-shadow: 0 0 8px var(--primary-color); transition: all 0.3s ease;
+            cursor: pointer; font-weight: bold; text-transform: uppercase; 
+            box-shadow: 0 0 8px var(--primary-color); transition: all 0.3s ease; 
             width: 100%; font-size: 0.9em;
         }
         .sell-item-btn {
             background-color: var(--energy-low); box-shadow: 0 0 8px var(--energy-low);
         }
-        .use-item-btn:hover, .sell-item-btn:hover {
-            filter: brightness(1.2); transform: scale(1.02);
+        .use-item-btn:hover, .sell-item-btn:hover { 
+            filter: brightness(1.2); transform: scale(1.02); 
         }
 
         /* Botão desabilitado ATUALIZADO */
-        .buy-btn:disabled, .use-item-btn[disabled], .sell-item-btn[disabled] {
-            background-color: var(--medium-gray);
-            color: var(--light-gray);
-            box-shadow: none;
-            filter: grayscale(0.8);
+        .buy-btn:disabled, .use-item-btn[disabled], .sell-item-btn[disabled] { 
+            background-color: var(--medium-gray); 
+            color: var(--light-gray); 
+            box-shadow: none; 
+            filter: grayscale(0.8); 
             transform: none;
             cursor: default; /* Remove o cursor de 'proibido' */
         }
