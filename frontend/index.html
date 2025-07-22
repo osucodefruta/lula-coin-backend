@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lula Coin Miner 3.9 (Stable)</title>
+    <title>Lula Coin Miner 4.0 (Sell Update)</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
@@ -227,9 +227,40 @@
         .item-name { font-size: 1.1em; font-weight: bold; color: var(--text-color); }
         .item-stats { font-size: 0.9em; color: var(--light-gray); }
         .item-price { font-size: 1.2em; color: limegreen; font-weight: bold; margin-top: auto; }
-        .buy-btn, .use-item-btn { background-color: var(--primary-color); color: var(--dark-gray); border: none; border-radius: 5px; padding: 10px 20px; margin-top: 10px; cursor: pointer; font-weight: bold; text-transform: uppercase; box-shadow: 0 0 10px var(--primary-color); transition: all 0.3s ease; width: 100%; }
-        .buy-btn:hover, .use-item-btn:hover { filter: brightness(1.2); transform: scale(1.02); }
-        .buy-btn:disabled, .use-item-btn[disabled] { background-color: var(--medium-gray); color: var(--light-gray); cursor: not-allowed; box-shadow: none; filter: grayscale(0.5); transform: none; }
+        
+        /* Estilos para Venda de Itens */
+        .item-sell-price { font-size: 1.0em; color: var(--energy-low); font-weight: bold; margin-bottom: 5px; }
+        .item-actions { display: flex; gap: 5px; width: 100%; margin-top: auto; }
+        .use-item-btn, .sell-item-btn { 
+            background-color: var(--primary-color); 
+            color: var(--dark-gray); 
+            border: none; 
+            border-radius: 5px; 
+            padding: 8px 10px; /* Padding reduzido para caber 2 botões */
+            cursor: pointer; 
+            font-weight: bold; 
+            text-transform: uppercase; 
+            box-shadow: 0 0 8px var(--primary-color); 
+            transition: all 0.3s ease; 
+            width: 100%;
+            font-size: 0.9em;
+        }
+        .sell-item-btn {
+            background-color: var(--energy-low); /* Cor Laranja */
+            box-shadow: 0 0 8px var(--energy-low);
+        }
+        .buy-btn:hover, .use-item-btn:hover, .sell-item-btn:hover { 
+            filter: brightness(1.2); 
+            transform: scale(1.02); 
+        }
+        .buy-btn, .use-item-btn[disabled], .sell-item-btn[disabled] { 
+            background-color: var(--medium-gray); 
+            color: var(--light-gray); 
+            cursor: not-allowed; 
+            box-shadow: none; 
+            filter: grayscale(0.5); 
+            transform: none; 
+        }
 
     </style>
 </head>
@@ -348,6 +379,7 @@
 
     <audio id="gpu-place-sound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_249496b996.mp3"></audio>
     <audio id="rack-place-sound" src="https://cdn.pixabay.com/download/audio/2022/02/22/audio_1739454191.mp3"></audio>
+    <audio id="sell-sound" src="https://cdn.pixabay.com/download/audio/2022/03/10/audio_c394c55a5b.mp3"></audio>
 
 
     <script>
@@ -529,7 +561,10 @@
                     if(room) room.forEach(rackSlot => {
                         if (rackSlot && rackSlot.placedMiners) {
                             rackSlot.placedMiners.forEach(miner => {
-                                if (miner) totalPower += MINERS.find(m => m.id === miner.id)?.power || 0;
+                                if (miner) {
+                                    const minerConfig = MINERS.find(m => m.id === miner.id);
+                                    if(minerConfig) totalPower += minerConfig.power;
+                                }
                             });
                         }
                     });
@@ -648,13 +683,79 @@
                 renderShop(activeCategory);
             }
         }
+
+        // --- NOVA LÓGICA DE VENDA ---
+        function sellItem(event) {
+            const button = event.currentTarget;
+            const itemId = button.dataset.id;
+            const category = button.dataset.category;
+
+            const itemConfig = (category === 'miners' ? MINERS : RACKS).find(i => i.id === itemId);
+            if (!itemConfig) return;
+
+            const sellPrice = itemConfig.price / 2;
+
+            const inventoryCategory = category === 'miners' ? 'miners' : 'racks';
+            let invItem = gameState.inventory[inventoryCategory].find(i => i.id === itemId);
+
+            if (invItem && invItem.quantity > 0) {
+                invItem.quantity--;
+                gameState.balance += sellPrice;
+
+                // Se a quantidade for zero, remove o item do array
+                if (invItem.quantity <= 0) {
+                    gameState.inventory[inventoryCategory] = gameState.inventory[inventoryCategory].filter(i => i.id !== itemId);
+                }
+                
+                playSound('sell-sound');
+                displayTerminalMessage(`${itemConfig.name} vendido por ◎${sellPrice.toFixed(2)}!`, 'lime');
+                updateUI(); // Atualiza o saldo na tela
+                renderInventory(category); // Re-renderiza o inventário
+                saveGame();
+            }
+        }
         
         function renderShop(category) {
-            minersShopContent.style.display = 'none'; racksShopContent.style.display = 'none'; const contentArea = category === 'miners' ? minersShopContent : racksShopContent; const itemsToRender = category === 'miners' ? MINERS : RACKS; contentArea.style.display = 'grid'; contentArea.innerHTML = ''; itemsToRender.forEach(item => { const itemDiv = document.createElement('div'); itemDiv.className = 'shop-item'; itemDiv.innerHTML = `<div class="item-icon">${category === 'miners' ? createGpuSprite(item).outerHTML : createRackSprite(item).outerHTML}</div><div class="item-name">${item.name}</div><div class="item-stats">${item.power ? `Poder: ${item.power} TH/s` : `Slots: ${item.slots}`}</div><div class="item-price">◎ ${item.price}</div><button class="buy-btn" data-id="${item.id}" data-category="${category}" ${gameState.balance < item.price ? 'disabled' : ''}>Comprar</button>`; contentArea.appendChild(itemDiv); }); contentArea.querySelectorAll('.buy-btn').forEach(btn => { btn.addEventListener('click', () => buyItem(btn.dataset.id, btn.dataset.category)); });
+            minersShopContent.style.display = 'none'; racksShopContent.style.display = 'none'; const contentArea = category === 'miners' ? minersShopContent : racksShopContent; const itemsToRender = category === 'miners' ? MINERS : RACKS; contentArea.style.display = 'grid'; contentArea.innerHTML = ''; itemsToRender.forEach(item => { const itemDiv = document.createElement('div'); itemDiv.className = 'shop-item'; itemDiv.innerHTML = `<div class="item-icon">${category === 'miners' ? createGpuSprite(item).outerHTML : createRackSprite(item).outerHTML}</div><div class="item-name">${item.name}</div><div class="item-stats">${item.power ? `Poder: ${item.power} TH/s` : `Slots: ${item.slots}`}</div><div class="item-price">◎ ${item.price.toFixed(2)}</div><button class="buy-btn" data-id="${item.id}" data-category="${category}" ${gameState.balance < item.price ? 'disabled' : ''}>Comprar</button>`; contentArea.appendChild(itemDiv); }); contentArea.querySelectorAll('.buy-btn').forEach(btn => { btn.addEventListener('click', (e) => buyItem(e.currentTarget.dataset.id, e.currentTarget.dataset.category)); });
         }
+        
+        // RENDER INVENTORY ATUALIZADO
         function renderInventory(category) {
-            minersInventoryContent.style.display = 'none'; racksInventoryContent.style.display = 'none'; const contentArea = category === 'miners' ? minersInventoryContent : racksInventoryContent; const itemsToRender = category === 'miners' ? gameState.inventory.miners : gameState.inventory.racks; contentArea.style.display = 'grid'; contentArea.innerHTML = ''; if (!itemsToRender || itemsToRender.length === 0) { contentArea.innerHTML = '<p style="grid-column: 1 / -1; text-align: center;">Vazio</p>'; return; } itemsToRender.forEach(invItem => { const itemConfig = (category === 'miners' ? MINERS : RACKS).find(i => i.id === invItem.id); if (!itemConfig) return; const itemDiv = document.createElement('div'); itemDiv.className = 'inventory-item'; itemDiv.innerHTML = `<div class="item-icon">${category === 'miners' ? createGpuSprite(itemConfig).outerHTML : createRackSprite(itemConfig).outerHTML}</div><div class="item-name">${itemConfig.name} (x${invItem.quantity})</div><button class="use-item-btn" data-id="${itemConfig.id}" data-category="${category}" ${invItem.quantity === 0 ? 'disabled' : ''}>Usar</button>`; contentArea.appendChild(itemDiv); }); contentArea.querySelectorAll('.use-item-btn').forEach(btn => btn.addEventListener('click', startPlacement));
+            minersInventoryContent.style.display = 'none'; racksInventoryContent.style.display = 'none'; 
+            const contentArea = category === 'miners' ? minersInventoryContent : racksInventoryContent; 
+            const inventorySource = category === 'miners' ? gameState.inventory.miners : gameState.inventory.racks;
+            contentArea.style.display = 'grid'; 
+            contentArea.innerHTML = ''; 
+
+            if (!inventorySource || inventorySource.length === 0) { 
+                contentArea.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; margin-top: 20px;">Inventário Vazio</p>'; 
+                return; 
+            } 
+            
+            inventorySource.forEach(invItem => { 
+                const itemConfig = (category === 'miners' ? MINERS : RACKS).find(i => i.id === invItem.id); 
+                if (!itemConfig) return; 
+
+                const sellPrice = itemConfig.price / 2;
+                const itemDiv = document.createElement('div'); 
+                itemDiv.className = 'inventory-item'; 
+                
+                itemDiv.innerHTML = `
+                    <div class="item-icon">${category === 'miners' ? createGpuSprite(itemConfig).outerHTML : createRackSprite(itemConfig).outerHTML}</div>
+                    <div class="item-name">${itemConfig.name} (x${invItem.quantity})</div>
+                    <div class="item-sell-price">Venda: ◎ ${sellPrice.toFixed(2)}</div>
+                    <div class="item-actions">
+                        <button class="use-item-btn" data-id="${itemConfig.id}" data-category="${category}" ${invItem.quantity === 0 ? 'disabled' : ''}>Usar</button>
+                        <button class="sell-item-btn" data-id="${itemConfig.id}" data-category="${category}" ${invItem.quantity === 0 ? 'disabled' : ''}>Vender</button>
+                    </div>
+                `; 
+                contentArea.appendChild(itemDiv); 
+            }); 
+            
+            contentArea.querySelectorAll('.use-item-btn').forEach(btn => btn.addEventListener('click', startPlacement));
+            contentArea.querySelectorAll('.sell-item-btn').forEach(btn => btn.addEventListener('click', sellItem));
         }
+
         function openShop() { shopModal.style.display = 'flex'; renderShop('miners'); cancelPlacement(); }
         function closeShop() { shopModal.style.display = 'none'; }
         function openInventory() { inventoryModal.style.display = 'flex'; renderInventory('miners'); cancelPlacement();}
@@ -691,7 +792,6 @@
             }
         }
         
-        // BUG FIX: Lógica de retorno ao inventário corrigida
         function returnItemToInventory(itemId, category) { 
             const inventoryCategory = category === 'miner' ? gameState.inventory.miners : gameState.inventory.racks;
             let invItem = inventoryCategory.find(i => i.id === itemId);
@@ -800,7 +900,8 @@
 
                 // Consome energia
                 if (gameState.energy > 0) {
-                    gameState.energy -= ENERGY_CONSUMPTION_RATE * deltaTime;
+                    const powerDraw = gameState.totalPower; // Simplificando, consumo proporcional à potência
+                    gameState.energy -= (ENERGY_CONSUMPTION_RATE * (powerDraw / 10 + 1) / 5) * deltaTime; // Consumo mais dinâmico
                     if (gameState.energy < 0) {
                         gameState.energy = 0;
                         updateTotalPower(); // Recalcula a potência para 0
@@ -820,8 +921,10 @@
             const terminalMessages = ["Conectando ao núcleo...", "Minerando blocos...", "Sincronizando...", "Verificando integridade...", "Aguardando transações..."];
             let terminalMessageIndex = 0;
             const updateTerminal = () => {
-                displayTerminalMessage(terminalMessages[terminalMessageIndex]);
-                terminalMessageIndex = (terminalMessageIndex + 1) % terminalMessages.length;
+                if(!placingItem) {
+                    displayTerminalMessage(terminalMessages[terminalMessageIndex]);
+                    terminalMessageIndex = (terminalMessageIndex + 1) % terminalMessages.length;
+                }
             };
             updateTerminal(); 
             terminalLoopInterval = setInterval(updateTerminal, 4000);
