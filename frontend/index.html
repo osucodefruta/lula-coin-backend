@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lula Coin Miner 2.1</title>
+    <title>Lula Coin Miner 2.2</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
@@ -49,9 +49,34 @@
             min-height: 100vh;
         }
 
-        /* --- Tela de Autenticação (Sem alterações) --- */
-        #auth-container { display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; height: 100%; background: var(--tertiary-color); z-index: 200; position: absolute; top: 0; left: 0; }
-        .auth-box { background-color: var(--dark-gray); padding: 40px; border-radius: 10px; border: 1px solid var(--border-color); box-shadow: 0 0 20px var(--glow-color); width: 90%; max-width: 400px; text-align: center; }
+        /* --- Tela de Autenticação (ATUALIZADA) --- */
+        #auth-container {
+            display: flex; /* Mostra por padrão */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            background: var(--tertiary-color);
+            z-index: 200;
+            position: absolute;
+            top: 0;
+            left: 0;
+            overflow: hidden; /* Esconde moedas que saem da tela */
+        }
+        .auth-box {
+            background-color: rgba(26, 26, 26, 0.8); /* Fundo um pouco transparente */
+            backdrop-filter: blur(5px);
+            padding: 40px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            z-index: 2; /* Fica na frente das moedas */
+            /* EFEITO PULSANTE ADICIONADO */
+            animation: pulse 2.5s infinite;
+        }
         .auth-box h2 { font-family: 'Orbitron', sans-serif; color: var(--primary-color); margin-bottom: 20px; text-shadow: 0 0 8px var(--primary-color); }
         .auth-box input { width: 100%; padding: 12px; margin-bottom: 15px; background-color: var(--tertiary-color); border: 1px solid var(--border-color); color: var(--text-color); border-radius: 5px; }
         .auth-box button { width: 100%; padding: 12px; background-color: var(--primary-color); color: var(--dark-gray); border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 1.1em; transition: all 0.2s ease; }
@@ -61,6 +86,46 @@
         .auth-toggle a:hover { text-decoration: underline; }
         #register-form { display: none; }
         #auth-message { margin-top: 15px; color: var(--red-alert); font-weight: bold; min-height: 20px; }
+        
+        /* ANIMAÇÃO DE MOEDAS CAINDO */
+        #falling-coins-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        .coin-fall {
+            position: absolute;
+            top: -10%;
+            background-color: #ffd700;
+            color: #b8860b;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-family: 'Orbitron', sans-serif;
+            animation: fall linear infinite;
+        }
+        @keyframes fall {
+            to {
+                transform: translateY(110vh) rotate(360deg);
+            }
+        }
+        /* Distribuição aleatória de moedas */
+        .coin-fall:nth-child(1) { width: 40px; height: 40px; left: 10%; animation-duration: 7s; animation-delay: 0s; font-size: 1.5em; }
+        .coin-fall:nth-child(2) { width: 20px; height: 20px; left: 20%; animation-duration: 5s; animation-delay: 1s; font-size: 1em; }
+        .coin-fall:nth-child(3) { width: 30px; height: 30px; left: 30%; animation-duration: 8s; animation-delay: 2s; font-size: 1.2em; }
+        .coin-fall:nth-child(4) { width: 50px; height: 50px; left: 40%; animation-duration: 6s; animation-delay: 3s; font-size: 2em; }
+        .coin-fall:nth-child(5) { width: 25px; height: 25px; left: 50%; animation-duration: 9s; animation-delay: 1.5s; font-size: 1.1em; }
+        .coin-fall:nth-child(6) { width: 45px; height: 45px; left: 60%; animation-duration: 5.5s; animation-delay: 4s; font-size: 1.8em; }
+        .coin-fall:nth-child(7) { width: 35px; height: 35px; left: 70%; animation-duration: 10s; animation-delay: 0.5s; font-size: 1.4em; }
+        .coin-fall:nth-child(8) { width: 28px; height: 28px; left: 80%; animation-duration: 6.5s; animation-delay: 2.5s; font-size: 1.2em; }
+        .coin-fall:nth-child(9) { width: 38px; height: 38px; left: 90%; animation-duration: 7.5s; animation-delay: 5s; font-size: 1.5em; }
+        .coin-fall:nth-child(10){ width: 22px; height: 22px; left: 5%; animation-duration: 8.5s; animation-delay: 3.5s; font-size: 1.1em; }
+
 
         #app {
             display: none;
@@ -81,7 +146,7 @@
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
         @keyframes blink-red { 0%, 48%, 100% { background-color: #4d0000; box-shadow: none; } 50% { background-color: #ff0000; box-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000; } }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes pulse { 0%, 100% { box-shadow: 0 0 5px var(--glow-color), 0 0 10px var(--glow-color); } 50% { box-shadow: 0 0 10px var(--glow-color), 0 0 20px var(--glow-color); } }
+        @keyframes pulse { 0%, 100% { box-shadow: 0 0 15px var(--glow-color), 0 0 5px var(--glow-color); } 50% { box-shadow: 0 0 30px var(--glow-color), 0 0 10px var(--glow-color); } }
         @keyframes scanline { 0% { background-position: 0 0; } 100% { background-position: 0 100%; } }
         @keyframes glow-text { 0%, 100% { text-shadow: 0 0 5px var(--primary-color), 0 0 15px var(--primary-color); } 50% { text-shadow: 0 0 10px var(--primary-color), 0 0 30px var(--primary-color); } }
 
@@ -89,8 +154,8 @@
         header { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background-color: var(--tertiary-color); border-bottom: 1px solid var(--border-color); z-index: 10; position: relative; }
         .logo h1 { font-family: 'Orbitron', sans-serif; font-size: 2em; color: var(--primary-color); text-shadow: 0 0 8px var(--primary-color); letter-spacing: 2px; animation: glow-text 3s ease-in-out infinite; }
         .user-profile { display: flex; align-items: center; }
-        .user-avatar { width: 40px; height: 40px; background-color: var(--primary-color); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.5em; margin-right: 15px; box-shadow: 0 0 10px var(--primary-color); }
-        .user-stats { display: flex; gap: 25px; } /* Aumentei o gap */
+        .user-avatar { width: 40px; height: 40px; background-color: var(--primary-color); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.8em; font-weight: bold; margin-right: 15px; box-shadow: 0 0 10px var(--primary-color); }
+        .user-stats { display: flex; gap: 25px; }
         .stat-item { display: flex; flex-direction: column; align-items: flex-end; }
         .stat-label { font-size: 0.8em; color: var(--light-gray); margin-bottom: 3px; }
         .stat-value { font-size: 1.1em; color: var(--text-color); font-weight: bold; display: flex; align-items: center; }
@@ -101,13 +166,7 @@
 
         /* --- Mining Room (CENÁRIO) --- */
         .mining-room {
-            flex-grow: 1;
-            display: flex;
-            justify-content: center;
-            align-items: flex-end;
-            position: relative;
-            overflow: hidden;
-            /* PAREDE DE TIJOLOS */
+            flex-grow: 1; display: flex; justify-content: center; align-items: flex-end; position: relative; overflow: hidden;
             background-color: var(--brick-mortar);
             background-image:
                 linear-gradient(var(--brick-color) 33.3%, transparent 33.3%),
@@ -117,112 +176,33 @@
             background-size: 80px 40px, 80px 40px, 80px 40px, 80px 40px;
             background-position: 0 0, 40px 0px, 0 20px, 0 20px;
         }
-
-        /* PISO 2.5D */
         .mining-room::before {
-            content: '';
-            position: absolute;
-            bottom: -5%; left: 0;
-            width: 100%; height: 40%;
+            content: ''; position: absolute; bottom: -5%; left: 0; width: 100%; height: 40%;
             background-color: var(--floor-plate-dark);
             background-image:
                 linear-gradient(45deg, var(--floor-plate-light) 25%, transparent 25%),
                 linear-gradient(-45deg, var(--floor-plate-light) 25%, transparent 25%),
                 linear-gradient(45deg, transparent 75%, var(--floor-plate-light) 75%),
                 linear-gradient(-45deg, transparent 75%, var(--floor-plate-light) 75%);
-            background-size: 80px 80px;
-            transform: perspective(150px) rotateX(25deg);
-            border-top: 5px solid var(--floor-gap);
-            z-index: 0;
+            background-size: 80px 80px; transform: perspective(150px) rotateX(25deg);
+            border-top: 5px solid var(--floor-gap); z-index: 0;
         }
 
-        #rack-placement-area {
-            position: absolute;
-            bottom: 30px;
-            width: calc(100% - 350px);
-            left: 280px;
-            height: calc(80% - 60px); /* Aumentado para acomodar racks maiores */
-            display: flex;
-            justify-content: space-around;
-            align-items: flex-end;
-            padding-bottom: 80px;
-            z-index: 1;
-        }
-        
-        .rack-placement-slot {
-            width: 220px;
-            height: 100%; /* Ocupa a altura total */
-            border: 2px dashed rgba(255, 59, 59, 0.4);
-            border-radius: 8px;
-            display: flex;
-            justify-content: center;
-            align-items: flex-end; /* Alinha o rack na base */
-            padding: 10px;
-            position: relative;
-            transition: border-color 0.3s ease, background-color 0.3s ease;
-            cursor: pointer;
-            z-index: 2;
-        }
+        #rack-placement-area { position: absolute; bottom: 30px; width: calc(100% - 350px); left: 280px; height: calc(80% - 60px); display: flex; justify-content: space-around; align-items: flex-end; padding-bottom: 80px; z-index: 1; }
+        .rack-placement-slot { width: 220px; height: 100%; border: 2px dashed rgba(255, 59, 59, 0.4); border-radius: 8px; display: flex; justify-content: center; align-items: flex-end; padding: 10px; position: relative; transition: border-color 0.3s ease, background-color 0.3s ease; cursor: pointer; z-index: 2; }
         .rack-placement-slot.occupied { border: none; background-color: transparent; cursor: default; }
         .rack-placement-slot.available:hover { border-color: var(--primary-color); background-color: rgba(255, 59, 59, 0.1); }
         .rack-placement-slot.available::after { content: 'CLIQUE PARA COLOCAR RACK'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 0.9em; color: rgba(255, 59, 59, 0.6); white-space: nowrap; opacity: 0; transition: opacity 0.3s ease; }
         .rack-placement-slot.available:hover::after { opacity: 1; }
 
-        /* --- NOVO RACK 2.5D com pernas e tamanho dinâmico --- */
-        .rack-2-5d {
-            width: 200px;
-            position: relative;
-            transform-style: preserve-3d;
-            z-index: 1;
-            /* A altura será definida via JS */
-        }
-        .rack-front {
-            width: 100%;
-            height: 100%;
-            background-color: var(--medium-gray);
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
-            padding: 15px;
-            padding-bottom: 25px; /* Espaço para as pernas */
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            position: relative;
-            transform: translateZ(10px);
-        }
-        .rack-side, .rack-top {
-            position: absolute;
-            background-color: var(--rack-side-color);
-            border-radius: 2px;
-        }
-        .rack-side {
-            width: 20px;
-            height: 100%;
-            left: -1px;
-            bottom: 0;
-            transform: rotateY(-90deg) translateX(-10px);
-            transform-origin: left;
-        }
-        .rack-top {
-            width: 100%;
-            height: 20px;
-            top: -11px;
-            left: 0;
-            transform: rotateX(90deg) translateY(-10px);
-            transform-origin: top;
-        }
-
-        .rack-leg {
-            position: absolute;
-            bottom: 5px;
-            width: 10px;
-            height: 20px;
-            background-color: #3e2723;
-        }
-        .rack-leg.front-left { left: 15px; }
-        .rack-leg.front-right { right: 15px; }
-
-
+        /* --- RACK 2.5D com pernas e tamanho dinâmico --- */
+        .rack-2-5d { width: 200px; position: relative; transform-style: preserve-3d; z-index: 1; }
+        .rack-front { width: 100%; height: 100%; background-color: var(--medium-gray); border: 2px solid var(--border-color); border-radius: 8px; padding: 15px; padding-bottom: 25px; display: flex; flex-direction: column; gap: 10px; position: relative; transform: translateZ(10px); }
+        .rack-side, .rack-top { position: absolute; background-color: var(--rack-side-color); border-radius: 2px; }
+        .rack-side { width: 20px; height: 100%; left: -1px; bottom: 0; transform: rotateY(-90deg) translateX(-10px); transform-origin: left; }
+        .rack-top { width: 100%; height: 20px; top: -11px; left: 0; transform: rotateX(90deg) translateY(-10px); transform-origin: top; }
+        .rack-leg { position: absolute; bottom: 5px; width: 10px; height: 20px; background-color: #3e2723; }
+        .rack-leg.front-left { left: 15px; } .rack-leg.front-right { right: 15px; }
         .rack-label { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background-color: var(--primary-color); color: var(--dark-gray); padding: 5px 10px; border-radius: 5px; font-size: 0.9em; font-weight: bold; white-space: nowrap; box-shadow: 0 0 8px var(--primary-color); }
         .slot { width: 100%; height: 60px; background-color: var(--dark-gray); border: 1px dashed var(--border-color); border-radius: 5px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: all 0.3s ease; position: relative; overflow: hidden; }
         .slot.empty:hover { border-color: var(--primary-color); background-color: rgba(255, 59, 59, 0.1); }
@@ -260,13 +240,7 @@
 
         .room-btn { padding: 5px 10px; background-color: var(--medium-gray); border: none; border-radius: 5px; color: var(--text-color); font-weight: bold; cursor: pointer; transition: all 0.2s ease; }
         .room-btn.active { background-color: #fff; color: var(--primary-color); box-shadow: 0 0 8px #fff; }
-        #add-room { /* BOTÃO DE COMPRAR SALA ATUALIZADO */
-            background-color: var(--primary-color);
-            color: var(--dark-gray);
-            padding: 7px 15px;
-            font-size: 1.1em;
-            box-shadow: 0 0 10px var(--primary-color);
-        }
+        #add-room { background-color: var(--primary-color); color: var(--dark-gray); padding: 7px 15px; font-size: 1.1em; box-shadow: 0 0 10px var(--primary-color); }
         #add-room:disabled { background-color: var(--medium-gray); color: var(--light-gray); box-shadow: none; filter: grayscale(0.8); cursor: not-allowed; }
         
         .miner-selection { position: absolute; bottom: 0; left: 0; width: 100%; height: 90px; background-color: rgba(0, 0, 0, 0.9); border-top: 1px solid var(--primary-color); display: none; align-items: center; justify-content: center; gap: 15px; padding: 0 20px; box-shadow: 0 -5px 20px rgba(255, 59, 59, 0.3); z-index: 20; transform: translateY(100%); transition: transform 0.3s ease-out; }
@@ -277,7 +251,7 @@
         .selection-item { flex-shrink: 0; width: 120px; height: 100px; background-color: var(--dark-gray); border: 2px solid var(--border-color); border-radius: 5px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: all 0.2s ease; position: relative; overflow: visible; }
         .selection-item:hover { border-color: var(--primary-color); transform: translateY(-3px); box-shadow: 0 0 10px var(--primary-color); }
         .selection-item .miner-gpu { transform: scale(0.8); }
-        .selection-item .rack-2-5d { transform: scale(0.35); } /* Ajusta o tamanho do sprite do rack */
+        .selection-item .rack-2-5d { transform: scale(0.35); }
         .cancel-selection-btn { background-color: var(--red-alert); color: #fff; border: none; border-radius: 5px; padding: 8px 15px; cursor: pointer; font-weight: bold; margin-left: 20px; transition: background-color 0.2s ease; }
         
         .shop-modal, .inventory-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.8); display: none; justify-content: center; align-items: center; z-index: 100; }
@@ -311,6 +285,12 @@
 <body>
 
     <div id="auth-container">
+        <div id="falling-coins-container">
+            <div class="coin-fall">L</div><div class="coin-fall">L</div><div class="coin-fall">L</div>
+            <div class="coin-fall">L</div><div class="coin-fall">L</div><div class="coin-fall">L</div>
+            <div class="coin-fall">L</div><div class="coin-fall">L</div><div class="coin-fall">L</div>
+            <div class="coin-fall">L</div>
+        </div>
         <div class="auth-box">
             <div id="login-form">
                 <h2>Login</h2>
@@ -334,11 +314,11 @@
         <header>
             <div class="logo"><h1>Lula Coin Miner</h1></div>
             <div class="user-profile">
-                <div class="user-avatar" id="user-avatar">?</div>
+                <div class="user-avatar" id="user-avatar">L</div>
                 <div class="user-stats">
                     <div class="stat-item">
                         <span class="stat-label">Saldo LCO</span>
-                        <span class="stat-value"><span class="icon">🦹</span><span id="balance">0.00</span></span>
+                        <span class="stat-value"><span class="icon">$</span><span id="balance">0.00</span></span>
                     </div>
                     <div class="stat-item">
                         <span class="stat-label">Potência Total</span>
@@ -346,7 +326,7 @@
                     </div>
                     <div class="stat-item">
                         <span class="stat-label">Mineração por Hora</span>
-                        <span class="stat-value"><span class="icon">🦹</span><span id="lco-per-hour">0.00</span></span>
+                        <span class="stat-value"><span class="icon">💰</span><span id="lco-per-hour">0.00</span></span>
                     </div>
                 </div>
             </div>
@@ -435,14 +415,13 @@
             { id: 'rack003', name: 'Rack Grande', slots: 4, price: 100, color: '#3a4750' },
         ];
         
-        // --- ESTADO DO JOGO (INICIALIZADO COMO NULO) ---
+        // --- ESTADO DO JOGO ---
         let gameState = null;
         let currentRoomIndex = 0;
         let placingItem = null;
 
         // --- ELEMENTOS DO DOM ---
-        // ... (elementos do DOM antigos)
-        const lcoPerHourElement = document.getElementById('lco-per-hour'); // NOVO ELEMENTO
+        const lcoPerHourElement = document.getElementById('lco-per-hour'); 
         const authContainer = document.getElementById('auth-container');
         const appContainer = document.getElementById('app');
         const loginForm = document.getElementById('login-form');
@@ -477,7 +456,7 @@
         const availableItemsList = document.getElementById('available-items-list');
         const cancelSelectionBtn = document.getElementById('cancel-selection-btn');
         
-        // --- FUNÇÕES DE API (sem alterações) ---
+        // --- FUNÇÕES DE API ---
         const apiRequest = async (endpoint, method = 'GET', body = null) => {
             const token = localStorage.getItem('token');
             if (!token && !endpoint.startsWith('/api/auth')) {
@@ -504,7 +483,7 @@
             }
         };
 
-        // --- FUNÇÕES DE AUTENTICAÇÃO (sem alterações) ---
+        // --- FUNÇÕES DE AUTENTICAÇÃO ---
         const handleLogin = async () => {
             const username = document.getElementById('login-username').value;
             const password = document.getElementById('login-password').value;
@@ -531,7 +510,7 @@
             authMessage.textContent = '';
         };
 
-        // --- FUNÇÕES DE GERENCIAMENTO DO JOGO (sem alterações) ---
+        // --- FUNÇÕES DE GERENCIAMENTO DO JOGO ---
         const initializeGame = async () => {
             const data = await apiRequest('/api/game/state');
             if (data && data.gameState) {
@@ -540,7 +519,8 @@
                     gameState.placedRacksPerRoom = [Array(NUM_RACK_PLACEMENT_SLOTS).fill(null)]; currentRoomIndex = 0;
                 }
                 authContainer.style.display = 'none'; appContainer.style.display = 'flex';
-                userAvatar.textContent = data.username.charAt(0).toUpperCase();
+                // AVATAR ATUALIZADO PARA 'L' FIXO
+                userAvatar.textContent = 'L';
                 updateUI(); startLoops();
             } else { handleLogout(); }
         };
@@ -568,7 +548,7 @@
         function createRackSprite(rack) {
             const rackSprite = document.createElement('div');
             rackSprite.className = 'rack-2-5d';
-            let rackHeight = rack.slots * 60 + 60; // Altura dinâmica
+            let rackHeight = rack.slots * 60 + 60; 
             rackSprite.style.height = `${rackHeight}px`;
             let slotsHtml = '';
             for (let i = 0; i < rack.slots; i++) {
@@ -582,7 +562,6 @@
             if (!gameState) return;
             updateBalance();
             updateTotalPower();
-            updateLcoPerHour(); // ATUALIZA A NOVA MÉTRICA
             renderRoomControls();
             renderRackPlacementArea();
             updateAddRoomButtonState();
@@ -602,9 +581,8 @@
             });
             gameState.totalPower = totalPower;
             totalPowerElement.textContent = `${gameState.totalPower} TH/s`;
-            updateLcoPerHour(); // Garante que a mineração/hora atualize junto com a potência
+            updateLcoPerHour(); 
         }
-        // NOVA FUNÇÃO PARA ATUALIZAR A MINERAÇÃO POR HORA
         function updateLcoPerHour() {
             if (!gameState) return;
             const perHour = (gameState.totalPower * LCO_PER_THS_PER_MINUTE) * 60;
@@ -670,7 +648,7 @@
                     const rackConfig = RACKS.find(r => r.id === rackData.id);
                     const rackElement = document.createElement('div');
                     rackElement.className = 'rack-2-5d';
-                    rackElement.style.height = `${rackConfig.slots * 60 + 60}px`; // Altura dinâmica
+                    rackElement.style.height = `${rackConfig.slots * 60 + 60}px`;
                     let minerSlotsHtml = '';
                     for (let j = 0; j < rackConfig.slots; j++) {
                         const miner = rackData.placedMiners[j];
@@ -741,7 +719,6 @@
         function openInventory() { inventoryModal.style.display = 'flex'; renderInventory('miners'); }
         function closeInventory() { inventoryModal.style.display = 'none'; }
         
-        // Funções de Posicionamento (start, cancel, handle) - sem alterações na lógica
         function startPlacement(item, type) {
             placingItem = { item, type }; miningRoom.classList.add('placing-item'); selectionBar.classList.add('active');
             displayTerminalMessage(`Clique em um local para colocar ${item.name}.`, "blue");
@@ -773,7 +750,7 @@
             finally { cancelPlacement(); setTimeout(() => { if (target.classList.contains('placing')) target.classList.remove('placing'); }, 500); }
         }
 
-        // --- LOOPS DO JOGO (sem alterações) ---
+        // --- LOOPS DO JOGO ---
         let gameLoopInterval, terminalLoopInterval, lastUpdateTime;
         function startLoops() {
             if (gameLoopInterval) clearInterval(gameLoopInterval);
@@ -794,7 +771,7 @@
             terminalLoopInterval = setInterval(updateTerminal, 5000);
         }
 
-        // --- LISTENERS DE EVENTOS (sem alterações) ---
+        // --- LISTENERS DE EVENTOS ---
         loginBtn.addEventListener('click', handleLogin);
         registerBtn.addEventListener('click', handleRegister);
         showRegisterLink.addEventListener('click', toggleForms);
@@ -809,7 +786,7 @@
         shopCategoryBtns.forEach(btn => btn.addEventListener('click', () => { shopCategoryBtns.forEach(b => b.classList.remove('active')); btn.classList.add('active'); renderShop(btn.dataset.category); }));
         inventoryCategoryBtns.forEach(btn => btn.addEventListener('click', () => { inventoryCategoryBtns.forEach(b => b.classList.remove('active')); btn.classList.add('active'); renderInventory(btn.dataset.category); }));
 
-        // --- INICIALIZAÇÃO (sem alterações) ---
+        // --- INICIALIZAÇÃO ---
         if (localStorage.getItem('token')) { initializeGame(); } 
         else { authContainer.style.display = 'flex'; }
     });
