@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lula Coin Miner 2.0</title>
+    <title>Lula Coin Miner 2.1</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
@@ -85,21 +85,21 @@
         @keyframes scanline { 0% { background-position: 0 0; } 100% { background-position: 0 100%; } }
         @keyframes glow-text { 0%, 100% { text-shadow: 0 0 5px var(--primary-color), 0 0 15px var(--primary-color); } 50% { text-shadow: 0 0 10px var(--primary-color), 0 0 30px var(--primary-color); } }
 
-        /* --- Header (Sem alterações visuais) --- */
+        /* --- Header --- */
         header { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background-color: var(--tertiary-color); border-bottom: 1px solid var(--border-color); z-index: 10; position: relative; }
         .logo h1 { font-family: 'Orbitron', sans-serif; font-size: 2em; color: var(--primary-color); text-shadow: 0 0 8px var(--primary-color); letter-spacing: 2px; animation: glow-text 3s ease-in-out infinite; }
         .user-profile { display: flex; align-items: center; }
         .user-avatar { width: 40px; height: 40px; background-color: var(--primary-color); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.5em; margin-right: 15px; box-shadow: 0 0 10px var(--primary-color); }
-        .user-stats { display: flex; gap: 20px; }
+        .user-stats { display: flex; gap: 25px; } /* Aumentei o gap */
         .stat-item { display: flex; flex-direction: column; align-items: flex-end; }
         .stat-label { font-size: 0.8em; color: var(--light-gray); margin-bottom: 3px; }
         .stat-value { font-size: 1.1em; color: var(--text-color); font-weight: bold; display: flex; align-items: center; }
-        .stat-value .icon { margin-right: 5px; color: var(--primary-color); text-shadow: 0 0 5px var(--primary-color); }
+        .stat-value .icon { margin-right: 8px; font-size: 1.2em; color: var(--text-color); width: 24px; height: 24px; background-color: var(--primary-color); border-radius: 50%; display: inline-flex; justify-content: center; align-items: center; }
 
         /* --- Main Content --- */
         .main-content { flex-grow: 1; display: flex; position: relative; overflow: hidden; }
 
-        /* --- Mining Room (NOVO CENÁRIO) --- */
+        /* --- Mining Room (CENÁRIO) --- */
         .mining-room {
             flex-grow: 1;
             display: flex;
@@ -107,7 +107,7 @@
             align-items: flex-end;
             position: relative;
             overflow: hidden;
-            /* PAREDE DE TIJOLOS com CSS */
+            /* PAREDE DE TIJOLOS */
             background-color: var(--brick-mortar);
             background-image:
                 linear-gradient(var(--brick-color) 33.3%, transparent 33.3%),
@@ -118,14 +118,12 @@
             background-position: 0 0, 40px 0px, 0 20px, 0 20px;
         }
 
-        /* PISO 2.5D com CSS */
+        /* PISO 2.5D */
         .mining-room::before {
             content: '';
             position: absolute;
-            bottom: -5%;
-            left: 0;
-            width: 100%;
-            height: 40%;
+            bottom: -5%; left: 0;
+            width: 100%; height: 40%;
             background-color: var(--floor-plate-dark);
             background-image:
                 linear-gradient(45deg, var(--floor-plate-light) 25%, transparent 25%),
@@ -143,7 +141,7 @@
             bottom: 30px;
             width: calc(100% - 350px);
             left: 280px;
-            height: calc(70% - 60px);
+            height: calc(80% - 60px); /* Aumentado para acomodar racks maiores */
             display: flex;
             justify-content: space-around;
             align-items: flex-end;
@@ -153,12 +151,12 @@
         
         .rack-placement-slot {
             width: 220px;
-            height: 300px;
+            height: 100%; /* Ocupa a altura total */
             border: 2px dashed rgba(255, 59, 59, 0.4);
             border-radius: 8px;
             display: flex;
             justify-content: center;
-            align-items: flex-end;
+            align-items: flex-end; /* Alinha o rack na base */
             padding: 10px;
             position: relative;
             transition: border-color 0.3s ease, background-color 0.3s ease;
@@ -170,13 +168,13 @@
         .rack-placement-slot.available::after { content: 'CLIQUE PARA COLOCAR RACK'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 0.9em; color: rgba(255, 59, 59, 0.6); white-space: nowrap; opacity: 0; transition: opacity 0.3s ease; }
         .rack-placement-slot.available:hover::after { opacity: 1; }
 
-        /* --- NOVO RACK 2.5D --- */
+        /* --- NOVO RACK 2.5D com pernas e tamanho dinâmico --- */
         .rack-2-5d {
             width: 200px;
-            height: 280px;
             position: relative;
             transform-style: preserve-3d;
             z-index: 1;
+            /* A altura será definida via JS */
         }
         .rack-front {
             width: 100%;
@@ -185,12 +183,11 @@
             border: 2px solid var(--border-color);
             border-radius: 8px;
             padding: 15px;
+            padding-bottom: 25px; /* Espaço para as pernas */
             display: flex;
             flex-direction: column;
             gap: 10px;
-            position: absolute;
-            bottom: 0;
-            left: 0;
+            position: relative;
             transform: translateZ(10px);
         }
         .rack-side, .rack-top {
@@ -202,7 +199,7 @@
             width: 20px;
             height: 100%;
             left: -1px;
-            bottom: -1px;
+            bottom: 0;
             transform: rotateY(-90deg) translateX(-10px);
             transform-origin: left;
         }
@@ -215,164 +212,72 @@
             transform-origin: top;
         }
 
-        .rack-label {
+        .rack-leg {
             position: absolute;
-            top: -15px; left: 50%;
-            transform: translateX(-50%);
-            background-color: var(--primary-color);
-            color: var(--dark-gray);
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 0.9em;
-            font-weight: bold;
-            white-space: nowrap;
-            box-shadow: 0 0 8px var(--primary-color);
+            bottom: 5px;
+            width: 10px;
+            height: 20px;
+            background-color: #3e2723;
         }
+        .rack-leg.front-left { left: 15px; }
+        .rack-leg.front-right { right: 15px; }
 
-        .slot {
-            width: 100%;
-            height: 60px;
-            background-color: var(--dark-gray);
-            border: 1px dashed var(--border-color);
-            border-radius: 5px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
+
+        .rack-label { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background-color: var(--primary-color); color: var(--dark-gray); padding: 5px 10px; border-radius: 5px; font-size: 0.9em; font-weight: bold; white-space: nowrap; box-shadow: 0 0 8px var(--primary-color); }
+        .slot { width: 100%; height: 60px; background-color: var(--dark-gray); border: 1px dashed var(--border-color); border-radius: 5px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: all 0.3s ease; position: relative; overflow: hidden; }
         .slot.empty:hover { border-color: var(--primary-color); background-color: rgba(255, 59, 59, 0.1); }
 
-        /* --- NOVAS GPUS DETALHADAS --- */
-        .miner-gpu {
-            width: 95%;
-            height: 95%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            border-radius: 5px;
-            position: relative;
-            cursor: pointer;
-        }
-        .gpu-shroud { /* Carcaça da GPU */
-            width: 100%;
-            height: 100%;
-            background-color: #222;
-            border: 2px solid; /* A cor será definida via JS */
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5), inset 0 0 8px rgba(0,0,0,0.7);
-            padding: 4px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-        .gpu-pcb { /* Placa de circuito */
-            width: 100%;
-            height: 4px;
-            background-color: #004d40;
-        }
-        .gpu-fans-container {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            width: 100%;
-            flex-grow: 1;
-        }
-        .gpu-fan {
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            background-color: #111;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 3px;
-            animation: spin 1s linear infinite;
-        }
-        .gpu-fan-blades {
-            width: 100%; height: 100%;
-            border-radius: 50%;
-            background-color: var(--primary-color); /* A cor será definida via JS */
-            position: relative;
-        }
+        /* --- GPUS DETALHADAS --- */
+        .miner-gpu { width: 95%; height: 95%; display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 5px; position: relative; cursor: pointer; }
+        .gpu-shroud { width: 100%; height: 100%; background-color: #222; border: 2px solid; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.5), inset 0 0 8px rgba(0,0,0,0.7); padding: 4px; display: flex; flex-direction: column; justify-content: space-between; }
+        .gpu-pcb { width: 100%; height: 4px; background-color: #004d40; }
+        .gpu-fans-container { display: flex; justify-content: space-around; align-items: center; width: 100%; flex-grow: 1; }
+        .gpu-fan { width: 35px; height: 35px; border-radius: 50%; background-color: #111; display: flex; justify-content: center; align-items: center; padding: 3px; animation: spin 1s linear infinite; }
+        .gpu-fan-blades { width: 100%; height: 100%; border-radius: 50%; background-color: var(--primary-color); position: relative; }
         .gpu-fan-blade { position: absolute; width: 30%; height: 110%; background: #111; top: -5%; left: 35%; }
-        .gpu-fan-blade:nth-child(1) { transform: rotate(0deg); }
-        .gpu-fan-blade:nth-child(2) { transform: rotate(120deg); }
-        .gpu-fan-blade:nth-child(3) { transform: rotate(240deg); }
+        .gpu-fan-blade:nth-child(1) { transform: rotate(0deg); } .gpu-fan-blade:nth-child(2) { transform: rotate(120deg); } .gpu-fan-blade:nth-child(3) { transform: rotate(240deg); }
         .gpu-leds-container { display: flex; justify-content: flex-end; gap: 5px; }
         .gpu-led { width: 6px; height: 6px; border-radius: 50%; animation: pulse 1.5s ease-in-out infinite; }
 
-        /* --- NOVO COMPUTER SETUP --- */
-        .computer-setup {
-            position: absolute;
-            left: 20px;
-            bottom: 30px;
-            width: 250px;
-            height: 250px;
-            z-index: 2;
-        }
-        .desk {
-            width: 180px; height: 10px;
-            background-color: #4e342e;
-            position: absolute;
-            bottom: 80px; left: 50%;
-            transform: translateX(-50%) perspective(150px) rotateX(15deg);
-            border-radius: 2px;
-            box-shadow: 0 15px 10px rgba(0,0,0,0.4);
-        }
+        /* --- COMPUTER SETUP --- */
+        .computer-setup { position: absolute; left: 20px; bottom: 30px; width: 250px; height: 250px; z-index: 2; }
+        .desk { width: 180px; height: 10px; background-color: #4e342e; position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%) perspective(150px) rotateX(15deg); border-radius: 2px; box-shadow: 0 15px 10px rgba(0,0,0,0.4); }
         .desk::before, .desk::after { content: ''; position: absolute; bottom: -60px; width: 10px; height: 60px; background-color: #3e2723; }
-        .desk::before { left: 10px; }
-        .desk::after { right: 10px; }
-
+        .desk::before { left: 10px; } .desk::after { right: 10px; }
         .monitor { width: 120px; height: 90px; background-color: #222; border: 2px solid #555; border-radius: 5px; position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%); box-shadow: 0 0 15px rgba(0, 0, 0, 0.5); }
         .monitor-screen { width: calc(100% - 10px); height: calc(100% - 10px); background-color: var(--monitor-screen); position: absolute; top: 5px; left: 5px; border-radius: 3px; overflow: hidden; box-shadow: inset 0 0 10px rgba(0,0,0,0.8); }
         .scanline-effect { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(0, 0, 0, 0.1) 50%, transparent 50%); background-size: 100% 2px; animation: scanline 5s linear infinite; }
         .monitor-text { color: lime; font-size: 0.6em; padding: 5px; white-space: pre-wrap; animation: blink 2s steps(1) infinite; }
-        
         .keyboard { width: 120px; height: 15px; background-color: #555; position: absolute; bottom: 65px; left: 50%; transform: translateX(-50%); border-radius: 3px; box-shadow: 0 2px 5px rgba(0,0,0,0.4); }
-        
-        /* NOVA CPU TOWER */
-        .cpu-box {
-            width: 50px; height: 100px;
-            background-color: #333;
-            position: absolute;
-            bottom: 0; left: 0;
-            border-radius: 5px;
-            box-shadow: 5px 5px 15px rgba(0,0,0,0.5);
-        }
-        .cpu-box::before { /* Lado 3D */
-            content: '';
-            position: absolute;
-            top: 0; right: -10px;
-            width: 10px; height: 100%;
-            background-color: #222;
-            border-radius: 0 5px 5px 0;
-            transform: skewY(-10deg);
-        }
-        .cpu-led-light {
-            width: 8px; height: 8px;
-            border-radius: 50%;
-            position: absolute;
-            top: 15px; left: 15px;
-            animation: blink-red 4s linear infinite;
-        }
+        .cpu-box { width: 50px; height: 100px; background-color: #333; position: absolute; bottom: 0; left: 0; border-radius: 5px; box-shadow: 5px 5px 15px rgba(0,0,0,0.5); }
+        .cpu-box::before { content: ''; position: absolute; top: 0; right: -10px; width: 10px; height: 100%; background-color: #222; border-radius: 0 5px 5px 0; transform: skewY(-10deg); }
+        .cpu-led-light { width: 8px; height: 8px; border-radius: 50%; position: absolute; top: 15px; left: 15px; animation: blink-red 4s linear infinite; }
 
         /* --- BARRAS e MODAIS --- */
         .stats-bar { display: flex; justify-content: center; align-items: center; gap: 15px; padding: 10px 20px; background-color: var(--tertiary-color); border-top: 1px solid var(--border-color); z-index: 10; }
         .stats-bar .action-btn { background-color: var(--primary-color); color: var(--dark-gray); border: none; border-radius: 5px; padding: 10px 20px; cursor: pointer; font-weight: bold; text-transform: uppercase; box-shadow: 0 0 10px var(--primary-color); transition: all 0.3s ease; }
         .stats-bar .action-btn:hover { filter: brightness(1.2); transform: scale(1.05); }
 
+        .room-btn { padding: 5px 10px; background-color: var(--medium-gray); border: none; border-radius: 5px; color: var(--text-color); font-weight: bold; cursor: pointer; transition: all 0.2s ease; }
+        .room-btn.active { background-color: #fff; color: var(--primary-color); box-shadow: 0 0 8px #fff; }
+        #add-room { /* BOTÃO DE COMPRAR SALA ATUALIZADO */
+            background-color: var(--primary-color);
+            color: var(--dark-gray);
+            padding: 7px 15px;
+            font-size: 1.1em;
+            box-shadow: 0 0 10px var(--primary-color);
+        }
+        #add-room:disabled { background-color: var(--medium-gray); color: var(--light-gray); box-shadow: none; filter: grayscale(0.8); cursor: not-allowed; }
+        
         .miner-selection { position: absolute; bottom: 0; left: 0; width: 100%; height: 90px; background-color: rgba(0, 0, 0, 0.9); border-top: 1px solid var(--primary-color); display: none; align-items: center; justify-content: center; gap: 15px; padding: 0 20px; box-shadow: 0 -5px 20px rgba(255, 59, 59, 0.3); z-index: 20; transform: translateY(100%); transition: transform 0.3s ease-out; }
         .miner-selection.active { transform: translateY(0%); display: flex; }
         .selection-title { font-size: 1em; color: var(--primary-color); margin-right: 10px; white-space: nowrap; }
         .available-items-list { display: flex; gap: 10px; flex-wrap: nowrap; overflow-x: auto; -ms-overflow-style: none; scrollbar-width: none; }
         .available-items-list::-webkit-scrollbar { display: none; }
-        .selection-item { flex-shrink: 0; width: 80px; height: 80px; background-color: var(--dark-gray); border: 2px solid var(--border-color); border-radius: 5px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: all 0.2s ease; position: relative; overflow: visible; }
+        .selection-item { flex-shrink: 0; width: 120px; height: 100px; background-color: var(--dark-gray); border: 2px solid var(--border-color); border-radius: 5px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: all 0.2s ease; position: relative; overflow: visible; }
         .selection-item:hover { border-color: var(--primary-color); transform: translateY(-3px); box-shadow: 0 0 10px var(--primary-color); }
-        .selection-item .miner-gpu, .selection-item .rack-2-5d { transform: scale(0.3); } /* Ajusta o tamanho do sprite */
+        .selection-item .miner-gpu { transform: scale(0.8); }
+        .selection-item .rack-2-5d { transform: scale(0.35); } /* Ajusta o tamanho do sprite do rack */
         .cancel-selection-btn { background-color: var(--red-alert); color: #fff; border: none; border-radius: 5px; padding: 8px 15px; cursor: pointer; font-weight: bold; margin-left: 20px; transition: background-color 0.2s ease; }
         
         .shop-modal, .inventory-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.8); display: none; justify-content: center; align-items: center; z-index: 100; }
@@ -433,17 +338,21 @@
                 <div class="user-stats">
                     <div class="stat-item">
                         <span class="stat-label">Saldo LCO</span>
-                        <span class="stat-value"><span class="icon">◎</span><span id="balance">0.00</span></span>
+                        <span class="stat-value"><span class="icon">🦹</span><span id="balance">0.00</span></span>
                     </div>
                     <div class="stat-item">
                         <span class="stat-label">Potência Total</span>
                         <span class="stat-value"><span class="icon">⚡</span><span id="total-power">0 TH/s</span></span>
                     </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Mineração por Hora</span>
+                        <span class="stat-value"><span class="icon">🦹</span><span id="lco-per-hour">0.00</span></span>
+                    </div>
                 </div>
             </div>
         </header>
 
-        <div id="room-controls" style="position: absolute; top: 70px; left: 50%; transform: translateX(-50%); z-index: 20; display: flex; gap: 10px;"></div>
+        <div id="room-controls" style="position: absolute; top: 80px; left: 50%; transform: translateX(-50%); z-index: 20; display: flex; gap: 10px; align-items: center;"></div>
 
         <main class="main-content">
             <div class="mining-room" id="mining-room">
@@ -520,20 +429,20 @@
             { id: 'miner003', name: 'ASIC Avançado', power: 20, price: 180, color: '#00ff7f' },
             { id: 'miner004', name: 'Super ASIC', power: 100, price: 800, color: '#ffa500' },
         ];
-        // RACKS ATUALIZADOS CONFORME SOLICITADO
         const RACKS = [
             { id: 'rack001', name: 'Rack Pequeno', slots: 2, price: 20, color: '#607d8b' },
             { id: 'rack002', name: 'Rack Médio', slots: 3, price: 30, color: '#4e626e' },
             { id: 'rack003', name: 'Rack Grande', slots: 4, price: 100, color: '#3a4750' },
         ];
-        const ROOM_PRICES = [500, 1500, 5000];
-
+        
         // --- ESTADO DO JOGO (INICIALIZADO COMO NULO) ---
         let gameState = null;
         let currentRoomIndex = 0;
         let placingItem = null;
 
-        // --- ELEMENTOS DO DOM (sem alterações) ---
+        // --- ELEMENTOS DO DOM ---
+        // ... (elementos do DOM antigos)
+        const lcoPerHourElement = document.getElementById('lco-per-hour'); // NOVO ELEMENTO
         const authContainer = document.getElementById('auth-container');
         const appContainer = document.getElementById('app');
         const loginForm = document.getElementById('login-form');
@@ -573,8 +482,7 @@
             const token = localStorage.getItem('token');
             if (!token && !endpoint.startsWith('/api/auth')) {
                 showAuthMessage('Sessão expirada. Faça login novamente.');
-                handleLogout();
-                return null;
+                handleLogout(); return null;
             }
             const options = { method, headers: { 'Content-Type': 'application/json' } };
             if (token) { options.headers['Authorization'] = `Bearer ${token}`; }
@@ -582,9 +490,7 @@
             try {
                 const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
                 if (response.status === 401) {
-                    handleLogout();
-                    showAuthMessage('Sessão inválida. Faça login novamente.');
-                    return null;
+                    handleLogout(); showAuthMessage('Sessão inválida. Faça login novamente.'); return null;
                 }
                 if (response.status === 204 || response.headers.get("content-length") === "0") {
                     return { success: true, message: "Operação bem-sucedida." };
@@ -594,9 +500,7 @@
                 return data;
             } catch (error) {
                 const messageArea = appContainer.style.display === 'flex' ? terminalTextElement : authMessage;
-                messageArea.textContent = `Erro: ${error.message}`;
-                messageArea.style.color = 'var(--red-alert)';
-                return null;
+                messageArea.textContent = `Erro: ${error.message}`; messageArea.style.color = 'var(--red-alert)'; return null;
             }
         };
 
@@ -606,28 +510,18 @@
             const password = document.getElementById('login-password').value;
             if (!username || !password) return showAuthMessage('Preencha todos os campos.');
             const data = await apiRequest('/api/auth/login', 'POST', { username, password });
-            if (data && data.token) {
-                localStorage.setItem('token', data.token);
-                await initializeGame();
-            }
+            if (data && data.token) { localStorage.setItem('token', data.token); await initializeGame(); }
         };
         const handleRegister = async () => {
             const username = document.getElementById('register-username').value;
             const password = document.getElementById('register-password').value;
             if (!username || !password) return showAuthMessage('Preencha todos os campos.');
             const data = await apiRequest('/api/auth/register', 'POST', { username, password });
-            if (data) {
-                showAuthMessage(data.message, 'lime');
-                toggleForms();
-            }
+            if (data) { showAuthMessage(data.message, 'lime'); toggleForms(); }
         };
         const handleLogout = () => {
-            localStorage.removeItem('token');
-            authContainer.style.display = 'flex';
-            appContainer.style.display = 'none';
-            gameState = null;
-            if (gameLoopInterval) clearInterval(gameLoopInterval);
-            if (terminalLoopInterval) clearInterval(terminalLoopInterval);
+            localStorage.removeItem('token'); authContainer.style.display = 'flex'; appContainer.style.display = 'none';
+            gameState = null; if (gameLoopInterval) clearInterval(gameLoopInterval); if (terminalLoopInterval) clearInterval(terminalLoopInterval);
         };
         const showAuthMessage = (msg, color = 'var(--red-alert)') => { authMessage.textContent = msg; authMessage.style.color = color; };
         const toggleForms = () => {
@@ -641,17 +535,13 @@
         const initializeGame = async () => {
             const data = await apiRequest('/api/game/state');
             if (data && data.gameState) {
-                gameState = data.gameState;
-                currentRoomIndex = data.currentRoomIndex || 0;
+                gameState = data.gameState; currentRoomIndex = data.currentRoomIndex || 0;
                 if (!gameState.placedRacksPerRoom || gameState.placedRacksPerRoom.length === 0) {
-                    gameState.placedRacksPerRoom = [Array(NUM_RACK_PLACEMENT_SLOTS).fill(null)];
-                    currentRoomIndex = 0;
+                    gameState.placedRacksPerRoom = [Array(NUM_RACK_PLACEMENT_SLOTS).fill(null)]; currentRoomIndex = 0;
                 }
-                authContainer.style.display = 'none';
-                appContainer.style.display = 'flex';
+                authContainer.style.display = 'none'; appContainer.style.display = 'flex';
                 userAvatar.textContent = data.username.charAt(0).toUpperCase();
-                updateUI();
-                startLoops();
+                updateUI(); startLoops();
             } else { handleLogout(); }
         };
         const saveGame = async () => {
@@ -661,59 +551,30 @@
             if (data) { setTimeout(() => displayTerminalMessage('Jogo salvo com sucesso!', 'lime'), 500); }
         };
 
-        // --- FUNÇÕES DE UI E RENDERIZAÇÃO (ATUALIZADAS) ---
-
-        // NOVA FUNÇÃO PARA CRIAR SPRITES DE GPU
+        // --- FUNÇÕES DE UI E RENDERIZAÇÃO ---
         function createGpuSprite(miner) {
             const gpu = document.createElement('div');
             gpu.className = 'miner-gpu';
-            
             let fanCount = 1;
             if (miner.power >= 5 && miner.power < 20) fanCount = 2;
             if (miner.power >= 20) fanCount = 3;
-
             let fansHtml = '';
             for (let i = 0; i < fanCount; i++) {
-                fansHtml += `
-                    <div class="gpu-fan">
-                        <div class="gpu-fan-blades" style="background-color: ${miner.color};">
-                            <div class="gpu-fan-blade"></div><div class="gpu-fan-blade"></div><div class="gpu-fan-blade"></div>
-                        </div>
-                    </div>
-                `;
+                fansHtml += `<div class="gpu-fan"><div class="gpu-fan-blades" style="background-color: ${miner.color};"><div class="gpu-fan-blade"></div><div class="gpu-fan-blade"></div><div class="gpu-fan-blade"></div></div></div>`;
             }
-            
-            gpu.innerHTML = `
-                <div class="gpu-shroud" style="border-color: ${miner.color};">
-                    <div class="gpu-pcb"></div>
-                    <div class="gpu-fans-container">${fansHtml}</div>
-                    <div class="gpu-leds-container">
-                        <div class="gpu-led" style="background-color: ${miner.color}; --glow-color: ${miner.color}; animation-delay: 0s;"></div>
-                        ${fanCount > 1 ? `<div class="gpu-led" style="background-color: ${miner.color}; --glow-color: ${miner.color}; animation-delay: 0.5s;"></div>` : ''}
-                    </div>
-                </div>
-            `;
+            gpu.innerHTML = `<div class="gpu-shroud" style="border-color: ${miner.color};"><div class="gpu-pcb"></div><div class="gpu-fans-container">${fansHtml}</div><div class="gpu-leds-container"><div class="gpu-led" style="background-color: ${miner.color}; --glow-color: ${miner.color}; animation-delay: 0s;"></div>${fanCount > 1 ? `<div class="gpu-led" style="background-color: ${miner.color}; --glow-color: ${miner.color}; animation-delay: 0.5s;"></div>` : ''}</div></div>`;
             return gpu;
         }
-
-        // NOVA FUNÇÃO PARA CRIAR SPRITES DE RACK 2.5D
         function createRackSprite(rack) {
             const rackSprite = document.createElement('div');
             rackSprite.className = 'rack-2-5d';
-            
+            let rackHeight = rack.slots * 60 + 60; // Altura dinâmica
+            rackSprite.style.height = `${rackHeight}px`;
             let slotsHtml = '';
             for (let i = 0; i < rack.slots; i++) {
-                // Em sprites de loja/inventário, os slots estão sempre vazios.
                 slotsHtml += '<div class="slot empty"></div>';
             }
-
-            rackSprite.innerHTML = `
-                <div class="rack-top" style="background-color: ${rack.color};"></div>
-                <div class="rack-side" style="background-color: ${rack.color}; filter: brightness(0.6);"></div>
-                <div class="rack-front" style="border-color: ${rack.color};">
-                    <div class="rack-label">${rack.name}</div>
-                    ${slotsHtml}
-                </div>`;
+            rackSprite.innerHTML = `<div class="rack-top" style="background-color: ${rack.color};"></div><div class="rack-side" style="background-color: ${rack.color}; filter: brightness(0.6);"></div><div class="rack-front" style="border-color: ${rack.color};"><div class="rack-label">${rack.name}</div>${slotsHtml}<div class="rack-leg front-left"></div><div class="rack-leg front-right"></div></div>`;
             return rackSprite;
         }
         
@@ -721,6 +582,7 @@
             if (!gameState) return;
             updateBalance();
             updateTotalPower();
+            updateLcoPerHour(); // ATUALIZA A NOVA MÉTRICA
             renderRoomControls();
             renderRackPlacementArea();
             updateAddRoomButtonState();
@@ -730,7 +592,7 @@
         function updateTotalPower() {
             let totalPower = 0;
             gameState.placedRacksPerRoom.forEach(room => {
-                if (room) room.forEach(rackSlot => {
+                if(room) room.forEach(rackSlot => {
                     if (rackSlot && rackSlot.placedMiners) {
                         rackSlot.placedMiners.forEach(miner => {
                             if (miner) totalPower += MINERS.find(m => m.id === miner.id)?.power || 0;
@@ -740,10 +602,18 @@
             });
             gameState.totalPower = totalPower;
             totalPowerElement.textContent = `${gameState.totalPower} TH/s`;
+            updateLcoPerHour(); // Garante que a mineração/hora atualize junto com a potência
         }
+        // NOVA FUNÇÃO PARA ATUALIZAR A MINERAÇÃO POR HORA
+        function updateLcoPerHour() {
+            if (!gameState) return;
+            const perHour = (gameState.totalPower * LCO_PER_THS_PER_MINUTE) * 60;
+            lcoPerHourElement.textContent = perHour.toFixed(2);
+        }
+
         function displayTerminalMessage(message, color = 'lime') { terminalTextElement.innerHTML = `> ${message}`; terminalTextElement.style.color = color; }
         
-        // Funções de Sala (buyRoom, switchRoom, etc) - sem alterações na lógica
+        // Funções de Sala ATUALIZADAS com nova lógica de preço
         function renderRoomControls() {
             roomControls.innerHTML = '';
             gameState.placedRacksPerRoom.forEach((room, index) => {
@@ -755,7 +625,6 @@
             });
             const addRoomButton = document.createElement('button');
             addRoomButton.id = 'add-room';
-            addRoomButton.className = 'room-btn';
             addRoomButton.addEventListener('click', buyRoom);
             roomControls.appendChild(addRoomButton);
             updateAddRoomButtonState();
@@ -769,8 +638,7 @@
         }
         async function buyRoom() {
             const nextRoomIndex = gameState.placedRacksPerRoom.length;
-            const roomCost = ROOM_PRICES[nextRoomIndex - 1];
-            if (roomCost === undefined) { displayTerminalMessage("Todas as salas já foram compradas!", "yellow"); return; }
+            const roomCost = nextRoomIndex * 50; // NOVA LÓGICA DE PREÇO
             if (gameState.balance >= roomCost) {
                 const data = await apiRequest('/api/game/buy-room', 'POST', { cost: roomCost });
                 if (data && data.gameState) {
@@ -784,17 +652,11 @@
         function updateAddRoomButtonState() {
             const addRoomButton = document.getElementById('add-room');
             if (!addRoomButton) return;
-            const nextRoomPrice = ROOM_PRICES[gameState.placedRacksPerRoom.length - 1];
-            if (nextRoomPrice === undefined) {
-                addRoomButton.textContent = 'MAX SALAS';
-                addRoomButton.disabled = true;
-            } else {
-                addRoomButton.textContent = `+ (${nextRoomPrice} LCO)`;
-                addRoomButton.disabled = gameState.balance < nextRoomPrice;
-            }
+            const nextRoomPrice = gameState.placedRacksPerRoom.length * 50; // NOVA LÓGICA DE PREÇO
+            addRoomButton.textContent = `+ Sala (${nextRoomPrice} LCO)`;
+            addRoomButton.disabled = gameState.balance < nextRoomPrice;
         }
         
-        // RENDERIZAÇÃO DA SALA ATUALIZADA PARA USAR NOVOS RACKS 2.5D
         function renderRackPlacementArea() {
             rackPlacementArea.innerHTML = '';
             const currentRoomData = gameState.placedRacksPerRoom[currentRoomIndex];
@@ -808,30 +670,18 @@
                     const rackConfig = RACKS.find(r => r.id === rackData.id);
                     const rackElement = document.createElement('div');
                     rackElement.className = 'rack-2-5d';
-                    
+                    rackElement.style.height = `${rackConfig.slots * 60 + 60}px`; // Altura dinâmica
                     let minerSlotsHtml = '';
                     for (let j = 0; j < rackConfig.slots; j++) {
                         const miner = rackData.placedMiners[j];
                         const minerSlotDiv = document.createElement('div');
                         minerSlotDiv.className = 'slot';
-                        minerSlotDiv.dataset.rackSlotIndex = i;
-                        minerSlotDiv.dataset.minerSlotIndex = j;
-                        if (miner) {
-                            minerSlotDiv.appendChild(createGpuSprite(MINERS.find(m => m.id === miner.id)));
-                        } else {
-                            minerSlotDiv.classList.add('empty');
-                            minerSlotDiv.addEventListener('click', handleSlotClick);
-                        }
+                        minerSlotDiv.dataset.rackSlotIndex = i; minerSlotDiv.dataset.minerSlotIndex = j;
+                        if (miner) { minerSlotDiv.appendChild(createGpuSprite(MINERS.find(m => m.id === miner.id))); } 
+                        else { minerSlotDiv.classList.add('empty'); minerSlotDiv.addEventListener('click', handleSlotClick); }
                         minerSlotsHtml += minerSlotDiv.outerHTML;
                     }
-
-                    rackElement.innerHTML = `
-                        <div class="rack-top" style="background-color: ${rackConfig.color};"></div>
-                        <div class="rack-side" style="background-color: ${rackConfig.color}; filter: brightness(0.6);"></div>
-                        <div class="rack-front" style="border-color: ${rackConfig.color};">
-                           <div class="rack-label">${rackConfig.name}</div>
-                           ${minerSlotsHtml}
-                        </div>`;
+                    rackElement.innerHTML = `<div class="rack-top" style="background-color: ${rackConfig.color};"></div><div class="rack-side" style="background-color: ${rackConfig.color}; filter: brightness(0.6);"></div><div class="rack-front" style="border-color: ${rackConfig.color};"><div class="rack-label">${rackConfig.name}</div>${minerSlotsHtml}<div class="rack-leg front-left"></div><div class="rack-leg front-right"></div></div>`;
                     slotDiv.appendChild(rackElement);
                 } else {
                     slotDiv.classList.add('available');
@@ -841,67 +691,48 @@
             }
         }
         
-        // Funções de Compra e Inventário atualizadas para usar novos sprites
         async function buyItem(itemId, category) {
             displayTerminalMessage('Processando compra...', 'yellow');
             const itemData = (category === 'miners' ? MINERS : RACKS).find(i => i.id === itemId);
             if (gameState.balance < itemData.price) { displayTerminalMessage('Saldo insuficiente!', 'red'); return; }
             const data = await apiRequest('/api/game/buy-item', 'POST', { itemId, category, price: itemData.price });
             if (data && data.gameState) {
-                gameState = data.gameState;
-                displayTerminalMessage(data.message, 'lime');
-                updateBalance();
-                renderShop(category);
-                renderInventory(category);
+                gameState = data.gameState; displayTerminalMessage(data.message, 'lime');
+                updateUI(); renderShop(category); renderInventory(category);
             }
         }
         function renderShop(category) {
-            minersShopContent.style.display = 'none';
-            racksShopContent.style.display = 'none';
+            minersShopContent.style.display = 'none'; racksShopContent.style.display = 'none';
             const contentArea = category === 'miners' ? minersShopContent : racksShopContent;
             const itemsToRender = category === 'miners' ? MINERS : RACKS;
-            contentArea.style.display = 'grid';
-            contentArea.innerHTML = '';
+            contentArea.style.display = 'grid'; contentArea.innerHTML = '';
             itemsToRender.forEach(item => {
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'shop-item';
-                itemDiv.innerHTML = `
-                    <div class="item-icon">${category === 'miners' ? createGpuSprite(item).outerHTML : createRackSprite(item).outerHTML}</div>
-                    <div class="item-name">${item.name}</div>
-                    <div class="item-stats">${item.power ? `Poder: ${item.power} TH/s` : `Slots: ${item.slots}`}</div>
-                    <div class="item-price">◎ ${item.price}</div>
-                    <button class="buy-btn" data-id="${item.id}" data-category="${category}" ${gameState.balance < item.price ? 'disabled' : ''}>Comprar</button>
-                `;
+                itemDiv.innerHTML = `<div class="item-icon">${category === 'miners' ? createGpuSprite(item).outerHTML : createRackSprite(item).outerHTML}</div><div class="item-name">${item.name}</div><div class="item-stats">${item.power ? `Poder: ${item.power} TH/s` : `Slots: ${item.slots}`}</div><div class="item-price">◎ ${item.price}</div><button class="buy-btn" data-id="${item.id}" data-category="${category}" ${gameState.balance < item.price ? 'disabled' : ''}>Comprar</button>`;
                 contentArea.appendChild(itemDiv);
             });
             contentArea.querySelectorAll('.buy-btn').forEach(btn => { btn.addEventListener('click', () => buyItem(btn.dataset.id, btn.dataset.category)); });
         }
         function renderInventory(category) {
-            minersInventoryContent.style.display = 'none';
-            racksInventoryContent.style.display = 'none';
+            minersInventoryContent.style.display = 'none'; racksInventoryContent.style.display = 'none';
             const contentArea = category === 'miners' ? minersInventoryContent : racksInventoryContent;
             const itemsToRender = category === 'miners' ? gameState.inventory.miners : gameState.inventory.racks;
-            contentArea.style.display = 'grid';
-            contentArea.innerHTML = '';
+            contentArea.style.display = 'grid'; contentArea.innerHTML = '';
             if (!itemsToRender || itemsToRender.length === 0) { contentArea.innerHTML = '<p style="grid-column: 1 / -1; text-align: center;">Vazio</p>'; return; }
             itemsToRender.forEach(invItem => {
                 const itemConfig = (category === 'miners' ? MINERS : RACKS).find(i => i.id === invItem.id);
                 if (!itemConfig) return;
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'inventory-item';
-                itemDiv.innerHTML = `
-                    <div class="item-icon">${category === 'miners' ? createGpuSprite(itemConfig).outerHTML : createRackSprite(itemConfig).outerHTML}</div>
-                    <div class="item-name">${itemConfig.name} (x${invItem.quantity})</div>
-                    <button class="use-item-btn" data-id="${itemConfig.id}" data-category="${category}">Usar</button>
-                `;
+                itemDiv.innerHTML = `<div class="item-icon">${category === 'miners' ? createGpuSprite(itemConfig).outerHTML : createRackSprite(itemConfig).outerHTML}</div><div class="item-name">${itemConfig.name} (x${invItem.quantity})</div><button class="use-item-btn" data-id="${itemConfig.id}" data-category="${category}">Usar</button>`;
                 contentArea.appendChild(itemDiv);
             });
             contentArea.querySelectorAll('.use-item-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const type = btn.dataset.category === 'miners' ? 'miner' : 'rack';
                     const itemConfig = (type === 'miner' ? MINERS : RACKS).find(i => i.id === btn.dataset.id);
-                    startPlacement(itemConfig, type);
-                    closeInventory();
+                    startPlacement(itemConfig, type); closeInventory();
                 });
             });
         }
@@ -912,15 +743,11 @@
         
         // Funções de Posicionamento (start, cancel, handle) - sem alterações na lógica
         function startPlacement(item, type) {
-            placingItem = { item, type };
-            miningRoom.classList.add('placing-item');
-            selectionBar.classList.add('active');
+            placingItem = { item, type }; miningRoom.classList.add('placing-item'); selectionBar.classList.add('active');
             displayTerminalMessage(`Clique em um local para colocar ${item.name}.`, "blue");
         }
         function cancelPlacement() {
-            placingItem = null;
-            miningRoom.classList.remove('placing-item');
-            selectionBar.classList.remove('active');
+            placingItem = null; miningRoom.classList.remove('placing-item'); selectionBar.classList.remove('active');
         }
         async function handleSlotClick(event) {
             if (!placingItem) return;
@@ -936,14 +763,11 @@
                     endpoint = '/api/game/place-miner';
                     body = { minerId: placingItem.item.id, rackSlotIndex: parseInt(target.dataset.rackSlotIndex), minerSlotIndex: parseInt(target.dataset.minerSlotIndex), roomIndex: currentRoomIndex };
                 } else { target.classList.remove('placing'); return; }
-
                 displayTerminalMessage(`Posicionando ${placingItem.item.name}...`, "yellow");
                 const data = await apiRequest(endpoint, 'POST', body);
                 if (data && data.gameState) {
-                    gameState = data.gameState;
-                    displayTerminalMessage(data.message, 'lime');
-                    updateUI();
-                    renderInventory(placingItem.type === 'rack' ? 'racks' : 'miners');
+                    gameState = data.gameState; displayTerminalMessage(data.message, 'lime');
+                    updateUI(); renderInventory(placingItem.type === 'rack' ? 'racks' : 'miners');
                 }
             } catch (error) { displayTerminalMessage("Erro ao posicionar item.", "red"); } 
             finally { cancelPlacement(); setTimeout(() => { if (target.classList.contains('placing')) target.classList.remove('placing'); }, 500); }
