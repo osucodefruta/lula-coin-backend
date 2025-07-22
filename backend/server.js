@@ -23,6 +23,14 @@ mongoose.connect(process.env.MONGO_URI)
 app.use('/api/auth', authRoutes);
 app.use('/api/game', gameRoutes);
 
+// --- NOVO CÓDIGO: Rota de Health Check ---
+// Esta rota serve para que serviços de monitoramento (como UptimeBot)
+// possam "pingar" o servidor e mantê-lo ativo em plataformas de hospedagem gratuitas.
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'online', timestamp: new Date() });
+});
+// --- FIM DO NOVO CÓDIGO ---
+
 // Rota de teste para verificar se o servidor está online
 app.get("/", (req, res) => {
   res.send("Lula Coin Miner Backend está online!");
