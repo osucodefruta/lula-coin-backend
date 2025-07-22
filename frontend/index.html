@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lula Coin Miner 3.5 (Polished)</title>
+    <title>Lula Coin Miner 3.6 (FIX)</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.9.3/tsparticles.bundle.min.js"></script>
@@ -71,7 +71,6 @@
         /* Animações reutilizáveis */
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes pulse { 0%, 100% { box-shadow: 0 0 15px var(--glow-color), 0 0 5px var(--glow-color); } 50% { box-shadow: 0 0 30px var(--glow-color), 0 0 10px var(--glow-color); } }
-        /* NOVAS ANIMAÇÕES PARA COLOCAR/REMOVER ITENS */
         @keyframes place-item-anim { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         @keyframes remove-item-anim { from { transform: scale(1); opacity: 1; } to { transform: scale(0.5); opacity: 0; } }
         .item-placed { animation: place-item-anim 0.3s ease-out; }
@@ -138,7 +137,7 @@
         .monitor { width: 120px; height: 90px; background-color: #222; border: 2px solid #555; border-radius: 5px; position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%); box-shadow: 0 0 15px rgba(0, 0, 0, 0.5); }
         .monitor-screen { width: calc(100% - 10px); height: calc(100% - 10px); background-color: var(--monitor-screen); position: absolute; top: 5px; left: 5px; border-radius: 3px; overflow: hidden; box-shadow: inset 0 0 10px rgba(0,0,0,0.8); }
         .scanline-effect { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(0, 0, 0, 0.1) 50%, transparent 50%); background-size: 100% 2px; animation: scanline 5s linear infinite; }
-        .monitor-text { color: lime; font-size: 0.7em; padding: 5px; white-space: pre; }
+        .monitor-text { color: lime; font-size: 0.9em; padding: 5px; white-space: pre; } /* Aumentado e cor corrigida */
         .keyboard { width: 120px; height: 15px; background-color: #555; position: absolute; bottom: 65px; left: 50%; transform: translateX(-50%); border-radius: 3px; box-shadow: 0 2px 5px rgba(0,0,0,0.4); }
         .cpu-box { width: 50px; height: 100px; background-color: #333; position: absolute; bottom: 0; left: 0; border-radius: 5px; box-shadow: 5px 5px 15px rgba(0,0,0,0.5); }
         .cpu-box::before { content: ''; position: absolute; top: 0; right: -10px; width: 10px; height: 100%; background-color: #222; border-radius: 0 5px 5px 0; transform: skewY(-10deg); }
@@ -152,7 +151,7 @@
         .room-btn { padding: 5px 10px; background-color: var(--medium-gray); border: none; border-radius: 5px; color: var(--text-color); font-weight: bold; cursor: pointer; transition: all 0.2s ease; }
         .room-btn.active { background-color: #fff; color: var(--primary-color); box-shadow: 0 0 8px #fff; }
         #add-room { background-color: var(--primary-color); color: var(--dark-gray); padding: 7px 15px; font-size: 1.1em; box-shadow: 0 0 10px var(--primary-color); }
-        #add-room:disabled { background-color: var(--medium-gray); color: var(--light-gray); box-shadow: none; filter: grayscale(0.8); cursor: not-allowed; }
+        /* Botão de comprar sala não fica mais desabilitado visualmente */
         
         .shop-modal, .inventory-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.8); display: none; justify-content: center; align-items: center; z-index: 100; }
         .shop-content, .inventory-content { background-color: var(--dark-gray); border: 2px solid var(--primary-color); border-radius: 10px; padding: 30px; width: 90%; max-width: 900px; height: 90%; max-height: 700px; display: flex; flex-direction: column; position: relative; box-shadow: 0 0 25px var(--glow-color); overflow: hidden; }
@@ -329,11 +328,10 @@
         let currentRoomIndex = 0;
         let placingItem = null;
         let isTransactionInProgress = false;
-        let lastWholeCoinAmount = 0; // Para a animação da moeda
+        let lastWholeCoinAmount = 0;
         
         // --- ELEMENTOS DO DOM ---
         const lcoPerHourElement = document.getElementById('lco-per-hour');
-        // ... (resto dos elementos)
         const authContainer = document.getElementById('auth-container');
         const appContainer = document.getElementById('app');
         const loginForm = document.getElementById('login-form');
@@ -425,13 +423,13 @@
             const data = await apiRequest('/api/game/state');
             if (data && data.gameState) {
                 gameState = data.gameState; currentRoomIndex = data.currentRoomIndex || 0;
-                lastWholeCoinAmount = Math.floor(gameState.balance); // Inicia o contador de moedas
+                lastWholeCoinAmount = Math.floor(gameState.balance);
                 if (!gameState.placedRacksPerRoom || gameState.placedRacksPerRoom.length === 0) {
                     gameState.placedRacksPerRoom = [Array(NUM_RACK_PLACEMENT_SLOTS).fill(null)]; currentRoomIndex = 0;
                 }
                 authContainer.style.display = 'none'; appContainer.style.display = 'flex';
                 userAvatar.textContent = 'L';
-                await setupParticles(); // Inicia o tsParticles
+                await setupParticles();
                 updateUI(); startLoops();
             } else { handleLogout(); }
         };
@@ -445,67 +443,86 @@
             const sound = document.getElementById(soundId);
             if(sound) {
                 sound.currentTime = 0;
-                sound.play();
+                sound.play().catch(e => console.error("Erro ao tocar som:", e));
             }
         }
 
         async function setupParticles() {
+            // A configuração agora é mais simples, pois será customizada em tempo real
             await tsParticles.load("tsparticles", {
                 fullScreen: { enable: false },
                 particles: {
-                    number: { value: 0 }, // Começa com zero partículas
+                    number: { value: 0 },
                     shape: { type: "text", options: { text: { value: "L", font: "Orbitron", style: "", weight: "700" } } },
                     color: { value: "#ffd700" },
                     size: { value: { min: 10, max: 20 } },
-                    opacity: { value: { min: 0.8, max: 1 }, animation: { enable: true, speed: 0.5, destroy: "max" } },
+                    opacity: { value: 1, animation: { enable: true, speed: 1.5, minimumValue: 0, destroy: "max" } },
                     move: {
                         enable: true,
-                        speed: 4,
-                        direction: "top",
-                        outModes: { top: "destroy" }
-                    }
-                },
-                emitters: {
-                    name: "coinEmitter",
-                    autoPlay: false, // Só emitir quando mandarmos
-                    position: { x: 10, y: 90 }, // Posição em % da tela (perto do computador)
-                    rate: { quantity: 1, delay: 0.1 },
-                    life: { duration: 2, count: 1 }, // Emite apenas 1 vez por chamada
-                    particles: {
-                        move: {
-                            path: {
-                                enable: true,
-                                // Coordenadas do caminho da partícula
-                                path: {
-                                    // Curva de baixo para cima
-                                    segments: [
-                                        { type: "line", options: { p1: { x: 150, y: 650 }, p2: { x: 400, y: 500 } } },
-                                        { type: "line", options: { p1: { x: 400, y: 500 }, p2: { x: 600, y: 300 } } },
-                                        { type: "line", options: { p1: { x: 600, y: 300 }, p2: { x: 800, y: 40 } } }
-                                    ],
-                                    // Essas coordenadas são absolutas, idealmente seriam dinâmicas
-                                    // Por simplicidade, estamos usando valores fixos
-                                }
-                            }
-                        }
+                        speed: 2,
+                        direction: "none",
                     }
                 }
             });
         }
 
         function triggerCoinAnimation(count = 1) {
-            const emitter = tsParticles.domItem(0).emitter;
-            if(emitter) {
-                emitter.play(); // Inicia o emissor
+            const container = tsParticles.domItem(0);
+            if (!container) return;
+
+            const computerEl = document.querySelector('.monitor');
+            const balanceEl = document.getElementById('balance');
+            if (!computerEl || !balanceEl) return;
+
+            const computerRect = computerEl.getBoundingClientRect();
+            const balanceRect = balanceEl.getBoundingClientRect();
+
+            // Posição de início (centro do monitor)
+            const emitterPosition = {
+                x: computerRect.left + computerRect.width / 2,
+                y: computerRect.top + computerRect.height / 2
+            };
+
+            // Posição do "ímã" (centro do saldo)
+            const attractorPosition = {
+                x: balanceRect.left + balanceRect.width / 2,
+                y: balanceRect.top + balanceRect.height / 2
+            };
+            
+            // Adiciona um emissor na posição do computador e um atrator na posição do saldo
+            container.options.emitters = {
+                position: emitterPosition,
+                rate: { quantity: count, delay: 0 },
+                life: { duration: 0.1, count: 1 },
+            };
+
+            container.options.motion = {
+                attract: {
+                    enable: true,
+                    distance: 500,
+                    maxSpeed: 10,
+                    speed: 2,
+                    rotate: { x: 0, y: 0 }
+                },
+            };
+            
+            // Define a posição do atrator dinamicamente
+            container.attract = {
+                position: attractorPosition,
+                radius: 200, // Raio de atração
+            };
+
+            // Recarrega as opções para aplicar as posições dinâmicas
+            container.refresh().then(() => {
                 playSound('coin-collect-sound');
-            }
+            });
         }
+
 
         // --- FUNÇÕES DE UI E RENDERIZAÇÃO ---
         function createGpuSprite(miner) {
             const gpu = document.createElement('div');
             gpu.className = 'miner-gpu';
-            // ...(código da GPU inalterado)
             let fanCount = 1; if (miner.power >= 5 && miner.power < 20) fanCount = 2; if (miner.power >= 20) fanCount = 3;
             let fansHtml = '';
             for (let i = 0; i < fanCount; i++) { fansHtml += `<div class="gpu-fan"><div class="gpu-fan-blades" style="background-color: ${miner.color};"><div class="gpu-fan-blade"></div><div class="gpu-fan-blade"></div><div class="gpu-fan-blade"></div></div></div>`; }
@@ -515,7 +532,6 @@
         function createRackSprite(rack) {
             const rackSprite = document.createElement('div');
             rackSprite.className = 'rack-2-5d';
-            // ...(código do Rack inalterado)
             let rackHeight = rack.slots * 60 + 60; rackSprite.style.height = `${rackHeight}px`;
             let slotsHtml = '';
             for (let i = 0; i < rack.slots; i++) { slotsHtml += '<div class="slot empty"></div>'; }
@@ -576,7 +592,7 @@
             if (!addRoomButton) return;
             const nextRoomPrice = gameState.placedRacksPerRoom.length * 50;
             addRoomButton.textContent = `+ Sala (${nextRoomPrice} LCO)`;
-            addRoomButton.disabled = gameState.balance < nextRoomPrice;
+            // Lógica de desabilitar removida
         }
         
         function renderRackPlacementArea() {
@@ -651,11 +667,9 @@
         }
         
         function renderShop(category) {
-            // ...(código do renderShop inalterado)
             minersShopContent.style.display = 'none'; racksShopContent.style.display = 'none'; const contentArea = category === 'miners' ? minersShopContent : racksShopContent; const itemsToRender = category === 'miners' ? MINERS : RACKS; contentArea.style.display = 'grid'; contentArea.innerHTML = ''; itemsToRender.forEach(item => { const itemDiv = document.createElement('div'); itemDiv.className = 'shop-item'; itemDiv.innerHTML = `<div class="item-icon">${category === 'miners' ? createGpuSprite(item).outerHTML : createRackSprite(item).outerHTML}</div><div class="item-name">${item.name}</div><div class="item-stats">${item.power ? `Poder: ${item.power} TH/s` : `Slots: ${item.slots}`}</div><div class="item-price">◎ ${item.price}</div><button class="buy-btn" data-id="${item.id}" data-category="${category}" ${gameState.balance < item.price ? 'disabled' : ''}>Comprar</button>`; contentArea.appendChild(itemDiv); }); contentArea.querySelectorAll('.buy-btn').forEach(btn => { btn.addEventListener('click', () => buyItem(btn.dataset.id, btn.dataset.category)); });
         }
         function renderInventory(category) {
-            // ...(código do renderInventory inalterado)
             minersInventoryContent.style.display = 'none'; racksInventoryContent.style.display = 'none'; const contentArea = category === 'miners' ? minersInventoryContent : racksInventoryContent; const itemsToRender = category === 'miners' ? gameState.inventory.miners : gameState.inventory.racks; contentArea.style.display = 'grid'; contentArea.innerHTML = ''; if (!itemsToRender || itemsToRender.length === 0) { contentArea.innerHTML = '<p style="grid-column: 1 / -1; text-align: center;">Vazio</p>'; return; } itemsToRender.forEach(invItem => { const itemConfig = (category === 'miners' ? MINERS : RACKS).find(i => i.id === invItem.id); if (!itemConfig) return; const itemDiv = document.createElement('div'); itemDiv.className = 'inventory-item'; itemDiv.innerHTML = `<div class="item-icon">${category === 'miners' ? createGpuSprite(itemConfig).outerHTML : createRackSprite(itemConfig).outerHTML}</div><div class="item-name">${itemConfig.name} (x${invItem.quantity})</div><button class="use-item-btn" data-id="${itemConfig.id}" data-category="${category}" ${invItem.quantity === 0 ? 'disabled' : ''}>Usar</button>`; contentArea.appendChild(itemDiv); }); contentArea.querySelectorAll('.use-item-btn').forEach(btn => btn.addEventListener('click', startPlacement));
         }
         function openShop() { shopModal.style.display = 'flex'; renderShop('miners'); cancelPlacement(); }
@@ -712,7 +726,7 @@
                         gameState.placedRacksPerRoom[currentRoomIndex][rackSlotIndex].placedMiners[minerSlotIndex] = null;
                         displayTerminalMessage('GPU guardada no inventário!', 'lime');
                         updateUI(); saveGame();
-                    }, 300); // Espera a animação terminar
+                    }, 300);
                 }
             }
             else if (target.classList.contains('rack-label')) {
@@ -744,30 +758,22 @@
                 lastUpdateTime = now;
                 gameState.balance += (gameState.totalPower * (LCO_PER_THS_PER_MINUTE / 60)) * deltaTime;
                 updateBalance();
-
-                // Checa se uma nova moeda foi minerada
                 if (Math.floor(gameState.balance) > lastWholeCoinAmount) {
                     const coinsEarned = Math.floor(gameState.balance) - lastWholeCoinAmount;
                     triggerCoinAnimation(coinsEarned);
                     lastWholeCoinAmount = Math.floor(gameState.balance);
                 }
-
             }, 1000);
-
-            terminalLoopInterval = setInterval(() => {
-                if (!gameState) return;
-                const lcoPerHour = (gameState.totalPower * LCO_PER_THS_PER_MINUTE) * 60;
-                // Atualiza o monitor do computador com status dinâmicos
-                terminalTextElement.textContent = 
-`> LULACOIN MINER v3.5
-> STATUS: ONLINE
-> ------------------
-> POWER: ${gameState.totalPower.toFixed(2)} TH/s
-> RATE : ${lcoPerHour.toFixed(2)} LCO/h
-> SALDO: ${gameState.balance.toFixed(2)} LCO
-> ------------------
-> MINING BLOCK #${~~(Math.random()*9000+1000)}`;
-            }, 2000);
+            
+            // ATUALIZADO: Monitor volta a mostrar simulação de mineração
+            const terminalMessages = ["Conectando ao núcleo...", "Minerando blocos...", "Sincronizando...", "Verificando integridade...", "Aguardando transações..."];
+            let terminalMessageIndex = 0;
+            const updateTerminal = () => {
+                displayTerminalMessage(terminalMessages[terminalMessageIndex]);
+                terminalMessageIndex = (terminalMessageIndex + 1) % terminalMessages.length;
+            };
+            updateTerminal(); // Chama uma vez para não começar vazio
+            terminalLoopInterval = setInterval(updateTerminal, 4000);
             
             autoSaveInterval = setInterval(() => { if(gameState) { saveGame(); } }, 30000);
         }
