@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lula Coin Miner 2.2</title>
+    <title>Lula Coin Miner 3.1</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
@@ -49,32 +49,16 @@
             min-height: 100vh;
         }
 
-        /* --- Tela de Autenticação (ATUALIZADA) --- */
+        /* --- Tela de Autenticação --- */
         #auth-container {
-            display: flex; /* Mostra por padrão */
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            height: 100%;
-            background: var(--tertiary-color);
-            z-index: 200;
-            position: absolute;
-            top: 0;
-            left: 0;
-            overflow: hidden; /* Esconde moedas que saem da tela */
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            width: 100%; height: 100%; background: var(--tertiary-color);
+            z-index: 200; position: absolute; top: 0; left: 0; overflow: hidden;
         }
         .auth-box {
-            background-color: rgba(26, 26, 26, 0.8); /* Fundo um pouco transparente */
-            backdrop-filter: blur(5px);
-            padding: 40px;
-            border-radius: 10px;
-            border: 1px solid var(--border-color);
-            width: 90%;
-            max-width: 400px;
-            text-align: center;
-            z-index: 2; /* Fica na frente das moedas */
-            /* EFEITO PULSANTE ADICIONADO */
+            background-color: rgba(26, 26, 26, 0.8); backdrop-filter: blur(5px);
+            padding: 40px; border-radius: 10px; border: 1px solid var(--border-color);
+            width: 90%; max-width: 400px; text-align: center; z-index: 2;
             animation: pulse 2.5s infinite;
         }
         .auth-box h2 { font-family: 'Orbitron', sans-serif; color: var(--primary-color); margin-bottom: 20px; text-shadow: 0 0 8px var(--primary-color); }
@@ -88,33 +72,13 @@
         #auth-message { margin-top: 15px; color: var(--red-alert); font-weight: bold; min-height: 20px; }
         
         /* ANIMAÇÃO DE MOEDAS CAINDO */
-        #falling-coins-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-        }
+        #falling-coins-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
         .coin-fall {
-            position: absolute;
-            top: -10%;
-            background-color: #ffd700;
-            color: #b8860b;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: bold;
-            font-family: 'Orbitron', sans-serif;
-            animation: fall linear infinite;
+            position: absolute; top: -10%; background-color: #ffd700; color: #b8860b;
+            border-radius: 50%; display: flex; justify-content: center; align-items: center;
+            font-weight: bold; font-family: 'Orbitron', sans-serif; animation: fall linear infinite;
         }
-        @keyframes fall {
-            to {
-                transform: translateY(110vh) rotate(360deg);
-            }
-        }
-        /* Distribuição aleatória de moedas */
+        @keyframes fall { to { transform: translateY(110vh) rotate(360deg); } }
         .coin-fall:nth-child(1) { width: 40px; height: 40px; left: 10%; animation-duration: 7s; animation-delay: 0s; font-size: 1.5em; }
         .coin-fall:nth-child(2) { width: 20px; height: 20px; left: 20%; animation-duration: 5s; animation-delay: 1s; font-size: 1em; }
         .coin-fall:nth-child(3) { width: 30px; height: 30px; left: 30%; animation-duration: 8s; animation-delay: 2s; font-size: 1.2em; }
@@ -128,19 +92,20 @@
 
 
         #app {
-            display: none;
-            flex-direction: column;
-            width: 100vw;
-            height: 100vh;
-            max-width: 1920px;
-            max-height: 1080px;
-            border: 2px solid var(--border-color);
-            box-shadow: 0 0 20px var(--glow-color);
-            background-color: var(--dark-gray);
-            position: relative;
-            overflow: hidden;
+            display: none; flex-direction: column; width: 100vw; height: 100vh;
+            max-width: 1920px; max-height: 1080px; border: 2px solid var(--border-color);
+            box-shadow: 0 0 20px var(--glow-color); background-color: var(--dark-gray);
+            position: relative; overflow: hidden;
         }
         
+        /* Classe para feedback de modo de colocação */
+        .placing-item .rack-placement-slot.available,
+        .placing-item .slot.empty {
+            border-color: var(--primary-color);
+            background-color: rgba(255, 59, 59, 0.2);
+            animation: pulse 1.5s infinite;
+        }
+
         /* Animações reutilizáveis */
         @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-5px); } 100% { transform: translateY(0px); } }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
@@ -191,11 +156,13 @@
         #rack-placement-area { position: absolute; bottom: 30px; width: calc(100% - 350px); left: 280px; height: calc(80% - 60px); display: flex; justify-content: space-around; align-items: flex-end; padding-bottom: 80px; z-index: 1; }
         .rack-placement-slot { width: 220px; height: 100%; border: 2px dashed rgba(255, 59, 59, 0.4); border-radius: 8px; display: flex; justify-content: center; align-items: flex-end; padding: 10px; position: relative; transition: border-color 0.3s ease, background-color 0.3s ease; cursor: pointer; z-index: 2; }
         .rack-placement-slot.occupied { border: none; background-color: transparent; cursor: default; }
-        .rack-placement-slot.available:hover { border-color: var(--primary-color); background-color: rgba(255, 59, 59, 0.1); }
-        .rack-placement-slot.available::after { content: 'CLIQUE PARA COLOCAR RACK'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 0.9em; color: rgba(255, 59, 59, 0.6); white-space: nowrap; opacity: 0; transition: opacity 0.3s ease; }
+        .rack-placement-slot.available:not(.placing-item .rack-placement-slot.available):hover { border-color: var(--primary-color); background-color: rgba(255, 59, 59, 0.1); }
+        .rack-placement-slot.available::after { content: 'ESPAÇO PARA RACK'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 0.9em; color: rgba(255, 59, 59, 0.6); white-space: nowrap; opacity: 0; transition: opacity 0.3s ease; }
         .rack-placement-slot.available:hover::after { opacity: 1; }
+        .placing-item .rack-placement-slot.available::after { content: 'CLIQUE PARA COLOCAR'; opacity: 1; color: var(--primary-color); }
+        .placing-item .slot.empty::after { content: 'CLIQUE'; position: absolute; font-size: 0.8em; color: var(--primary-color); opacity: 1;}
 
-        /* --- RACK 2.5D com pernas e tamanho dinâmico --- */
+        /* --- RACK 2.5D --- */
         .rack-2-5d { width: 200px; position: relative; transform-style: preserve-3d; z-index: 1; }
         .rack-front { width: 100%; height: 100%; background-color: var(--medium-gray); border: 2px solid var(--border-color); border-radius: 8px; padding: 15px; padding-bottom: 25px; display: flex; flex-direction: column; gap: 10px; position: relative; transform: translateZ(10px); }
         .rack-side, .rack-top { position: absolute; background-color: var(--rack-side-color); border-radius: 2px; }
@@ -203,11 +170,13 @@
         .rack-top { width: 100%; height: 20px; top: -11px; left: 0; transform: rotateX(90deg) translateY(-10px); transform-origin: top; }
         .rack-leg { position: absolute; bottom: 5px; width: 10px; height: 20px; background-color: #3e2723; }
         .rack-leg.front-left { left: 15px; } .rack-leg.front-right { right: 15px; }
-        .rack-label { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background-color: var(--primary-color); color: var(--dark-gray); padding: 5px 10px; border-radius: 5px; font-size: 0.9em; font-weight: bold; white-space: nowrap; box-shadow: 0 0 8px var(--primary-color); }
+        .rack-label { cursor: pointer; position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background-color: var(--primary-color); color: var(--dark-gray); padding: 5px 10px; border-radius: 5px; font-size: 0.9em; font-weight: bold; white-space: nowrap; box-shadow: 0 0 8px var(--primary-color); }
+        .rack-label:hover { filter: brightness(1.2); }
         .slot { width: 100%; height: 60px; background-color: var(--dark-gray); border: 1px dashed var(--border-color); border-radius: 5px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: all 0.3s ease; position: relative; overflow: hidden; }
-        .slot.empty:hover { border-color: var(--primary-color); background-color: rgba(255, 59, 59, 0.1); }
+        .slot.empty:not(.placing-item .slot.empty):hover { border-color: var(--primary-color); background-color: rgba(255, 59, 59, 0.1); }
+        .slot.occupied:hover { background-color: rgba(255, 59, 59, 0.2); }
 
-        /* --- GPUS DETALHADAS --- */
+        /* --- GPUS --- */
         .miner-gpu { width: 95%; height: 95%; display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 5px; position: relative; cursor: pointer; }
         .gpu-shroud { width: 100%; height: 100%; background-color: #222; border: 2px solid; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.5), inset 0 0 8px rgba(0,0,0,0.7); padding: 4px; display: flex; flex-direction: column; justify-content: space-between; }
         .gpu-pcb { width: 100%; height: 4px; background-color: #004d40; }
@@ -243,17 +212,6 @@
         #add-room { background-color: var(--primary-color); color: var(--dark-gray); padding: 7px 15px; font-size: 1.1em; box-shadow: 0 0 10px var(--primary-color); }
         #add-room:disabled { background-color: var(--medium-gray); color: var(--light-gray); box-shadow: none; filter: grayscale(0.8); cursor: not-allowed; }
         
-        .miner-selection { position: absolute; bottom: 0; left: 0; width: 100%; height: 90px; background-color: rgba(0, 0, 0, 0.9); border-top: 1px solid var(--primary-color); display: none; align-items: center; justify-content: center; gap: 15px; padding: 0 20px; box-shadow: 0 -5px 20px rgba(255, 59, 59, 0.3); z-index: 20; transform: translateY(100%); transition: transform 0.3s ease-out; }
-        .miner-selection.active { transform: translateY(0%); display: flex; }
-        .selection-title { font-size: 1em; color: var(--primary-color); margin-right: 10px; white-space: nowrap; }
-        .available-items-list { display: flex; gap: 10px; flex-wrap: nowrap; overflow-x: auto; -ms-overflow-style: none; scrollbar-width: none; }
-        .available-items-list::-webkit-scrollbar { display: none; }
-        .selection-item { flex-shrink: 0; width: 120px; height: 100px; background-color: var(--dark-gray); border: 2px solid var(--border-color); border-radius: 5px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: all 0.2s ease; position: relative; overflow: visible; }
-        .selection-item:hover { border-color: var(--primary-color); transform: translateY(-3px); box-shadow: 0 0 10px var(--primary-color); }
-        .selection-item .miner-gpu { transform: scale(0.8); }
-        .selection-item .rack-2-5d { transform: scale(0.35); }
-        .cancel-selection-btn { background-color: var(--red-alert); color: #fff; border: none; border-radius: 5px; padding: 8px 15px; cursor: pointer; font-weight: bold; margin-left: 20px; transition: background-color 0.2s ease; }
-        
         .shop-modal, .inventory-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.8); display: none; justify-content: center; align-items: center; z-index: 100; }
         .shop-content, .inventory-content { background-color: var(--dark-gray); border: 2px solid var(--primary-color); border-radius: 10px; padding: 30px; width: 90%; max-width: 900px; height: 90%; max-height: 700px; display: flex; flex-direction: column; position: relative; box-shadow: 0 0 25px var(--glow-color); overflow: hidden; }
         .shop-header, .inventory-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
@@ -279,7 +237,7 @@
         .item-price { font-size: 1.2em; color: limegreen; font-weight: bold; margin-top: auto; }
         .buy-btn, .use-item-btn { background-color: var(--primary-color); color: var(--dark-gray); border: none; border-radius: 5px; padding: 10px 20px; margin-top: 10px; cursor: pointer; font-weight: bold; text-transform: uppercase; box-shadow: 0 0 10px var(--primary-color); transition: all 0.3s ease; width: 100%; }
         .buy-btn:hover, .use-item-btn:hover { filter: brightness(1.2); transform: scale(1.02); }
-        .buy-btn:disabled, .use-item-btn:disabled { background-color: var(--medium-gray); color: var(--light-gray); cursor: not-allowed; box-shadow: none; filter: grayscale(0.5); transform: none; }
+        .buy-btn:disabled { background-color: var(--medium-gray); color: var(--light-gray); cursor: not-allowed; box-shadow: none; filter: grayscale(0.5); transform: none; }
     </style>
 </head>
 <body>
@@ -360,12 +318,6 @@
             <button class="action-btn" id="logout-btn" style="background-color: var(--red-alert);">Sair</button>
         </div>
 
-        <div class="miner-selection" id="selection-bar">
-            <span class="selection-title" id="selection-title">Selecione um item:</span>
-            <div id="available-items-list" class="available-items-list"></div>
-            <button class="cancel-selection-btn" id="cancel-selection-btn">Cancelar</button>
-        </div>
-
         <div class="shop-modal" id="shop-modal">
             <div class="shop-content">
                 <div class="shop-header">
@@ -418,13 +370,14 @@
         // --- ESTADO DO JOGO ---
         let gameState = null;
         let currentRoomIndex = 0;
-        let placingItem = null;
-
+        let placingItem = null; // Variável de estado para o modo de colocação
+        
         // --- ELEMENTOS DO DOM ---
-        const lcoPerHourElement = document.getElementById('lco-per-hour'); 
+        const lcoPerHourElement = document.getElementById('lco-per-hour');
         const authContainer = document.getElementById('auth-container');
         const appContainer = document.getElementById('app');
         const loginForm = document.getElementById('login-form');
+        // ...(resto dos elementos)
         const registerForm = document.getElementById('register-form');
         const loginBtn = document.getElementById('login-btn');
         const registerBtn = document.getElementById('register-btn');
@@ -452,28 +405,18 @@
         const inventoryCategoryBtns = document.querySelectorAll('.inventory-category-btn');
         const minersInventoryContent = document.getElementById('miners-inventory-content');
         const racksInventoryContent = document.getElementById('racks-inventory-content');
-        const selectionBar = document.getElementById('selection-bar');
-        const availableItemsList = document.getElementById('available-items-list');
-        const cancelSelectionBtn = document.getElementById('cancel-selection-btn');
-        
+
         // --- FUNÇÕES DE API ---
         const apiRequest = async (endpoint, method = 'GET', body = null) => {
             const token = localStorage.getItem('token');
-            if (!token && !endpoint.startsWith('/api/auth')) {
-                showAuthMessage('Sessão expirada. Faça login novamente.');
-                handleLogout(); return null;
-            }
+            if (!token && !endpoint.startsWith('/api/auth')) { showAuthMessage('Sessão expirada. Faça login novamente.'); handleLogout(); return null; }
             const options = { method, headers: { 'Content-Type': 'application/json' } };
             if (token) { options.headers['Authorization'] = `Bearer ${token}`; }
             if (body) { options.body = JSON.stringify(body); }
             try {
                 const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
-                if (response.status === 401) {
-                    handleLogout(); showAuthMessage('Sessão inválida. Faça login novamente.'); return null;
-                }
-                if (response.status === 204 || response.headers.get("content-length") === "0") {
-                    return { success: true, message: "Operação bem-sucedida." };
-                }
+                if (response.status === 401) { handleLogout(); showAuthMessage('Sessão inválida. Faça login novamente.'); return null; }
+                if (response.status === 204 || response.headers.get("content-length") === "0") { return { success: true, message: "Operação bem-sucedida." }; }
                 const data = await response.json();
                 if (!response.ok) { throw new Error(data.message || 'Ocorreu um erro.'); }
                 return data;
@@ -519,7 +462,6 @@
                     gameState.placedRacksPerRoom = [Array(NUM_RACK_PLACEMENT_SLOTS).fill(null)]; currentRoomIndex = 0;
                 }
                 authContainer.style.display = 'none'; appContainer.style.display = 'flex';
-                // AVATAR ATUALIZADO PARA 'L' FIXO
                 userAvatar.textContent = 'L';
                 updateUI(); startLoops();
             } else { handleLogout(); }
@@ -566,7 +508,6 @@
             renderRackPlacementArea();
             updateAddRoomButtonState();
         }
-
         function updateBalance() { balanceElement.textContent = gameState.balance.toFixed(2); }
         function updateTotalPower() {
             let totalPower = 0;
@@ -588,10 +529,8 @@
             const perHour = (gameState.totalPower * LCO_PER_THS_PER_MINUTE) * 60;
             lcoPerHourElement.textContent = perHour.toFixed(2);
         }
-
         function displayTerminalMessage(message, color = 'lime') { terminalTextElement.innerHTML = `> ${message}`; terminalTextElement.style.color = color; }
         
-        // Funções de Sala ATUALIZADAS com nova lógica de preço
         function renderRoomControls() {
             roomControls.innerHTML = '';
             gameState.placedRacksPerRoom.forEach((room, index) => {
@@ -616,7 +555,7 @@
         }
         async function buyRoom() {
             const nextRoomIndex = gameState.placedRacksPerRoom.length;
-            const roomCost = nextRoomIndex * 50; // NOVA LÓGICA DE PREÇO
+            const roomCost = nextRoomIndex * 50; 
             if (gameState.balance >= roomCost) {
                 const data = await apiRequest('/api/game/buy-room', 'POST', { cost: roomCost });
                 if (data && data.gameState) {
@@ -630,7 +569,7 @@
         function updateAddRoomButtonState() {
             const addRoomButton = document.getElementById('add-room');
             if (!addRoomButton) return;
-            const nextRoomPrice = gameState.placedRacksPerRoom.length * 50; // NOVA LÓGICA DE PREÇO
+            const nextRoomPrice = gameState.placedRacksPerRoom.length * 50;
             addRoomButton.textContent = `+ Sala (${nextRoomPrice} LCO)`;
             addRoomButton.disabled = gameState.balance < nextRoomPrice;
         }
@@ -654,16 +593,29 @@
                         const miner = rackData.placedMiners[j];
                         const minerSlotDiv = document.createElement('div');
                         minerSlotDiv.className = 'slot';
-                        minerSlotDiv.dataset.rackSlotIndex = i; minerSlotDiv.dataset.minerSlotIndex = j;
-                        if (miner) { minerSlotDiv.appendChild(createGpuSprite(MINERS.find(m => m.id === miner.id))); } 
-                        else { minerSlotDiv.classList.add('empty'); minerSlotDiv.addEventListener('click', handleSlotClick); }
+                        if (miner) {
+                            minerSlotDiv.classList.add('occupied');
+                            minerSlotDiv.appendChild(createGpuSprite(MINERS.find(m => m.id === miner.id)));
+                        } else {
+                            minerSlotDiv.classList.add('empty');
+                        }
+                        minerSlotDiv.dataset.type = 'minerslot';
+                        minerSlotDiv.dataset.rackSlotIndex = i; 
+                        minerSlotDiv.dataset.minerSlotIndex = j;
+                        minerSlotDiv.addEventListener('click', handleWorldClick);
                         minerSlotsHtml += minerSlotDiv.outerHTML;
                     }
-                    rackElement.innerHTML = `<div class="rack-top" style="background-color: ${rackConfig.color};"></div><div class="rack-side" style="background-color: ${rackConfig.color}; filter: brightness(0.6);"></div><div class="rack-front" style="border-color: ${rackConfig.color};"><div class="rack-label">${rackConfig.name}</div>${minerSlotsHtml}<div class="rack-leg front-left"></div><div class="rack-leg front-right"></div></div>`;
+
+                    const rackLabelHtml = `<div class="rack-label" data-type="racklabel" data-rack-slot-index="${i}">${rackConfig.name}</div>`;
+                    rackElement.innerHTML = `<div class="rack-top" style="background-color: ${rackConfig.color};"></div><div class="rack-side" style="background-color: ${rackConfig.color}; filter: brightness(0.6);"></div><div class="rack-front" style="border-color: ${rackConfig.color};">${rackLabelHtml}<div class="slots-container">${minerSlotsHtml}</div><div class="rack-leg front-left"></div><div class="rack-leg front-right"></div></div>`;
+                    
                     slotDiv.appendChild(rackElement);
+                    slotDiv.querySelector('.rack-label').addEventListener('click', handleWorldClick);
+
                 } else {
                     slotDiv.classList.add('available');
-                    slotDiv.addEventListener('click', handleSlotClick);
+                    slotDiv.dataset.type = 'rackslot';
+                    slotDiv.addEventListener('click', handleWorldClick);
                 }
                 rackPlacementArea.appendChild(slotDiv);
             }
@@ -703,51 +655,131 @@
                 if (!itemConfig) return;
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'inventory-item';
-                itemDiv.innerHTML = `<div class="item-icon">${category === 'miners' ? createGpuSprite(itemConfig).outerHTML : createRackSprite(itemConfig).outerHTML}</div><div class="item-name">${itemConfig.name} (x${invItem.quantity})</div><button class="use-item-btn" data-id="${itemConfig.id}" data-category="${category}">Usar</button>`;
+                itemDiv.innerHTML = `<div class="item-icon">${category === 'miners' ? createGpuSprite(itemConfig).outerHTML : createRackSprite(itemConfig).outerHTML}</div><div class="item-name">${itemConfig.name} (x${invItem.quantity})</div><button class="use-item-btn" data-id="${itemConfig.id}" data-category="${category}" ${invItem.quantity === 0 ? 'disabled' : ''}>Usar</button>`;
                 contentArea.appendChild(itemDiv);
             });
-            contentArea.querySelectorAll('.use-item-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const type = btn.dataset.category === 'miners' ? 'miner' : 'rack';
-                    const itemConfig = (type === 'miner' ? MINERS : RACKS).find(i => i.id === btn.dataset.id);
-                    startPlacement(itemConfig, type); closeInventory();
-                });
-            });
+            contentArea.querySelectorAll('.use-item-btn').forEach(btn => btn.addEventListener('click', startPlacement));
         }
-        function openShop() { shopModal.style.display = 'flex'; renderShop('miners'); }
+        function openShop() { shopModal.style.display = 'flex'; renderShop('miners'); cancelPlacement(); }
         function closeShop() { shopModal.style.display = 'none'; }
-        function openInventory() { inventoryModal.style.display = 'flex'; renderInventory('miners'); }
+        function openInventory() { inventoryModal.style.display = 'flex'; renderInventory('miners'); cancelPlacement();}
         function closeInventory() { inventoryModal.style.display = 'none'; }
         
-        function startPlacement(item, type) {
-            placingItem = { item, type }; miningRoom.classList.add('placing-item'); selectionBar.classList.add('active');
-            displayTerminalMessage(`Clique em um local para colocar ${item.name}.`, "blue");
+        // ############### NOVA LÓGICA DE INTERAÇÃO ###############
+        
+        function startPlacement(event) {
+            const button = event.currentTarget;
+            const itemId = button.dataset.id;
+            const category = button.dataset.category;
+            const itemConfig = category === 'miners' ? MINERS.find(i=>i.id === itemId) : RACKS.find(i=>i.id === itemId);
+            placingItem = {
+                item: itemConfig,
+                type: category === 'miners' ? 'miner' : 'rack'
+            };
+            miningRoom.classList.add('placing-item');
+            displayTerminalMessage(`Modo de Colocação: Selecione um local para ${itemConfig.name}.`, 'yellow');
+            closeInventory();
         }
+
         function cancelPlacement() {
-            placingItem = null; miningRoom.classList.remove('placing-item'); selectionBar.classList.remove('active');
+            if (placingItem) {
+                placingItem = null;
+                miningRoom.classList.remove('placing-item');
+                displayTerminalMessage('Modo de Colocação cancelado.', 'orange');
+            }
         }
-        async function handleSlotClick(event) {
-            if (!placingItem) return;
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                cancelPlacement();
+            }
+        });
+
+        function handlePlacement(target) {
+            // Lógica para COLOCAR RACK
+            if (placingItem.type === 'rack' && target.classList.contains('available')) {
+                const slotIndex = parseInt(target.dataset.slotIndex);
+                const invItem = gameState.inventory.racks.find(r => r.id === placingItem.item.id);
+                
+                invItem.quantity--;
+                const newRackData = { id: placingItem.item.id, placedMiners: Array(placingItem.item.slots).fill(null) };
+                gameState.placedRacksPerRoom[currentRoomIndex][slotIndex] = newRackData;
+                
+                displayTerminalMessage(`Rack ${placingItem.item.name} colocado!`, 'lime');
+                cancelPlacement();
+                updateUI();
+                saveGame();
+            }
+            // Lógica para COLOCAR GPU
+            else if (placingItem.type === 'miner' && target.classList.contains('empty')) {
+                const rackSlotIndex = parseInt(target.dataset.rackSlotIndex);
+                const minerSlotIndex = parseInt(target.dataset.minerSlotIndex);
+                const invItem = gameState.inventory.miners.find(m => m.id === placingItem.item.id);
+
+                invItem.quantity--;
+                gameState.placedRacksPerRoom[currentRoomIndex][rackSlotIndex].placedMiners[minerSlotIndex] = { id: placingItem.item.id };
+                
+                displayTerminalMessage(`GPU ${placingItem.item.name} instalada!`, 'lime');
+                cancelPlacement();
+                updateUI();
+                saveGame();
+            } else {
+                displayTerminalMessage(`Local inválido para ${placingItem.item.name}!`, 'red');
+            }
+        }
+        
+        function returnItemToInventory(itemId, category) {
+            const inventoryCategory = category === 'miner' ? gameState.inventory.miners : gameState.inventory.racks;
+            const invItem = inventoryCategory.find(i => i.id === itemId);
+            if (invItem) { invItem.quantity++; } 
+            else { inventoryCategory.push({ id: itemId, quantity: 1 }); }
+        }
+
+        async function handleWorldClick(event) {
             const target = event.currentTarget;
-            if (target.classList.contains('placing')) return;
-            target.classList.add('placing');
-            let endpoint = '', body = {};
-            try {
-                if (placingItem.type === 'rack' && target.classList.contains('available')) {
-                    endpoint = '/api/game/place-rack';
-                    body = { rackId: placingItem.item.id, slotIndex: parseInt(target.dataset.slotIndex), roomIndex: currentRoomIndex };
-                } else if (placingItem.type === 'miner' && target.classList.contains('empty')) {
-                    endpoint = '/api/game/place-miner';
-                    body = { minerId: placingItem.item.id, rackSlotIndex: parseInt(target.dataset.rackSlotIndex), minerSlotIndex: parseInt(target.dataset.minerSlotIndex), roomIndex: currentRoomIndex };
-                } else { target.classList.remove('placing'); return; }
-                displayTerminalMessage(`Posicionando ${placingItem.item.name}...`, "yellow");
-                const data = await apiRequest(endpoint, 'POST', body);
-                if (data && data.gameState) {
-                    gameState = data.gameState; displayTerminalMessage(data.message, 'lime');
-                    updateUI(); renderInventory(placingItem.type === 'rack' ? 'racks' : 'miners');
+            
+            // Se estiver em modo de colocação, delega para a função de placement
+            if (placingItem) {
+                handlePlacement(target);
+                return;
+            }
+
+            // --- Lógica de Remoção ---
+
+            // REMOVER GPU
+            if (target.classList.contains('slot') && target.classList.contains('occupied')) {
+                const rackSlotIndex = parseInt(target.dataset.rackSlotIndex);
+                const minerSlotIndex = parseInt(target.dataset.minerSlotIndex);
+                const minerData = gameState.placedRacksPerRoom[currentRoomIndex][rackSlotIndex].placedMiners[minerSlotIndex];
+                
+                if (window.confirm("Deseja guardar esta GPU no inventário?")) {
+                    returnItemToInventory(minerData.id, 'miner');
+                    gameState.placedRacksPerRoom[currentRoomIndex][rackSlotIndex].placedMiners[minerSlotIndex] = null;
+                    displayTerminalMessage('GPU guardada no inventário!', 'lime');
+                    updateUI();
+                    saveGame();
                 }
-            } catch (error) { displayTerminalMessage("Erro ao posicionar item.", "red"); } 
-            finally { cancelPlacement(); setTimeout(() => { if (target.classList.contains('placing')) target.classList.remove('placing'); }, 500); }
+            }
+            // REMOVER RACK
+            else if (target.dataset.type === 'racklabel') {
+                const rackSlotIndex = parseInt(target.dataset.rackSlotIndex);
+                const rackData = gameState.placedRacksPerRoom[currentRoomIndex][rackSlotIndex];
+                
+                const isOccupied = rackData.placedMiners.some(miner => miner !== null);
+
+                if (isOccupied) {
+                    displayTerminalMessage("Esvazie o rack antes de guardá-lo.", "red");
+                    return;
+                }
+
+                if (window.confirm("Deseja guardar este Rack no inventário?")) {
+                    returnItemToInventory(rackData.id, 'rack');
+                    gameState.placedRacksPerRoom[currentRoomIndex][rackSlotIndex] = null;
+                    displayTerminalMessage('Rack guardado no inventário!', 'lime');
+                    updateUI();
+                    saveGame();
+                }
+            }
         }
 
         // --- LOOPS DO JOGO ---
@@ -782,7 +814,6 @@
         closeShopBtn.addEventListener('click', closeShop);
         openInventoryBtn.addEventListener('click', openInventory);
         closeInventoryBtn.addEventListener('click', closeInventory);
-        cancelSelectionBtn.addEventListener('click', cancelPlacement);
         shopCategoryBtns.forEach(btn => btn.addEventListener('click', () => { shopCategoryBtns.forEach(b => b.classList.remove('active')); btn.classList.add('active'); renderShop(btn.dataset.category); }));
         inventoryCategoryBtns.forEach(btn => btn.addEventListener('click', () => { inventoryCategoryBtns.forEach(b => b.classList.remove('active')); btn.classList.add('active'); renderInventory(btn.dataset.category); }));
 
