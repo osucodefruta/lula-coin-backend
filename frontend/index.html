@@ -599,7 +599,7 @@
                     const rackLabel = document.createElement('div'); rackLabel.className = 'rack-label'; rackLabel.textContent = rackConfig.name; rackLabel.dataset.rackSlotIndex = i;
                     rackLabel.addEventListener('click', handleWorldClick);
                     const slotsContainer = document.createElement('div');
-                    slotsContainer.className = 'slots-container'; // BUG FIX: Adicionado container
+                    slotsContainer.className = 'slots-container';
                     for (let j = 0; j < rackConfig.slots; j++) {
                         const miner = rackData.placedMiners[j];
                         const minerSlotDiv = document.createElement('div');
@@ -838,7 +838,7 @@
         closeShopBtn.addEventListener('click', closeShop);
         openInventoryBtn.addEventListener('click', openInventory);
         closeInventoryBtn.addEventListener('click', closeInventory);
-        energyBtn.addEventListener('click', handleEnergyRecharge); // Listener para o botão de energia
+        energyBtn.addEventListener('click', handleEnergyRecharge);
         shopCategoryBtns.forEach(btn => btn.addEventListener('click', () => { shopCategoryBtns.forEach(b => b.classList.remove('active')); btn.classList.add('active'); renderShop(btn.dataset.category); }));
         inventoryCategoryBtns.forEach(btn => btn.addEventListener('click', () => { inventoryCategoryBtns.forEach(b => b.classList.remove('active')); btn.classList.add('active'); renderInventory(btn.dataset.category); }));
         
