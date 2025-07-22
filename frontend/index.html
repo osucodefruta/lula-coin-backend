@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lula Coin Miner 4.0 (Sell Update)</title>
+    <title>Lula Coin Miner 4.1 (Visual Update)</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
@@ -19,8 +19,9 @@
             --red-alert: #ff4500;
             --border-color: rgba(255, 59, 59, 0.3);
             --glow-color: rgba(255, 59, 59, 0.6);
-            --brick-color: #2c1d1d;
-            --brick-mortar: #1a1a1a;
+            /* Cores da Parede ATUALIZADAS */
+            --brick-color: #9c6644; /* Marrom claro para tijolos */
+            --brick-mortar: #ddc9a3; /* Bege para o rejunte */
             --floor-plate-dark: #2a343a;
             --floor-plate-light: #444f56;
             --floor-gap: #111;
@@ -93,11 +94,22 @@
         /* --- Main Content --- */
         .main-content { flex-grow: 1; display: flex; position: relative; overflow: hidden; }
 
-        /* --- Mining Room (CENÁRIO) --- */
-        .mining-room { flex-grow: 1; display: flex; justify-content: center; align-items: flex-end; position: relative; overflow: hidden; background-color: var(--brick-mortar); background-image: linear-gradient(var(--brick-color) 33.3%, transparent 33.3%), linear-gradient(90deg, transparent 50%, var(--brick-mortar) 50%), linear-gradient(transparent 66.6%, var(--brick-color) 66.6%), linear-gradient(90deg, var(--brick-mortar) 50%, transparent 50%); background-size: 80px 40px, 80px 40px, 80px 40px, 80px 40px; background-position: 0 0, 40px 0px, 0 20px, 0 20px; }
+        /* --- Mining Room (CENÁRIO) ATUALIZADO --- */
+        .mining-room {
+            flex-grow: 1; display: flex; justify-content: center; align-items: flex-end;
+            position: relative; overflow: hidden;
+            background-color: var(--brick-mortar);
+            background-image:
+                linear-gradient(var(--brick-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--brick-color) 1px, transparent 1px);
+            background-size: 100px 40px;
+        }
         .mining-room::before {
-            content: ''; position: absolute; bottom: -5%; left: -5%;
-            width: 110%; height: 40%;
+            content: ''; position: absolute; bottom: -5%;
+            /* Ajuste para preencher a tela */
+            left: 0;
+            width: 100%;
+            height: 40%;
             background-color: var(--floor-plate-dark);
             background-image:
                 linear-gradient(45deg, var(--floor-plate-light) 25%, transparent 25%),
@@ -137,7 +149,6 @@
         .gpu-pcb { width: 100%; height: 4px; background-color: #004d40; }
         .gpu-fans-container { display: flex; justify-content: space-around; align-items: center; width: 100%; flex-grow: 1; }
         .gpu-fan { width: 35px; height: 35px; border-radius: 50%; background-color: #111; display: flex; justify-content: center; align-items: center; padding: 3px; animation: spin 1s linear infinite; }
-        /* Animação do Fan pausada quando sem energia */
         .no-energy .gpu-fan { animation-play-state: paused; }
         .gpu-fan-blades { width: 100%; height: 100%; border-radius: 50%; background-color: var(--primary-color); position: relative; }
         .gpu-fan-blade { position: absolute; width: 30%; height: 110%; background: #111; top: -5%; left: 35%; }
@@ -146,7 +157,7 @@
         .gpu-led { width: 6px; height: 6px; border-radius: 50%; animation: pulse 1.5s ease-in-out infinite; }
         .no-energy .gpu-led { animation: none; background-color: #333; }
 
-        /* --- COMPUTER SETUP ATUALIZADO --- */
+        /* --- COMPUTER SETUP --- */
         .computer-setup { position: absolute; left: 20px; bottom: 30px; width: 250px; height: 250px; z-index: 2; }
         .desk { width: 180px; height: 10px; background-color: #4e342e; position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%) perspective(150px) rotateX(15deg); border-radius: 2px; box-shadow: 0 15px 10px rgba(0,0,0,0.4); }
         .desk::before, .desk::after { content: ''; position: absolute; bottom: -60px; width: 10px; height: 60px; background-color: #3e2723; }
@@ -154,7 +165,7 @@
         .monitor { width: 120px; height: 90px; background-color: #222; border: 2px solid #555; border-radius: 5px; position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%); box-shadow: 0 0 15px rgba(0, 0, 0, 0.5); }
         .monitor-screen { width: calc(100% - 10px); height: calc(100% - 10px); background-color: var(--monitor-screen); position: absolute; top: 5px; left: 5px; border-radius: 3px; overflow: hidden; box-shadow: inset 0 0 10px rgba(0,0,0,0.8); }
         .scanline-effect { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(0, 0, 0, 0.1) 50%, transparent 50%); background-size: 100% 2px; animation: scanline 5s linear infinite; }
-        .monitor-text { color: lime; font-size: 0.8em; padding: 5px; white-space: pre-wrap; word-break: break-all; } /* AJUSTADO */
+        .monitor-text { color: lime; font-size: 0.8em; padding: 5px; white-space: pre-wrap; word-break: break-all; }
         .keyboard { width: 80px; height: 20px; background-color: #333; position: absolute; bottom: 82px; left: 50%; transform: translateX(-50%) perspective(150px) rotateX(45deg); border-radius: 3px; box-shadow: 0 2px 5px rgba(0,0,0,0.4); }
         .mouse { width: 15px; height: 22px; background-color: #333; position: absolute; bottom: 85px; left: 85%; border-radius: 8px 8px 4px 4px; }
         .cpu-box { width: 50px; height: 100px; background-color: #333; position: absolute; bottom: 0; left: 0; border-radius: 5px; box-shadow: 5px 5px 15px rgba(0,0,0,0.5); }
@@ -169,36 +180,31 @@
         /* Botão de Energia ATUALIZADO */
         #energy-btn {
             background-color: var(--medium-gray);
-            color: #ffd700; /* Cor amarela para o texto */
             border: 1px solid var(--energy-full);
             box-shadow: 0 0 8px var(--energy-full);
             position: relative;
             overflow: hidden;
             padding: 10px 20px;
             font-size: 1em;
-            margin-left: auto; /* Empurra para a direita */
+            margin-left: auto;
         }
         #energy-bar {
-            position: absolute;
-            bottom: 0; left: 0;
-            width: 100%;
-            height: 100%;
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 100%;
             background-color: var(--energy-full);
             z-index: 0;
             transition: width 0.5s ease-out, background-color 0.5s ease;
         }
-        #energy-text {
-            position: relative;
-            z-index: 1; /* Garante que o texto fique sobre a barra */
+        #energy-text { position: relative; z-index: 1; font-weight: bold; }
+        #energy-btn.rechargeable { cursor: pointer; animation: pulse 1.5s infinite; }
+        #energy-btn:disabled { cursor: not-allowed; filter: grayscale(0.7); }
+        
+        /* Estilos para o texto de Energia */
+        .energy-label { color: #fff; text-shadow: 1px 1px 2px black; }
+        .energy-icon, .energy-value {
+            color: var(--energy-full);
+            text-shadow: 0 0 5px var(--energy-full), 0 0 8px #fff;
         }
-        #energy-btn.rechargeable {
-            cursor: pointer;
-            animation: pulse 1.5s infinite;
-        }
-        #energy-btn:disabled {
-            cursor: not-allowed;
-            filter: grayscale(0.7);
-        }
+
 
         .room-btn { padding: 5px 10px; background-color: var(--medium-gray); border: none; border-radius: 5px; color: var(--text-color); font-weight: bold; cursor: pointer; transition: all 0.2s ease; }
         .room-btn.active { background-color: #fff; color: var(--primary-color); box-shadow: 0 0 8px #fff; }
@@ -227,39 +233,45 @@
         .item-name { font-size: 1.1em; font-weight: bold; color: var(--text-color); }
         .item-stats { font-size: 0.9em; color: var(--light-gray); }
         .item-price { font-size: 1.2em; color: limegreen; font-weight: bold; margin-top: auto; }
+
+        /* Estilos de Botões ATUALIZADOS */
+        .buy-btn {
+            background-color: var(--primary-color); color: var(--dark-gray);
+            padding: 12px 20px; width: 100%; border-radius: 5px;
+            border: none; cursor: pointer; font-weight: bold; text-transform: uppercase;
+            box-shadow: 0 0 10px var(--primary-color); transition: all 0.2s ease;
+        }
+        /* Hover verde para comprar */
+        .buy-btn:not(:disabled):hover {
+            background-color: #28a745; /* Verde */
+            box-shadow: 0 0 15px #28a745;
+            filter: brightness(1.1);
+        }
         
-        /* Estilos para Venda de Itens */
         .item-sell-price { font-size: 1.0em; color: var(--energy-low); font-weight: bold; margin-bottom: 5px; }
         .item-actions { display: flex; gap: 5px; width: 100%; margin-top: auto; }
         .use-item-btn, .sell-item-btn { 
-            background-color: var(--primary-color); 
-            color: var(--dark-gray); 
-            border: none; 
-            border-radius: 5px; 
-            padding: 8px 10px; /* Padding reduzido para caber 2 botões */
-            cursor: pointer; 
-            font-weight: bold; 
-            text-transform: uppercase; 
-            box-shadow: 0 0 8px var(--primary-color); 
-            transition: all 0.3s ease; 
-            width: 100%;
-            font-size: 0.9em;
+            background-color: var(--primary-color); color: var(--dark-gray); 
+            border: none; border-radius: 5px; padding: 8px 10px;
+            cursor: pointer; font-weight: bold; text-transform: uppercase; 
+            box-shadow: 0 0 8px var(--primary-color); transition: all 0.3s ease; 
+            width: 100%; font-size: 0.9em;
         }
         .sell-item-btn {
-            background-color: var(--energy-low); /* Cor Laranja */
-            box-shadow: 0 0 8px var(--energy-low);
+            background-color: var(--energy-low); box-shadow: 0 0 8px var(--energy-low);
         }
-        .buy-btn:hover, .use-item-btn:hover, .sell-item-btn:hover { 
-            filter: brightness(1.2); 
-            transform: scale(1.02); 
+        .use-item-btn:hover, .sell-item-btn:hover { 
+            filter: brightness(1.2); transform: scale(1.02); 
         }
-        .buy-btn, .use-item-btn[disabled], .sell-item-btn[disabled] { 
+
+        /* Botão desabilitado ATUALIZADO */
+        .buy-btn:disabled, .use-item-btn[disabled], .sell-item-btn[disabled] { 
             background-color: var(--medium-gray); 
             color: var(--light-gray); 
-            cursor: not-allowed; 
             box-shadow: none; 
-            filter: grayscale(0.5); 
-            transform: none; 
+            filter: grayscale(0.8); 
+            transform: none;
+            cursor: default; /* Remove o cursor de 'proibido' */
         }
 
     </style>
@@ -342,7 +354,7 @@
             <button class="action-btn" id="logout-btn">Sair</button>
             <button class="action-btn" id="energy-btn" disabled>
                 <div id="energy-bar"></div>
-                <span id="energy-text">⚡ Energia: 100%</span>
+                <span id="energy-text"></span>
             </button>
         </div>
 
@@ -684,7 +696,7 @@
             }
         }
 
-        // --- NOVA LÓGICA DE VENDA ---
+        // --- LÓGICA DE VENDA ---
         function sellItem(event) {
             const button = event.currentTarget;
             const itemId = button.dataset.id;
@@ -694,7 +706,6 @@
             if (!itemConfig) return;
 
             const sellPrice = itemConfig.price / 2;
-
             const inventoryCategory = category === 'miners' ? 'miners' : 'racks';
             let invItem = gameState.inventory[inventoryCategory].find(i => i.id === itemId);
 
@@ -702,15 +713,14 @@
                 invItem.quantity--;
                 gameState.balance += sellPrice;
 
-                // Se a quantidade for zero, remove o item do array
                 if (invItem.quantity <= 0) {
                     gameState.inventory[inventoryCategory] = gameState.inventory[inventoryCategory].filter(i => i.id !== itemId);
                 }
                 
                 playSound('sell-sound');
                 displayTerminalMessage(`${itemConfig.name} vendido por ◎${sellPrice.toFixed(2)}!`, 'lime');
-                updateUI(); // Atualiza o saldo na tela
-                renderInventory(category); // Re-renderiza o inventário
+                updateUI();
+                renderInventory(category);
                 saveGame();
             }
         }
@@ -719,7 +729,6 @@
             minersShopContent.style.display = 'none'; racksShopContent.style.display = 'none'; const contentArea = category === 'miners' ? minersShopContent : racksShopContent; const itemsToRender = category === 'miners' ? MINERS : RACKS; contentArea.style.display = 'grid'; contentArea.innerHTML = ''; itemsToRender.forEach(item => { const itemDiv = document.createElement('div'); itemDiv.className = 'shop-item'; itemDiv.innerHTML = `<div class="item-icon">${category === 'miners' ? createGpuSprite(item).outerHTML : createRackSprite(item).outerHTML}</div><div class="item-name">${item.name}</div><div class="item-stats">${item.power ? `Poder: ${item.power} TH/s` : `Slots: ${item.slots}`}</div><div class="item-price">◎ ${item.price.toFixed(2)}</div><button class="buy-btn" data-id="${item.id}" data-category="${category}" ${gameState.balance < item.price ? 'disabled' : ''}>Comprar</button>`; contentArea.appendChild(itemDiv); }); contentArea.querySelectorAll('.buy-btn').forEach(btn => { btn.addEventListener('click', (e) => buyItem(e.currentTarget.dataset.id, e.currentTarget.dataset.category)); });
         }
         
-        // RENDER INVENTORY ATUALIZADO
         function renderInventory(category) {
             minersInventoryContent.style.display = 'none'; racksInventoryContent.style.display = 'none'; 
             const contentArea = category === 'miners' ? minersInventoryContent : racksInventoryContent; 
@@ -762,7 +771,6 @@
         function closeInventory() { inventoryModal.style.display = 'none'; }
         
         // --- LÓGICA DE INTERAÇÃO ---
-        
         function startPlacement(event) { const button = event.currentTarget; const itemId = button.dataset.id; const category = button.dataset.category; const itemConfig = category === 'miners' ? MINERS.find(i=>i.id === itemId) : RACKS.find(i=>i.id === itemId); placingItem = { item: itemConfig, type: category === 'miners' ? 'miner' : 'rack' }; miningRoom.classList.add('placing-item'); displayTerminalMessage(`Modo de Colocação: Selecione um local para ${itemConfig.name}.`, 'yellow'); closeInventory(); }
         function cancelPlacement() { if (placingItem) { placingItem = null; miningRoom.classList.remove('placing-item'); displayTerminalMessage('Modo de Colocação cancelado.', 'orange'); } }
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { cancelPlacement(); } });
@@ -835,24 +843,26 @@
             }
         }
 
-        // --- LÓGICA DE ENERGIA ---
+        // --- LÓGICA DE ENERGIA ATUALIZADA ---
         function updateEnergyUI() {
             const energyPercent = gameState.energy;
             energyBar.style.width = `${energyPercent}%`;
-            energyText.textContent = `⚡ Energia: ${energyPercent.toFixed(0)}%`;
+
+            // Atualiza o texto usando innerHTML para permitir estilização
+            energyText.innerHTML = `<span class="energy-icon">⚡</span> <span class="energy-label">Energia:</span> <span class="energy-value">${energyPercent.toFixed(0)}%</span>`;
 
             if (energyPercent <= 0) {
                 energyBar.style.backgroundColor = 'var(--energy-empty)';
                 energyBtn.style.borderColor = 'var(--energy-empty)';
                 energyBtn.classList.add('rechargeable');
-                energyText.textContent = `Recarregar (1 LCO)`;
+                energyText.innerHTML = `Recarregar (<span class="energy-value">1 LCO</span>)`; // Adapta o texto para recarga
                 energyBtn.disabled = false;
                 miningRoom.classList.add('no-energy');
             } else if (energyPercent <= 20) {
                 energyBar.style.backgroundColor = 'var(--energy-low)';
                 energyBtn.style.borderColor = 'var(--energy-low)';
                 energyBtn.classList.add('rechargeable');
-                energyText.textContent = `Recarregar Grátis`;
+                energyText.innerHTML = `<span class="energy-label">Recarregar Grátis</span>`; // Adapta o texto para recarga
                 energyBtn.disabled = false;
                 miningRoom.classList.remove('no-energy');
             } else {
@@ -883,7 +893,6 @@
             }
         }
 
-
         // --- LOOPS DO JOGO ---
         let gameLoopInterval, terminalLoopInterval;
         function startLoops() {
@@ -898,17 +907,15 @@
                 const deltaTime = (now - lastUpdateTime) / 1000;
                 lastUpdateTime = now;
 
-                // Consome energia
                 if (gameState.energy > 0) {
-                    const powerDraw = gameState.totalPower; // Simplificando, consumo proporcional à potência
-                    gameState.energy -= (ENERGY_CONSUMPTION_RATE * (powerDraw / 10 + 1) / 5) * deltaTime; // Consumo mais dinâmico
+                    const powerDraw = gameState.totalPower;
+                    gameState.energy -= (ENERGY_CONSUMPTION_RATE * (powerDraw / 10 + 1) / 5) * deltaTime;
                     if (gameState.energy < 0) {
                         gameState.energy = 0;
-                        updateTotalPower(); // Recalcula a potência para 0
+                        updateTotalPower();
                     }
                 }
                 
-                // Gera moedas se tiver energia
                 if (gameState.energy > 0) {
                     gameState.balance += (gameState.totalPower * (LCO_PER_THS_PER_MINUTE / 60)) * deltaTime;
                 }
