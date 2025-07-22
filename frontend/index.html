@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lula Coin Miner 3.4 (Shop FIX)</title>
+    <title>Lula Coin Miner 3.5 (Polished)</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.9.3/tsparticles.bundle.min.js"></script>
     <style>
         /* Variáveis CSS para fácil tematização */
         :root {
@@ -19,8 +20,6 @@
             --red-alert: #ff4500;
             --border-color: rgba(255, 59, 59, 0.3);
             --glow-color: rgba(255, 59, 59, 0.6);
-
-            /* Cores para o ambiente 2.0 */
             --brick-color: #2c1d1d;
             --brick-mortar: #1a1a1a;
             --floor-plate-dark: #2a343a;
@@ -31,36 +30,12 @@
             --monitor-screen: #0f1c2c;
         }
 
-        /* Reset Básico para consistência entre navegadores */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Share Tech Mono', monospace;
-        }
-
-        body {
-            background-color: #0a0a0a;
-            color: var(--text-color);
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Share Tech Mono', monospace; }
+        body { background-color: #0a0a0a; color: var(--text-color); overflow: hidden; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
 
         /* --- Tela de Autenticação --- */
-        #auth-container {
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            width: 100%; height: 100%; background: var(--tertiary-color);
-            z-index: 200; position: absolute; top: 0; left: 0; overflow: hidden;
-        }
-        .auth-box {
-            background-color: rgba(26, 26, 26, 0.8); backdrop-filter: blur(5px);
-            padding: 40px; border-radius: 10px; border: 1px solid var(--border-color);
-            width: 90%; max-width: 400px; text-align: center; z-index: 2;
-            animation: pulse 2.5s infinite;
-        }
+        #auth-container { display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; height: 100%; background: var(--tertiary-color); z-index: 200; position: absolute; top: 0; left: 0; overflow: hidden; }
+        .auth-box { background-color: rgba(26, 26, 26, 0.8); backdrop-filter: blur(5px); padding: 40px; border-radius: 10px; border: 1px solid var(--border-color); width: 90%; max-width: 400px; text-align: center; z-index: 2; animation: pulse 2.5s infinite; }
         .auth-box h2 { font-family: 'Orbitron', sans-serif; color: var(--primary-color); margin-bottom: 20px; text-shadow: 0 0 8px var(--primary-color); }
         .auth-box input { width: 100%; padding: 12px; margin-bottom: 15px; background-color: var(--tertiary-color); border: 1px solid var(--border-color); color: var(--text-color); border-radius: 5px; }
         .auth-box button { width: 100%; padding: 12px; background-color: var(--primary-color); color: var(--dark-gray); border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 1.1em; transition: all 0.2s ease; }
@@ -73,11 +48,7 @@
         
         /* ANIMAÇÃO DE MOEDAS CAINDO */
         #falling-coins-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
-        .coin-fall {
-            position: absolute; top: -10%; background-color: #ffd700; color: #b8860b;
-            border-radius: 50%; display: flex; justify-content: center; align-items: center;
-            font-weight: bold; font-family: 'Orbitron', sans-serif; animation: fall linear infinite;
-        }
+        .coin-fall { position: absolute; top: -10%; background-color: #ffd700; color: #b8860b; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-family: 'Orbitron', sans-serif; animation: fall linear infinite; }
         @keyframes fall { to { transform: translateY(110vh) rotate(360deg); } }
         .coin-fall:nth-child(1) { width: 40px; height: 40px; left: 10%; animation-duration: 7s; animation-delay: 0s; font-size: 1.5em; }
         .coin-fall:nth-child(2) { width: 20px; height: 20px; left: 20%; animation-duration: 5s; animation-delay: 1s; font-size: 1em; }
@@ -91,33 +62,24 @@
         .coin-fall:nth-child(10){ width: 22px; height: 22px; left: 5%; animation-duration: 8.5s; animation-delay: 3.5s; font-size: 1.1em; }
 
 
-        #app {
-            display: none; flex-direction: column; width: 100vw; height: 100vh;
-            max-width: 1920px; max-height: 1080px; border: 2px solid var(--border-color);
-            box-shadow: 0 0 20px var(--glow-color); background-color: var(--dark-gray);
-            position: relative; overflow: hidden;
-        }
+        #app { display: none; flex-direction: column; width: 100vw; height: 100vh; max-width: 1920px; max-height: 1080px; border: 2px solid var(--border-color); box-shadow: 0 0 20px var(--glow-color); background-color: var(--dark-gray); position: relative; overflow: hidden; }
         
         /* Classe para feedback de modo de colocação */
         .placing-item .rack-placement-slot.available,
-        .placing-item .slot.empty {
-            border-color: var(--primary-color);
-            background-color: rgba(255, 59, 59, 0.2);
-            animation: pulse 1.5s infinite;
-        }
+        .placing-item .slot.empty { border-color: var(--primary-color); background-color: rgba(255, 59, 59, 0.2); animation: pulse 1.5s infinite; }
 
         /* Animações reutilizáveis */
-        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-5px); } 100% { transform: translateY(0px); } }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-        @keyframes blink-red { 0%, 48%, 100% { background-color: #4d0000; box-shadow: none; } 50% { background-color: #ff0000; box-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000; } }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes pulse { 0%, 100% { box-shadow: 0 0 15px var(--glow-color), 0 0 5px var(--glow-color); } 50% { box-shadow: 0 0 30px var(--glow-color), 0 0 10px var(--glow-color); } }
-        @keyframes scanline { 0% { background-position: 0 0; } 100% { background-position: 0 100%; } }
-        @keyframes glow-text { 0%, 100% { text-shadow: 0 0 5px var(--primary-color), 0 0 15px var(--primary-color); } 50% { text-shadow: 0 0 10px var(--primary-color), 0 0 30px var(--primary-color); } }
+        /* NOVAS ANIMAÇÕES PARA COLOCAR/REMOVER ITENS */
+        @keyframes place-item-anim { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes remove-item-anim { from { transform: scale(1); opacity: 1; } to { transform: scale(0.5); opacity: 0; } }
+        .item-placed { animation: place-item-anim 0.3s ease-out; }
+        .item-removed { animation: remove-item-anim 0.3s ease-out; }
+        
 
         /* --- Header --- */
         header { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background-color: var(--tertiary-color); border-bottom: 1px solid var(--border-color); z-index: 10; position: relative; }
-        .logo h1 { font-family: 'Orbitron', sans-serif; font-size: 2em; color: var(--primary-color); text-shadow: 0 0 8px var(--primary-color); letter-spacing: 2px; animation: glow-text 3s ease-in-out infinite; }
         .user-profile { display: flex; align-items: center; }
         .user-avatar { width: 40px; height: 40px; background-color: var(--primary-color); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.8em; font-weight: bold; margin-right: 15px; box-shadow: 0 0 10px var(--primary-color); }
         .user-stats { display: flex; gap: 25px; }
@@ -130,28 +92,8 @@
         .main-content { flex-grow: 1; display: flex; position: relative; overflow: hidden; }
 
         /* --- Mining Room (CENÁRIO) --- */
-        .mining-room {
-            flex-grow: 1; display: flex; justify-content: center; align-items: flex-end; position: relative; overflow: hidden;
-            background-color: var(--brick-mortar);
-            background-image:
-                linear-gradient(var(--brick-color) 33.3%, transparent 33.3%),
-                linear-gradient(90deg, transparent 50%, var(--brick-mortar) 50%),
-                linear-gradient(transparent 66.6%, var(--brick-color) 66.6%),
-                linear-gradient(90deg, var(--brick-mortar) 50%, transparent 50%);
-            background-size: 80px 40px, 80px 40px, 80px 40px, 80px 40px;
-            background-position: 0 0, 40px 0px, 0 20px, 0 20px;
-        }
-        .mining-room::before {
-            content: ''; position: absolute; bottom: -5%; left: 0; width: 100%; height: 40%;
-            background-color: var(--floor-plate-dark);
-            background-image:
-                linear-gradient(45deg, var(--floor-plate-light) 25%, transparent 25%),
-                linear-gradient(-45deg, var(--floor-plate-light) 25%, transparent 25%),
-                linear-gradient(45deg, transparent 75%, var(--floor-plate-light) 75%),
-                linear-gradient(-45deg, transparent 75%, var(--floor-plate-light) 75%);
-            background-size: 80px 80px; transform: perspective(150px) rotateX(25deg);
-            border-top: 5px solid var(--floor-gap); z-index: 0;
-        }
+        .mining-room { flex-grow: 1; display: flex; justify-content: center; align-items: flex-end; position: relative; overflow: hidden; background-color: var(--brick-mortar); background-image: linear-gradient(var(--brick-color) 33.3%, transparent 33.3%), linear-gradient(90deg, transparent 50%, var(--brick-mortar) 50%), linear-gradient(transparent 66.6%, var(--brick-color) 66.6%), linear-gradient(90deg, var(--brick-mortar) 50%, transparent 50%); background-size: 80px 40px, 80px 40px, 80px 40px, 80px 40px; background-position: 0 0, 40px 0px, 0 20px, 0 20px; }
+        .mining-room::before { content: ''; position: absolute; bottom: -5%; left: 0; width: 100%; height: 40%; background-color: var(--floor-plate-dark); background-image: linear-gradient(45deg, var(--floor-plate-light) 25%, transparent 25%), linear-gradient(-45deg, var(--floor-plate-light) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, var(--floor-plate-light) 75%), linear-gradient(-45deg, transparent 75%, var(--floor-plate-light) 75%); background-size: 80px 80px; transform: perspective(150px) rotateX(25deg); border-top: 5px solid var(--floor-gap); z-index: 0; }
 
         #rack-placement-area { position: absolute; bottom: 30px; width: calc(100% - 350px); left: 280px; height: calc(80% - 60px); display: flex; justify-content: space-around; align-items: flex-end; padding-bottom: 80px; z-index: 1; }
         .rack-placement-slot { width: 220px; height: 100%; border: 2px dashed rgba(255, 59, 59, 0.4); border-radius: 8px; display: flex; justify-content: center; align-items: flex-end; padding: 10px; position: relative; transition: border-color 0.3s ease, background-color 0.3s ease; cursor: pointer; z-index: 2; }
@@ -196,7 +138,7 @@
         .monitor { width: 120px; height: 90px; background-color: #222; border: 2px solid #555; border-radius: 5px; position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%); box-shadow: 0 0 15px rgba(0, 0, 0, 0.5); }
         .monitor-screen { width: calc(100% - 10px); height: calc(100% - 10px); background-color: var(--monitor-screen); position: absolute; top: 5px; left: 5px; border-radius: 3px; overflow: hidden; box-shadow: inset 0 0 10px rgba(0,0,0,0.8); }
         .scanline-effect { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(0, 0, 0, 0.1) 50%, transparent 50%); background-size: 100% 2px; animation: scanline 5s linear infinite; }
-        .monitor-text { color: lime; font-size: 0.6em; padding: 5px; white-space: pre-wrap; animation: blink 2s steps(1) infinite; }
+        .monitor-text { color: lime; font-size: 0.7em; padding: 5px; white-space: pre; }
         .keyboard { width: 120px; height: 15px; background-color: #555; position: absolute; bottom: 65px; left: 50%; transform: translateX(-50%); border-radius: 3px; box-shadow: 0 2px 5px rgba(0,0,0,0.4); }
         .cpu-box { width: 50px; height: 100px; background-color: #333; position: absolute; bottom: 0; left: 0; border-radius: 5px; box-shadow: 5px 5px 15px rgba(0,0,0,0.5); }
         .cpu-box::before { content: ''; position: absolute; top: 0; right: -10px; width: 10px; height: 100%; background-color: #222; border-radius: 0 5px 5px 0; transform: skewY(-10deg); }
@@ -238,6 +180,15 @@
         .buy-btn, .use-item-btn { background-color: var(--primary-color); color: var(--dark-gray); border: none; border-radius: 5px; padding: 10px 20px; margin-top: 10px; cursor: pointer; font-weight: bold; text-transform: uppercase; box-shadow: 0 0 10px var(--primary-color); transition: all 0.3s ease; width: 100%; }
         .buy-btn:hover, .use-item-btn:hover { filter: brightness(1.2); transform: scale(1.02); }
         .buy-btn:disabled, .use-item-btn[disabled] { background-color: var(--medium-gray); color: var(--light-gray); cursor: not-allowed; box-shadow: none; filter: grayscale(0.5); transform: none; }
+
+        /* Div para tsParticles */
+        #tsparticles {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 5; /* Fica sobre o jogo mas abaixo dos modais */
+            pointer-events: none; /* Não interfere com os cliques */
+        }
     </style>
 </head>
 <body>
@@ -269,6 +220,8 @@
     </div>
 
     <div id="app">
+        <div id="tsparticles"></div>
+
         <header>
             <div class="logo"><h1>Lula Coin Miner</h1></div>
             <div class="user-profile">
@@ -348,6 +301,11 @@
         </div>
     </div>
 
+    <audio id="gpu-place-sound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_249496b996.mp3"></audio>
+    <audio id="rack-place-sound" src="https://cdn.pixabay.com/download/audio/2022/02/22/audio_1739454191.mp3"></audio>
+    <audio id="coin-collect-sound" src="https://cdn.pixabay.com/download/audio/2022/03/10/audio_c9a8f2196e.mp3"></audio>
+
+
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         // --- CONFIGURAÇÕES E CONSTANTES ---
@@ -370,10 +328,12 @@
         let gameState = null;
         let currentRoomIndex = 0;
         let placingItem = null;
-        let isTransactionInProgress = false; // <<< BUG FIX: Trava para compras na loja
+        let isTransactionInProgress = false;
+        let lastWholeCoinAmount = 0; // Para a animação da moeda
         
         // --- ELEMENTOS DO DOM ---
         const lcoPerHourElement = document.getElementById('lco-per-hour');
+        // ... (resto dos elementos)
         const authContainer = document.getElementById('auth-container');
         const appContainer = document.getElementById('app');
         const loginForm = document.getElementById('login-form');
@@ -443,11 +403,8 @@
         let autoSaveInterval = null;
         
         const handleLogout = () => {
-            if (gameState) {
-                saveGame(); 
-            }
+            if (gameState) { saveGame(); }
             if (autoSaveInterval) clearInterval(autoSaveInterval);
-            
             localStorage.removeItem('token'); 
             authContainer.style.display = 'flex'; 
             appContainer.style.display = 'none';
@@ -468,11 +425,13 @@
             const data = await apiRequest('/api/game/state');
             if (data && data.gameState) {
                 gameState = data.gameState; currentRoomIndex = data.currentRoomIndex || 0;
+                lastWholeCoinAmount = Math.floor(gameState.balance); // Inicia o contador de moedas
                 if (!gameState.placedRacksPerRoom || gameState.placedRacksPerRoom.length === 0) {
                     gameState.placedRacksPerRoom = [Array(NUM_RACK_PLACEMENT_SLOTS).fill(null)]; currentRoomIndex = 0;
                 }
                 authContainer.style.display = 'none'; appContainer.style.display = 'flex';
                 userAvatar.textContent = 'L';
+                await setupParticles(); // Inicia o tsParticles
                 updateUI(); startLoops();
             } else { handleLogout(); }
         };
@@ -481,41 +440,90 @@
             await apiRequest('/api/game/update', 'POST', { gameState, currentRoomIndex });
         };
 
+        // --- FUNÇÕES DE EFEITOS E ANIMAÇÕES ---
+        function playSound(soundId) {
+            const sound = document.getElementById(soundId);
+            if(sound) {
+                sound.currentTime = 0;
+                sound.play();
+            }
+        }
+
+        async function setupParticles() {
+            await tsParticles.load("tsparticles", {
+                fullScreen: { enable: false },
+                particles: {
+                    number: { value: 0 }, // Começa com zero partículas
+                    shape: { type: "text", options: { text: { value: "L", font: "Orbitron", style: "", weight: "700" } } },
+                    color: { value: "#ffd700" },
+                    size: { value: { min: 10, max: 20 } },
+                    opacity: { value: { min: 0.8, max: 1 }, animation: { enable: true, speed: 0.5, destroy: "max" } },
+                    move: {
+                        enable: true,
+                        speed: 4,
+                        direction: "top",
+                        outModes: { top: "destroy" }
+                    }
+                },
+                emitters: {
+                    name: "coinEmitter",
+                    autoPlay: false, // Só emitir quando mandarmos
+                    position: { x: 10, y: 90 }, // Posição em % da tela (perto do computador)
+                    rate: { quantity: 1, delay: 0.1 },
+                    life: { duration: 2, count: 1 }, // Emite apenas 1 vez por chamada
+                    particles: {
+                        move: {
+                            path: {
+                                enable: true,
+                                // Coordenadas do caminho da partícula
+                                path: {
+                                    // Curva de baixo para cima
+                                    segments: [
+                                        { type: "line", options: { p1: { x: 150, y: 650 }, p2: { x: 400, y: 500 } } },
+                                        { type: "line", options: { p1: { x: 400, y: 500 }, p2: { x: 600, y: 300 } } },
+                                        { type: "line", options: { p1: { x: 600, y: 300 }, p2: { x: 800, y: 40 } } }
+                                    ],
+                                    // Essas coordenadas são absolutas, idealmente seriam dinâmicas
+                                    // Por simplicidade, estamos usando valores fixos
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function triggerCoinAnimation(count = 1) {
+            const emitter = tsParticles.domItem(0).emitter;
+            if(emitter) {
+                emitter.play(); // Inicia o emissor
+                playSound('coin-collect-sound');
+            }
+        }
+
         // --- FUNÇÕES DE UI E RENDERIZAÇÃO ---
         function createGpuSprite(miner) {
             const gpu = document.createElement('div');
             gpu.className = 'miner-gpu';
-            let fanCount = 1;
-            if (miner.power >= 5 && miner.power < 20) fanCount = 2;
-            if (miner.power >= 20) fanCount = 3;
+            // ...(código da GPU inalterado)
+            let fanCount = 1; if (miner.power >= 5 && miner.power < 20) fanCount = 2; if (miner.power >= 20) fanCount = 3;
             let fansHtml = '';
-            for (let i = 0; i < fanCount; i++) {
-                fansHtml += `<div class="gpu-fan"><div class="gpu-fan-blades" style="background-color: ${miner.color};"><div class="gpu-fan-blade"></div><div class="gpu-fan-blade"></div><div class="gpu-fan-blade"></div></div></div>`;
-            }
+            for (let i = 0; i < fanCount; i++) { fansHtml += `<div class="gpu-fan"><div class="gpu-fan-blades" style="background-color: ${miner.color};"><div class="gpu-fan-blade"></div><div class="gpu-fan-blade"></div><div class="gpu-fan-blade"></div></div></div>`; }
             gpu.innerHTML = `<div class="gpu-shroud" style="border-color: ${miner.color};"><div class="gpu-pcb"></div><div class="gpu-fans-container">${fansHtml}</div><div class="gpu-leds-container"><div class="gpu-led" style="background-color: ${miner.color}; --glow-color: ${miner.color}; animation-delay: 0s;"></div>${fanCount > 1 ? `<div class="gpu-led" style="background-color: ${miner.color}; --glow-color: ${miner.color}; animation-delay: 0.5s;"></div>` : ''}</div></div>`;
             return gpu;
         }
         function createRackSprite(rack) {
             const rackSprite = document.createElement('div');
             rackSprite.className = 'rack-2-5d';
-            let rackHeight = rack.slots * 60 + 60; 
-            rackSprite.style.height = `${rackHeight}px`;
+            // ...(código do Rack inalterado)
+            let rackHeight = rack.slots * 60 + 60; rackSprite.style.height = `${rackHeight}px`;
             let slotsHtml = '';
-            for (let i = 0; i < rack.slots; i++) {
-                slotsHtml += '<div class="slot empty"></div>';
-            }
+            for (let i = 0; i < rack.slots; i++) { slotsHtml += '<div class="slot empty"></div>'; }
             rackSprite.innerHTML = `<div class="rack-top" style="background-color: ${rack.color};"></div><div class="rack-side" style="background-color: ${rack.color}; filter: brightness(0.6);"></div><div class="rack-front" style="border-color: ${rack.color};"><div class="rack-label">${rack.name}</div>${slotsHtml}<div class="rack-leg front-left"></div><div class="rack-leg front-right"></div></div>`;
             return rackSprite;
         }
         
-        function updateUI() {
-            if (!gameState) return;
-            updateBalance();
-            updateTotalPower();
-            renderRoomControls();
-            renderRackPlacementArea();
-            updateAddRoomButtonState();
-        }
+        function updateUI() { if (!gameState) return; updateBalance(); updateTotalPower(); renderRoomControls(); renderRackPlacementArea(); updateAddRoomButtonState(); }
         function updateBalance() { balanceElement.textContent = gameState.balance.toFixed(2); }
         function updateTotalPower() {
             let totalPower = 0;
@@ -532,11 +540,7 @@
             totalPowerElement.textContent = `${gameState.totalPower} TH/s`;
             updateLcoPerHour(); 
         }
-        function updateLcoPerHour() {
-            if (!gameState) return;
-            const perHour = (gameState.totalPower * LCO_PER_THS_PER_MINUTE) * 60;
-            lcoPerHourElement.textContent = perHour.toFixed(2);
-        }
+        function updateLcoPerHour() { if (!gameState) return; const perHour = (gameState.totalPower * LCO_PER_THS_PER_MINUTE) * 60; lcoPerHourElement.textContent = perHour.toFixed(2); }
         function displayTerminalMessage(message, color = 'lime') { terminalTextElement.innerHTML = `> ${message}`; terminalTextElement.style.color = color; }
         
         function renderRoomControls() {
@@ -554,23 +558,16 @@
             roomControls.appendChild(addRoomButton);
             updateAddRoomButtonState();
         }
-        function switchRoom(index) {
-            if (index === currentRoomIndex) return;
-            currentRoomIndex = index;
-            renderRackPlacementArea();
-            renderRoomControls();
-        }
+        function switchRoom(index) { if (index === currentRoomIndex) return; currentRoomIndex = index; renderRackPlacementArea(); renderRoomControls(); }
         async function buyRoom() {
             const nextRoomIndex = gameState.placedRacksPerRoom.length;
             const roomCost = nextRoomIndex * 50; 
             if (gameState.balance >= roomCost) {
                 const data = await apiRequest('/api/game/buy-room', 'POST', { cost: roomCost });
                 if (data && data.gameState) {
-                    gameState = data.gameState;
-                    currentRoomIndex = gameState.placedRacksPerRoom.length - 1;
+                    gameState = data.gameState; currentRoomIndex = gameState.placedRacksPerRoom.length - 1;
                     displayTerminalMessage(`Sala ${currentRoomIndex + 1} comprada!`, "lime");
-                    updateUI();
-                    saveGame();
+                    updateUI(); saveGame();
                 }
             } else { displayTerminalMessage(`LCO insuficiente! Necessário ${roomCost} LCO.`, "red"); }
         }
@@ -590,56 +587,38 @@
                 const slotDiv = document.createElement('div');
                 slotDiv.className = 'rack-placement-slot';
                 slotDiv.dataset.slotIndex = i;
-                
                 if (rackData) {
                     slotDiv.classList.add('occupied');
                     const rackConfig = RACKS.find(r => r.id === rackData.id);
                     const rackElement = document.createElement('div');
                     rackElement.className = 'rack-2-5d';
                     rackElement.style.height = `${rackConfig.slots * 60 + 60}px`;
-                    
-                    const rackTop = document.createElement('div');
-                    rackTop.className = 'rack-top';
-                    rackTop.style.backgroundColor = rackConfig.color;
-                    
-                    const rackSide = document.createElement('div');
-                    rackSide.className = 'rack-side';
-                    rackSide.style.backgroundColor = rackConfig.color;
-                    rackSide.style.filter = 'brightness(0.6)';
-                    
-                    const rackFront = document.createElement('div');
-                    rackFront.className = 'rack-front';
-                    rackFront.style.borderColor = rackConfig.color;
+                    if (rackData.isNew) { rackElement.classList.add('item-placed'); delete rackData.isNew; }
 
-                    const rackLabel = document.createElement('div');
-                    rackLabel.className = 'rack-label';
-                    rackLabel.textContent = rackConfig.name;
-                    rackLabel.dataset.rackSlotIndex = i;
+                    const rackTop = document.createElement('div'); rackTop.className = 'rack-top'; rackTop.style.backgroundColor = rackConfig.color;
+                    const rackSide = document.createElement('div'); rackSide.className = 'rack-side'; rackSide.style.backgroundColor = rackConfig.color; rackSide.style.filter = 'brightness(0.6)';
+                    const rackFront = document.createElement('div'); rackFront.className = 'rack-front'; rackFront.style.borderColor = rackConfig.color;
+                    const rackLabel = document.createElement('div'); rackLabel.className = 'rack-label'; rackLabel.textContent = rackConfig.name; rackLabel.dataset.rackSlotIndex = i;
                     rackLabel.addEventListener('click', handleWorldClick);
-                    
                     const slotsContainer = document.createElement('div');
-                    
                     for (let j = 0; j < rackConfig.slots; j++) {
                         const miner = rackData.placedMiners[j];
                         const minerSlotDiv = document.createElement('div');
                         minerSlotDiv.className = 'slot';
                         if (miner) {
                             minerSlotDiv.classList.add('occupied');
-                            minerSlotDiv.appendChild(createGpuSprite(MINERS.find(m => m.id === miner.id)));
+                            const gpuSprite = createGpuSprite(MINERS.find(m => m.id === miner.id));
+                            if (miner.isNew) { gpuSprite.classList.add('item-placed'); delete miner.isNew; }
+                            minerSlotDiv.appendChild(gpuSprite);
                         } else {
                             minerSlotDiv.classList.add('empty');
                         }
-                        minerSlotDiv.dataset.rackSlotIndex = i; 
-                        minerSlotDiv.dataset.minerSlotIndex = j;
+                        minerSlotDiv.dataset.rackSlotIndex = i; minerSlotDiv.dataset.minerSlotIndex = j;
                         minerSlotDiv.addEventListener('click', handleWorldClick);
                         slotsContainer.appendChild(minerSlotDiv);
                     }
-                    
-                    const legLeft = document.createElement('div');
-                    legLeft.className = 'rack-leg front-left';
-                    const legRight = document.createElement('div');
-                    legRight.className = 'rack-leg front-right';
-                    
+                    const legLeft = document.createElement('div'); legLeft.className = 'rack-leg front-left';
+                    const legRight = document.createElement('div'); legRight.className = 'rack-leg front-right';
                     rackFront.append(rackLabel, slotsContainer, legLeft, legRight);
                     rackElement.append(rackTop, rackSide, rackFront);
                     slotDiv.appendChild(rackElement);
@@ -651,32 +630,20 @@
             }
         }
         
-        // BUG FIX: Adicionada a trava `isTransactionInProgress`
         async function buyItem(itemId, category) {
-            if (isTransactionInProgress) {
-                displayTerminalMessage("Aguarde a transação anterior...", "orange");
-                return;
-            }
+            if (isTransactionInProgress) { displayTerminalMessage("Aguarde a transação anterior...", "orange"); return; }
             isTransactionInProgress = true;
-            
             try {
                 displayTerminalMessage('Processando compra...', 'yellow');
                 const itemData = (category === 'miners' ? MINERS : RACKS).find(i => i.id === itemId);
-                if (gameState.balance < itemData.price) {
-                    displayTerminalMessage('Saldo insuficiente!', 'red');
-                    return;
-                }
+                if (gameState.balance < itemData.price) { displayTerminalMessage('Saldo insuficiente!', 'red'); return; }
                 const data = await apiRequest('/api/game/buy-item', 'POST', { itemId, category, price: itemData.price });
                 if (data && data.gameState) {
-                    gameState = data.gameState; 
-                    displayTerminalMessage(data.message, 'lime');
-                    updateUI(); 
-                    renderShop(category); 
-                    renderInventory(category);
+                    gameState = data.gameState; displayTerminalMessage(data.message, 'lime');
+                    updateUI(); renderShop(category); renderInventory(category);
                     saveGame();
                 }
             } finally {
-                // Independentemente do resultado, libera a trava e atualiza a loja
                 isTransactionInProgress = false;
                 const activeCategory = document.querySelector('.shop-category-btn.active').dataset.category;
                 renderShop(activeCategory);
@@ -684,33 +651,12 @@
         }
         
         function renderShop(category) {
-            minersShopContent.style.display = 'none'; racksShopContent.style.display = 'none';
-            const contentArea = category === 'miners' ? minersShopContent : racksShopContent;
-            const itemsToRender = category === 'miners' ? MINERS : RACKS;
-            contentArea.style.display = 'grid'; contentArea.innerHTML = '';
-            itemsToRender.forEach(item => {
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'shop-item';
-                itemDiv.innerHTML = `<div class="item-icon">${category === 'miners' ? createGpuSprite(item).outerHTML : createRackSprite(item).outerHTML}</div><div class="item-name">${item.name}</div><div class="item-stats">${item.power ? `Poder: ${item.power} TH/s` : `Slots: ${item.slots}`}</div><div class="item-price">◎ ${item.price}</div><button class="buy-btn" data-id="${item.id}" data-category="${category}" ${gameState.balance < item.price ? 'disabled' : ''}>Comprar</button>`;
-                contentArea.appendChild(itemDiv);
-            });
-            contentArea.querySelectorAll('.buy-btn').forEach(btn => { btn.addEventListener('click', () => buyItem(btn.dataset.id, btn.dataset.category)); });
+            // ...(código do renderShop inalterado)
+            minersShopContent.style.display = 'none'; racksShopContent.style.display = 'none'; const contentArea = category === 'miners' ? minersShopContent : racksShopContent; const itemsToRender = category === 'miners' ? MINERS : RACKS; contentArea.style.display = 'grid'; contentArea.innerHTML = ''; itemsToRender.forEach(item => { const itemDiv = document.createElement('div'); itemDiv.className = 'shop-item'; itemDiv.innerHTML = `<div class="item-icon">${category === 'miners' ? createGpuSprite(item).outerHTML : createRackSprite(item).outerHTML}</div><div class="item-name">${item.name}</div><div class="item-stats">${item.power ? `Poder: ${item.power} TH/s` : `Slots: ${item.slots}`}</div><div class="item-price">◎ ${item.price}</div><button class="buy-btn" data-id="${item.id}" data-category="${category}" ${gameState.balance < item.price ? 'disabled' : ''}>Comprar</button>`; contentArea.appendChild(itemDiv); }); contentArea.querySelectorAll('.buy-btn').forEach(btn => { btn.addEventListener('click', () => buyItem(btn.dataset.id, btn.dataset.category)); });
         }
         function renderInventory(category) {
-            minersInventoryContent.style.display = 'none'; racksInventoryContent.style.display = 'none';
-            const contentArea = category === 'miners' ? minersInventoryContent : racksInventoryContent;
-            const itemsToRender = category === 'miners' ? gameState.inventory.miners : gameState.inventory.racks;
-            contentArea.style.display = 'grid'; contentArea.innerHTML = '';
-            if (!itemsToRender || itemsToRender.length === 0) { contentArea.innerHTML = '<p style="grid-column: 1 / -1; text-align: center;">Vazio</p>'; return; }
-            itemsToRender.forEach(invItem => {
-                const itemConfig = (category === 'miners' ? MINERS : RACKS).find(i => i.id === invItem.id);
-                if (!itemConfig) return;
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'inventory-item';
-                itemDiv.innerHTML = `<div class="item-icon">${category === 'miners' ? createGpuSprite(itemConfig).outerHTML : createRackSprite(itemConfig).outerHTML}</div><div class="item-name">${itemConfig.name} (x${invItem.quantity})</div><button class="use-item-btn" data-id="${itemConfig.id}" data-category="${category}" ${invItem.quantity === 0 ? 'disabled' : ''}>Usar</button>`;
-                contentArea.appendChild(itemDiv);
-            });
-            contentArea.querySelectorAll('.use-item-btn').forEach(btn => btn.addEventListener('click', startPlacement));
+            // ...(código do renderInventory inalterado)
+            minersInventoryContent.style.display = 'none'; racksInventoryContent.style.display = 'none'; const contentArea = category === 'miners' ? minersInventoryContent : racksInventoryContent; const itemsToRender = category === 'miners' ? gameState.inventory.miners : gameState.inventory.racks; contentArea.style.display = 'grid'; contentArea.innerHTML = ''; if (!itemsToRender || itemsToRender.length === 0) { contentArea.innerHTML = '<p style="grid-column: 1 / -1; text-align: center;">Vazio</p>'; return; } itemsToRender.forEach(invItem => { const itemConfig = (category === 'miners' ? MINERS : RACKS).find(i => i.id === invItem.id); if (!itemConfig) return; const itemDiv = document.createElement('div'); itemDiv.className = 'inventory-item'; itemDiv.innerHTML = `<div class="item-icon">${category === 'miners' ? createGpuSprite(itemConfig).outerHTML : createRackSprite(itemConfig).outerHTML}</div><div class="item-name">${itemConfig.name} (x${invItem.quantity})</div><button class="use-item-btn" data-id="${itemConfig.id}" data-category="${category}" ${invItem.quantity === 0 ? 'disabled' : ''}>Usar</button>`; contentArea.appendChild(itemDiv); }); contentArea.querySelectorAll('.use-item-btn').forEach(btn => btn.addEventListener('click', startPlacement));
         }
         function openShop() { shopModal.style.display = 'flex'; renderShop('miners'); cancelPlacement(); }
         function closeShop() { shopModal.style.display = 'none'; }
@@ -719,42 +665,19 @@
         
         // --- LÓGICA DE INTERAÇÃO ---
         
-        function startPlacement(event) {
-            const button = event.currentTarget;
-            const itemId = button.dataset.id;
-            const category = button.dataset.category;
-            const itemConfig = category === 'miners' ? MINERS.find(i=>i.id === itemId) : RACKS.find(i=>i.id === itemId);
-            placingItem = {
-                item: itemConfig,
-                type: category === 'miners' ? 'miner' : 'rack'
-            };
-            miningRoom.classList.add('placing-item');
-            displayTerminalMessage(`Modo de Colocação: Selecione um local para ${itemConfig.name}.`, 'yellow');
-            closeInventory();
-        }
-
-        function cancelPlacement() {
-            if (placingItem) {
-                placingItem = null;
-                miningRoom.classList.remove('placing-item');
-                displayTerminalMessage('Modo de Colocação cancelado.', 'orange');
-            }
-        }
-        
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                cancelPlacement();
-            }
-        });
+        function startPlacement(event) { const button = event.currentTarget; const itemId = button.dataset.id; const category = button.dataset.category; const itemConfig = category === 'miners' ? MINERS.find(i=>i.id === itemId) : RACKS.find(i=>i.id === itemId); placingItem = { item: itemConfig, type: category === 'miners' ? 'miner' : 'rack' }; miningRoom.classList.add('placing-item'); displayTerminalMessage(`Modo de Colocação: Selecione um local para ${itemConfig.name}.`, 'yellow'); closeInventory(); }
+        function cancelPlacement() { if (placingItem) { placingItem = null; miningRoom.classList.remove('placing-item'); displayTerminalMessage('Modo de Colocação cancelado.', 'orange'); } }
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { cancelPlacement(); } });
 
         function handlePlacement(target) {
             if (placingItem.type === 'rack' && target.classList.contains('available')) {
                 const slotIndex = parseInt(target.dataset.slotIndex);
                 const invItem = gameState.inventory.racks.find(r => r.id === placingItem.item.id);
                 invItem.quantity--;
-                const newRackData = { id: placingItem.item.id, placedMiners: Array(placingItem.item.slots).fill(null) };
+                const newRackData = { id: placingItem.item.id, placedMiners: Array(placingItem.item.slots).fill(null), isNew: true };
                 gameState.placedRacksPerRoom[currentRoomIndex][slotIndex] = newRackData;
                 displayTerminalMessage(`Rack ${placingItem.item.name} colocado!`, 'lime');
+                playSound('rack-place-sound');
                 cancelPlacement(); updateUI(); saveGame();
             }
             else if (placingItem.type === 'miner' && target.classList.contains('empty')) {
@@ -762,48 +685,41 @@
                 const minerSlotIndex = parseInt(target.dataset.minerSlotIndex);
                 const invItem = gameState.inventory.miners.find(m => m.id === placingItem.item.id);
                 invItem.quantity--;
-                gameState.placedRacksPerRoom[currentRoomIndex][rackSlotIndex].placedMiners[minerSlotIndex] = { id: placingItem.item.id };
+                gameState.placedRacksPerRoom[currentRoomIndex][rackSlotIndex].placedMiners[minerSlotIndex] = { id: placingItem.item.id, isNew: true };
                 displayTerminalMessage(`GPU ${placingItem.item.name} instalada!`, 'lime');
+                playSound('gpu-place-sound');
                 cancelPlacement(); updateUI(); saveGame();
             } else {
                 displayTerminalMessage(`Local inválido para ${placingItem.item.name}!`, 'red');
             }
         }
         
-        function returnItemToInventory(itemId, category) {
-            const inventoryCategory = category === 'miner' ? gameState.inventory.miners : gameState.inventory.racks;
-            const invItem = inventoryCategory.find(i => i.id === itemId);
-            if (invItem) { invItem.quantity++; } 
-            else { inventoryCategory.push({ id: itemId, quantity: 1 }); }
-        }
+        function returnItemToInventory(itemId, category) { const inventoryCategory = category === 'miner' ? gameState.inventory.miners : gameState.inventory.racks; const invItem = inventoryCategory.find(i => i.id === itemId); if (invItem) { invItem.quantity++; } else { inventoryCategory.push({ id: itemId, quantity: 1 }); } }
 
         async function handleWorldClick(event) {
             const target = event.currentTarget;
-            
-            if (placingItem) {
-                handlePlacement(target);
-                return;
-            }
+            if (placingItem) { handlePlacement(target); return; }
 
             if (target.classList.contains('slot') && target.classList.contains('occupied')) {
                 const rackSlotIndex = parseInt(target.dataset.rackSlotIndex);
                 const minerSlotIndex = parseInt(target.dataset.minerSlotIndex);
                 const minerData = gameState.placedRacksPerRoom[currentRoomIndex][rackSlotIndex].placedMiners[minerSlotIndex];
                 if (window.confirm("Deseja guardar esta GPU no inventário?")) {
-                    returnItemToInventory(minerData.id, 'miner');
-                    gameState.placedRacksPerRoom[currentRoomIndex][rackSlotIndex].placedMiners[minerSlotIndex] = null;
-                    displayTerminalMessage('GPU guardada no inventário!', 'lime');
-                    updateUI(); saveGame();
+                    target.querySelector('.miner-gpu').classList.add('item-removed');
+                    playSound('gpu-place-sound');
+                    setTimeout(() => {
+                        returnItemToInventory(minerData.id, 'miner');
+                        gameState.placedRacksPerRoom[currentRoomIndex][rackSlotIndex].placedMiners[minerSlotIndex] = null;
+                        displayTerminalMessage('GPU guardada no inventário!', 'lime');
+                        updateUI(); saveGame();
+                    }, 300); // Espera a animação terminar
                 }
             }
             else if (target.classList.contains('rack-label')) {
                 const rackSlotIndex = parseInt(target.dataset.rackSlotIndex);
                 const rackData = gameState.placedRacksPerRoom[currentRoomIndex][rackSlotIndex];
                 const isOccupied = rackData.placedMiners.some(miner => miner !== null);
-                if (isOccupied) {
-                    displayTerminalMessage("Esvazie o rack antes de guardá-lo.", "red");
-                    return;
-                }
+                if (isOccupied) { displayTerminalMessage("Esvazie o rack antes de guardá-lo.", "red"); return; }
                 if (window.confirm("Deseja guardar este Rack no inventário?")) {
                     returnItemToInventory(rackData.id, 'rack');
                     gameState.placedRacksPerRoom[currentRoomIndex][rackSlotIndex] = null;
@@ -828,19 +744,32 @@
                 lastUpdateTime = now;
                 gameState.balance += (gameState.totalPower * (LCO_PER_THS_PER_MINUTE / 60)) * deltaTime;
                 updateBalance();
+
+                // Checa se uma nova moeda foi minerada
+                if (Math.floor(gameState.balance) > lastWholeCoinAmount) {
+                    const coinsEarned = Math.floor(gameState.balance) - lastWholeCoinAmount;
+                    triggerCoinAnimation(coinsEarned);
+                    lastWholeCoinAmount = Math.floor(gameState.balance);
+                }
+
             }, 1000);
 
-            let terminalMessageIndex = 0;
-            const terminalMessages = ["Conectando ao núcleo...", "Minerando blocos...", "Sincronizando...", "Verificando integridade...", "Aguardando transações..."];
-            const updateTerminal = () => { displayTerminalMessage(terminalMessages[terminalMessageIndex]); terminalMessageIndex = (terminalMessageIndex + 1) % terminalMessages.length; };
-            updateTerminal();
-            terminalLoopInterval = setInterval(updateTerminal, 5000);
+            terminalLoopInterval = setInterval(() => {
+                if (!gameState) return;
+                const lcoPerHour = (gameState.totalPower * LCO_PER_THS_PER_MINUTE) * 60;
+                // Atualiza o monitor do computador com status dinâmicos
+                terminalTextElement.textContent = 
+`> LULACOIN MINER v3.5
+> STATUS: ONLINE
+> ------------------
+> POWER: ${gameState.totalPower.toFixed(2)} TH/s
+> RATE : ${lcoPerHour.toFixed(2)} LCO/h
+> SALDO: ${gameState.balance.toFixed(2)} LCO
+> ------------------
+> MINING BLOCK #${~~(Math.random()*9000+1000)}`;
+            }, 2000);
             
-            autoSaveInterval = setInterval(() => {
-                if(gameState) {
-                    saveGame();
-                }
-            }, 30000);
+            autoSaveInterval = setInterval(() => { if(gameState) { saveGame(); } }, 30000);
         }
 
         // --- LISTENERS DE EVENTOS ---
@@ -856,11 +785,7 @@
         shopCategoryBtns.forEach(btn => btn.addEventListener('click', () => { shopCategoryBtns.forEach(b => b.classList.remove('active')); btn.classList.add('active'); renderShop(btn.dataset.category); }));
         inventoryCategoryBtns.forEach(btn => btn.addEventListener('click', () => { inventoryCategoryBtns.forEach(b => b.classList.remove('active')); btn.classList.add('active'); renderInventory(btn.dataset.category); }));
         
-        window.addEventListener('beforeunload', () => {
-            if (gameState) {
-                saveGame();
-            }
-        });
+        window.addEventListener('beforeunload', () => { if (gameState) { saveGame(); } });
 
         // --- INICIALIZAÇÃO ---
         if (localStorage.getItem('token')) { initializeGame(); } 
