@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lula Coin Miner 3.2 (FIX)</title>
+    <title>Lula Coin Miner 3.4 (Shop FIX)</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
@@ -314,7 +314,6 @@
         <div class="stats-bar">
             <button class="action-btn" id="open-shop-btn">Loja</button>
             <button class="action-btn" id="open-inventory-btn">Inventário</button>
-            <button class="action-btn" id="save-game-btn">Salvar Jogo</button>
             <button class="action-btn" id="logout-btn" style="background-color: var(--red-alert);">Sair</button>
         </div>
 
@@ -370,7 +369,8 @@
         // --- ESTADO DO JOGO ---
         let gameState = null;
         let currentRoomIndex = 0;
-        let placingItem = null; 
+        let placingItem = null;
+        let isTransactionInProgress = false; // <<< BUG FIX: Trava para compras na loja
         
         // --- ELEMENTOS DO DOM ---
         const lcoPerHourElement = document.getElementById('lco-per-hour');
@@ -384,7 +384,6 @@
         const showLoginLink = document.getElementById('show-login-link');
         const authMessage = document.getElementById('auth-message');
         const logoutBtn = document.getElementById('logout-btn');
-        const saveGameBtn = document.getElementById('save-game-btn');
         const userAvatar = document.getElementById('user-avatar');
         const balanceElement = document.getElementById('balance');
         const totalPowerElement = document.getElementById('total-power');
@@ -440,9 +439,21 @@
             const data = await apiRequest('/api/auth/register', 'POST', { username, password });
             if (data) { showAuthMessage(data.message, 'lime'); toggleForms(); }
         };
+        
+        let autoSaveInterval = null;
+        
         const handleLogout = () => {
-            localStorage.removeItem('token'); authContainer.style.display = 'flex'; appContainer.style.display = 'none';
-            gameState = null; if (gameLoopInterval) clearInterval(gameLoopInterval); if (terminalLoopInterval) clearInterval(terminalLoopInterval);
+            if (gameState) {
+                saveGame(); 
+            }
+            if (autoSaveInterval) clearInterval(autoSaveInterval);
+            
+            localStorage.removeItem('token'); 
+            authContainer.style.display = 'flex'; 
+            appContainer.style.display = 'none';
+            gameState = null; 
+            if (gameLoopInterval) clearInterval(gameLoopInterval); 
+            if (terminalLoopInterval) clearInterval(terminalLoopInterval);
         };
         const showAuthMessage = (msg, color = 'var(--red-alert)') => { authMessage.textContent = msg; authMessage.style.color = color; };
         const toggleForms = () => {
@@ -467,9 +478,7 @@
         };
         const saveGame = async () => {
             if (!gameState) return;
-            displayTerminalMessage('Salvando progresso no servidor...', 'yellow');
-            const data = await apiRequest('/api/game/update', 'POST', { gameState, currentRoomIndex });
-            if (data) { setTimeout(() => displayTerminalMessage('Jogo salvo com sucesso!', 'lime'), 500); }
+            await apiRequest('/api/game/update', 'POST', { gameState, currentRoomIndex });
         };
 
         // --- FUNÇÕES DE UI E RENDERIZAÇÃO ---
@@ -550,7 +559,6 @@
             currentRoomIndex = index;
             renderRackPlacementArea();
             renderRoomControls();
-            saveGame();
         }
         async function buyRoom() {
             const nextRoomIndex = gameState.placedRacksPerRoom.length;
@@ -562,6 +570,7 @@
                     currentRoomIndex = gameState.placedRacksPerRoom.length - 1;
                     displayTerminalMessage(`Sala ${currentRoomIndex + 1} comprada!`, "lime");
                     updateUI();
+                    saveGame();
                 }
             } else { displayTerminalMessage(`LCO insuficiente! Necessário ${roomCost} LCO.`, "red"); }
         }
@@ -642,16 +651,38 @@
             }
         }
         
+        // BUG FIX: Adicionada a trava `isTransactionInProgress`
         async function buyItem(itemId, category) {
-            displayTerminalMessage('Processando compra...', 'yellow');
-            const itemData = (category === 'miners' ? MINERS : RACKS).find(i => i.id === itemId);
-            if (gameState.balance < itemData.price) { displayTerminalMessage('Saldo insuficiente!', 'red'); return; }
-            const data = await apiRequest('/api/game/buy-item', 'POST', { itemId, category, price: itemData.price });
-            if (data && data.gameState) {
-                gameState = data.gameState; displayTerminalMessage(data.message, 'lime');
-                updateUI(); renderShop(category); renderInventory(category);
+            if (isTransactionInProgress) {
+                displayTerminalMessage("Aguarde a transação anterior...", "orange");
+                return;
+            }
+            isTransactionInProgress = true;
+            
+            try {
+                displayTerminalMessage('Processando compra...', 'yellow');
+                const itemData = (category === 'miners' ? MINERS : RACKS).find(i => i.id === itemId);
+                if (gameState.balance < itemData.price) {
+                    displayTerminalMessage('Saldo insuficiente!', 'red');
+                    return;
+                }
+                const data = await apiRequest('/api/game/buy-item', 'POST', { itemId, category, price: itemData.price });
+                if (data && data.gameState) {
+                    gameState = data.gameState; 
+                    displayTerminalMessage(data.message, 'lime');
+                    updateUI(); 
+                    renderShop(category); 
+                    renderInventory(category);
+                    saveGame();
+                }
+            } finally {
+                // Independentemente do resultado, libera a trava e atualiza a loja
+                isTransactionInProgress = false;
+                const activeCategory = document.querySelector('.shop-category-btn.active').dataset.category;
+                renderShop(activeCategory);
             }
         }
+        
         function renderShop(category) {
             minersShopContent.style.display = 'none'; racksShopContent.style.display = 'none';
             const contentArea = category === 'miners' ? minersShopContent : racksShopContent;
@@ -686,7 +717,7 @@
         function openInventory() { inventoryModal.style.display = 'flex'; renderInventory('miners'); cancelPlacement();}
         function closeInventory() { inventoryModal.style.display = 'none'; }
         
-        // ############### LÓGICA DE INTERAÇÃO ATUALIZADA ###############
+        // --- LÓGICA DE INTERAÇÃO ---
         
         function startPlacement(event) {
             const button = event.currentTarget;
@@ -717,33 +748,23 @@
         });
 
         function handlePlacement(target) {
-            // Lógica para COLOCAR RACK
             if (placingItem.type === 'rack' && target.classList.contains('available')) {
                 const slotIndex = parseInt(target.dataset.slotIndex);
                 const invItem = gameState.inventory.racks.find(r => r.id === placingItem.item.id);
-                
                 invItem.quantity--;
                 const newRackData = { id: placingItem.item.id, placedMiners: Array(placingItem.item.slots).fill(null) };
                 gameState.placedRacksPerRoom[currentRoomIndex][slotIndex] = newRackData;
-                
                 displayTerminalMessage(`Rack ${placingItem.item.name} colocado!`, 'lime');
-                cancelPlacement();
-                updateUI();
-                saveGame();
+                cancelPlacement(); updateUI(); saveGame();
             }
-            // Lógica para COLOCAR GPU
             else if (placingItem.type === 'miner' && target.classList.contains('empty')) {
                 const rackSlotIndex = parseInt(target.dataset.rackSlotIndex);
                 const minerSlotIndex = parseInt(target.dataset.minerSlotIndex);
                 const invItem = gameState.inventory.miners.find(m => m.id === placingItem.item.id);
-
                 invItem.quantity--;
                 gameState.placedRacksPerRoom[currentRoomIndex][rackSlotIndex].placedMiners[minerSlotIndex] = { id: placingItem.item.id };
-                
                 displayTerminalMessage(`GPU ${placingItem.item.name} instalada!`, 'lime');
-                cancelPlacement();
-                updateUI();
-                saveGame();
+                cancelPlacement(); updateUI(); saveGame();
             } else {
                 displayTerminalMessage(`Local inválido para ${placingItem.item.name}!`, 'red');
             }
@@ -764,47 +785,42 @@
                 return;
             }
 
-            // Lógica de Remoção
             if (target.classList.contains('slot') && target.classList.contains('occupied')) {
                 const rackSlotIndex = parseInt(target.dataset.rackSlotIndex);
                 const minerSlotIndex = parseInt(target.dataset.minerSlotIndex);
                 const minerData = gameState.placedRacksPerRoom[currentRoomIndex][rackSlotIndex].placedMiners[minerSlotIndex];
-                
                 if (window.confirm("Deseja guardar esta GPU no inventário?")) {
                     returnItemToInventory(minerData.id, 'miner');
                     gameState.placedRacksPerRoom[currentRoomIndex][rackSlotIndex].placedMiners[minerSlotIndex] = null;
                     displayTerminalMessage('GPU guardada no inventário!', 'lime');
-                    updateUI();
-                    saveGame();
+                    updateUI(); saveGame();
                 }
             }
             else if (target.classList.contains('rack-label')) {
                 const rackSlotIndex = parseInt(target.dataset.rackSlotIndex);
                 const rackData = gameState.placedRacksPerRoom[currentRoomIndex][rackSlotIndex];
-                
                 const isOccupied = rackData.placedMiners.some(miner => miner !== null);
-
                 if (isOccupied) {
                     displayTerminalMessage("Esvazie o rack antes de guardá-lo.", "red");
                     return;
                 }
-
                 if (window.confirm("Deseja guardar este Rack no inventário?")) {
                     returnItemToInventory(rackData.id, 'rack');
                     gameState.placedRacksPerRoom[currentRoomIndex][rackSlotIndex] = null;
                     displayTerminalMessage('Rack guardado no inventário!', 'lime');
-                    updateUI();
-                    saveGame();
+                    updateUI(); saveGame();
                 }
             }
         }
 
         // --- LOOPS DO JOGO ---
-        let gameLoopInterval, terminalLoopInterval, lastUpdateTime;
+        let gameLoopInterval, terminalLoopInterval;
         function startLoops() {
             if (gameLoopInterval) clearInterval(gameLoopInterval);
             if (terminalLoopInterval) clearInterval(terminalLoopInterval);
-            lastUpdateTime = Date.now();
+            if (autoSaveInterval) clearInterval(autoSaveInterval);
+
+            let lastUpdateTime = Date.now();
             gameLoopInterval = setInterval(() => {
                 if (!gameState) return;
                 const now = Date.now();
@@ -813,11 +829,18 @@
                 gameState.balance += (gameState.totalPower * (LCO_PER_THS_PER_MINUTE / 60)) * deltaTime;
                 updateBalance();
             }, 1000);
+
             let terminalMessageIndex = 0;
             const terminalMessages = ["Conectando ao núcleo...", "Minerando blocos...", "Sincronizando...", "Verificando integridade...", "Aguardando transações..."];
             const updateTerminal = () => { displayTerminalMessage(terminalMessages[terminalMessageIndex]); terminalMessageIndex = (terminalMessageIndex + 1) % terminalMessages.length; };
             updateTerminal();
             terminalLoopInterval = setInterval(updateTerminal, 5000);
+            
+            autoSaveInterval = setInterval(() => {
+                if(gameState) {
+                    saveGame();
+                }
+            }, 30000);
         }
 
         // --- LISTENERS DE EVENTOS ---
@@ -826,13 +849,18 @@
         showRegisterLink.addEventListener('click', toggleForms);
         showLoginLink.addEventListener('click', toggleForms);
         logoutBtn.addEventListener('click', handleLogout);
-        saveGameBtn.addEventListener('click', saveGame);
         openShopBtn.addEventListener('click', openShop);
         closeShopBtn.addEventListener('click', closeShop);
         openInventoryBtn.addEventListener('click', openInventory);
         closeInventoryBtn.addEventListener('click', closeInventory);
         shopCategoryBtns.forEach(btn => btn.addEventListener('click', () => { shopCategoryBtns.forEach(b => b.classList.remove('active')); btn.classList.add('active'); renderShop(btn.dataset.category); }));
         inventoryCategoryBtns.forEach(btn => btn.addEventListener('click', () => { inventoryCategoryBtns.forEach(b => b.classList.remove('active')); btn.classList.add('active'); renderInventory(btn.dataset.category); }));
+        
+        window.addEventListener('beforeunload', () => {
+            if (gameState) {
+                saveGame();
+            }
+        });
 
         // --- INICIALIZAÇÃO ---
         if (localStorage.getItem('token')) { initializeGame(); } 
