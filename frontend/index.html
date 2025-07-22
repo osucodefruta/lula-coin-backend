@@ -122,6 +122,51 @@
             z-index: 0;
         }
 
+        /* --- ESTILO DO QUADRO DE RANKING --- */
+        #global-ranking-board {
+            position: absolute;
+            top: 25%;
+            left: 30px;
+            width: 230px;
+            background-color: #1e272e; /* Cor de quadro negro */
+            border: 10px solid #6d4c41; /* Moldura de madeira */
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.5);
+            color: #ecf0f1;
+            z-index: 5;
+            font-family: 'Share Tech Mono', monospace;
+        }
+        #global-ranking-board h2 {
+            font-size: 1.1em;
+            text-align: center;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+            border-bottom: 1px solid rgba(255, 59, 59, 0.4);
+            padding-bottom: 5px;
+        }
+        #global-ranking-board ol {
+            list-style: none;
+            padding: 0;
+        }
+        #global-ranking-board li {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            font-size: 0.9em;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        #global-ranking-board li:last-child {
+            border-bottom: none;
+        }
+        #global-ranking-board li span:first-child {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 110px;
+        }
+
+
         #rack-placement-area { position: absolute; bottom: 30px; width: calc(100% - 350px); left: 280px; height: calc(80% - 60px); display: flex; justify-content: space-around; align-items: flex-end; padding-bottom: 80px; z-index: 1; }
         .rack-placement-slot { width: 220px; height: 100%; border: 2px dashed rgba(255, 59, 59, 0.4); border-radius: 8px; display: flex; justify-content: center; align-items: flex-end; padding: 10px; position: relative; transition: border-color 0.3s ease, background-color 0.3s ease; cursor: pointer; z-index: 2; }
         .rack-placement-slot.occupied { border: none; background-color: transparent; cursor: default; }
@@ -322,6 +367,12 @@
 
         <main class="main-content">
             <div class="mining-room" id="mining-room">
+                <div id="global-ranking-board">
+                    <h2>🏆 Ranking Global (Top 5)</h2>
+                    <ol id="ranking-list">
+                        <li>Carregando...</li>
+                    </ol>
+                </div>
                 <div class="computer-setup">
                     <div class="desk"></div>
                     <div class="monitor">
@@ -464,6 +515,33 @@
             }
         };
 
+        // --- FUNÇÃO PARA BUSCAR E EXIBIR O RANKING ---
+        async function fetchGlobalRanking() {
+            const rankingList = document.getElementById('ranking-list');
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/ranking/top5/balance`);
+                const players = await response.json();
+
+                rankingList.innerHTML = ''; // Limpa a lista "Carregando..."
+
+                if (players.length === 0) {
+                    rankingList.innerHTML = '<li>Nenhum jogador no ranking ainda.</li>';
+                    return;
+                }
+
+                players.forEach((player, index) => {
+                    const li = document.createElement('li');
+                    const formattedBalance = player.gameState.balance.toFixed(2);
+                    li.innerHTML = `<span>${index + 1}. ${player.username}</span> <span>◎ ${formattedBalance}</span>`;
+                    rankingList.appendChild(li);
+                });
+
+            } catch (error) {
+                console.error('Erro ao buscar o ranking:', error);
+                rankingList.innerHTML = '<li>Não foi possível carregar o ranking.</li>';
+            }
+        }
+
         // --- FUNÇÕES DE AUTENTICAÇÃO ---
         const handleLogin = async () => {
             const username = document.getElementById('login-username').value;
@@ -516,7 +594,12 @@
                 }
                 authContainer.style.display = 'none'; appContainer.style.display = 'flex';
                 userAvatar.textContent = 'L';
-                updateUI(); startLoops();
+                updateUI(); 
+                startLoops();
+                
+                // --- INICIA A ATUALIZAÇÃO DO RANKING ---
+                fetchGlobalRanking(); // Busca o ranking na primeira vez que entra
+                setInterval(fetchGlobalRanking, 60000); // Atualiza a cada 60 segundos
             } else { handleLogout(); }
         };
         const saveGame = async () => {

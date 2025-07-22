@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const authRoutes = require('./routes/auth');
 const gameRoutes = require('./routes/game');
+const rankingRoutes = require('./routes/ranking'); // << 1. ADICIONADO: Importa a nova rota de ranking
 
 const app = express();
 
@@ -22,14 +23,13 @@ mongoose.connect(process.env.MONGO_URI)
 // Definição das rotas da API
 app.use('/api/auth', authRoutes);
 app.use('/api/game', gameRoutes);
+app.use('/api/ranking', rankingRoutes); // << 2. ADICIONADO: Usa a nova rota de ranking
 
-// --- NOVO CÓDIGO: Rota de Health Check ---
-// Esta rota serve para que serviços de monitoramento (como UptimeBot)
-// possam "pingar" o servidor e mantê-lo ativo em plataformas de hospedagem gratuitas.
+// --- Rota de Health Check ---
+// Mantém o servidor ativo em plataformas de hospedagem gratuitas.
 app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'online', timestamp: new Date() });
 });
-// --- FIM DO NOVO CÓDIGO ---
 
 // Rota de teste para verificar se o servidor está online
 app.get("/", (req, res) => {
