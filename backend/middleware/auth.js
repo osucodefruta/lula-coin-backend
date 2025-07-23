@@ -1,11 +1,14 @@
-// backend/middleware/auth.js
+// backend/middleware/auth.js (VERSÃO FINAL LIMPA E FUNCIONAL)
 
 const jwt = require('jsonwebtoken');
-require('dotenv').config();
+
+// A linha 'require('dotenv').config()' foi removida pois já é chamada no server.js
 
 module.exports = function(req, res, next) {
     // Pega o token do cabeçalho da requisição (Ex: "Bearer TOKEN...")
     const authHeader = req.header('Authorization');
+    
+    // Checa se o cabeçalho existe e o divide para pegar apenas o token
     const token = authHeader && authHeader.split(' ')[1];
 
     // Se não houver token, nega o acesso
@@ -17,13 +20,13 @@ module.exports = function(req, res, next) {
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        // Esta linha é a mais importante: ela pega as informações do token
-        // e as anexa ao pedido (req) para que as próximas rotas saibam quem é o usuário.
+        // Anexa as informações do usuário ao objeto da requisição (req)
         req.user = decoded.user || decoded; 
 
-        next(); // Permite que a requisição continue para a rota do jogo/chat
+        // Permite que a requisição continue para a rota principal
+        next();
     } catch (err) {
-        // Se o token for inválido ou expirado, nega o acesso
+        // Se o token for inválido (assinatura errada ou expirado), nega o acesso
         res.status(401).json({ msg: 'Token não é válido.' });
     }
 };
