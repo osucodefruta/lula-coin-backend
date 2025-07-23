@@ -2,12 +2,24 @@
 const mongoose = require('mongoose');
 
 const ChatMessageSchema = new mongoose.Schema({
-    username: { type: String, required: true },
-    message: { type: String, required: true },
-    timestamp: { type: Date, default: Date.now }
+    username: {
+        type: String,
+        required: true,
+        trim: true,
+        maxlength: 50
+    },
+    message: {
+        type: String,
+        required: true,
+        trim: true,
+        maxlength: 200
+    },
+    timestamp: {
+        type: Date,
+        default: Date.now
+    }
 });
 
-// Importante: Não defina a coleção como "capped" aqui no Mongoose,
-// pois já a criamos manualmente no Atlas.
-
+// Terceiro parâmetro força o nome da coleção para "chatmessages"
 module.exports = mongoose.model('ChatMessage', ChatMessageSchema, 'chatmessages');
+
