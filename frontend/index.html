@@ -615,25 +615,34 @@
         const rankingHeader = document.getElementById('ranking-header');
         const rankingBody = document.getElementById('ranking-body');
 
-        // --- FUNÇÕES DE API ---
+        // --- FUNÇÕES DE API (COM CORREÇÃO) ---
         const apiRequest = async (endpoint, method = 'GET', body = null) => {
             const token = localStorage.getItem('token');
-            if (!token && !endpoint.startsWith('/api/auth')) { showAuthMessage('Sessão expirada. Faça login novamente.'); handleLogout(); return null; }
+            // Se não houver token (e não for uma rota de autenticação), força o logout
+            if (!token && !endpoint.startsWith('/api/auth')) { 
+                showAuthMessage('Sessão expirada. Faça login novamente.'); 
+                handleLogout(true); // << ALTERADO: Indica que é um logout forçado
+                return null; 
+            }
             const options = { method, headers: { 'Content-Type': 'application/json' } };
             if (token) { options.headers['Authorization'] = `Bearer ${token}`; }
             if (body) { options.body = JSON.stringify(body); }
             try {
                 const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
-                if (response.status === 401) { handleLogout(); showAuthMessage('Sessão inválida. Faça login novamente.'); return null; }
+                
+                // << CORREÇÃO: Trata o erro 401 primeiro
+                if (response.status === 401) { 
+                    handleLogout(true); // << Indica que é um logout forçado
+                    showAuthMessage('Sessão inválida. Faça login novamente.'); 
+                    return null; 
+                }
+
                 if (response.status === 204 || response.headers.get("content-length") === "0") { return { success: true, message: "Operação bem-sucedida." }; }
                 
-                // --- TRATAMENTO DE ERRO DE VALIDAÇÃO ---
-                // Verifica se a resposta é um erro de validação do express-validator
                 if (response.status === 400 || response.status === 429) {
                     const errorData = await response.json();
-                    // Para rate-limit, a mensagem vem direto. Para validação, vem em um array 'errors'.
                     const errorMessage = errorData.message || (errorData.errors && errorData.errors[0].msg) || 'Erro de validação.';
-                    displayTerminalMessage(errorMessage, 'red'); // Exibe a mensagem de erro específica
+                    displayTerminalMessage(errorMessage, 'red');
                     throw new Error(errorMessage);
                 }
 
@@ -641,7 +650,6 @@
                 if (!response.ok) { throw new Error(data.message || 'Ocorreu um erro.'); }
                 return data;
             } catch (error) {
-                // Evita exibir o mesmo erro duas vezes
                 if (! (error.message.includes('mensagens muito rápido') || error.message.includes('A mensagem'))) {
                     const messageArea = appContainer.style.display === 'flex' ? terminalTextElement : authMessage;
                     if (error instanceof SyntaxError) {
@@ -660,33 +668,27 @@
             const rankingList = document.getElementById('ranking-list');
             rankingList.innerHTML = '<li>Carregando...</li>';
             try {
-                // Usa a função apiRequest para padronizar as chamadas
                 const players = await apiRequest('/api/ranking/top5/balance');
                 if (!players) {
                     rankingList.innerHTML = '<li>Erro ao carregar o ranking.</li>';
                     return;
                 }
-
                 rankingList.innerHTML = ''; 
-
                 if (players.length === 0) {
                     rankingList.innerHTML = '<li>Nenhum jogador no ranking.</li>';
                     return;
                 }
-
                 players.forEach((player, index) => {
                     const li = document.createElement('li');
                     const formattedBalance = player.gameState.balance.toFixed(2);
                     li.innerHTML = `<span>${index + 1}. ${player.username}</span> <span>◎ ${formattedBalance}</span>`;
                     rankingList.appendChild(li);
                 });
-
             } catch (error) {
                 console.error('Erro ao buscar o ranking:', error);
                 rankingList.innerHTML = '<li>Erro ao carregar o ranking.</li>';
             }
         }
-
         function handleRankingClick() {
             const isHidden = rankingBody.style.display === 'none';
             if (isHidden) {
@@ -697,75 +699,54 @@
             }
         }
         
-        // --- LÓGICA DO CHAT (ATUALIZADA E SEGURA) ---
+        // --- LÓGICA DO CHAT ---
         async function fetchMessages() {
             const messages = await apiRequest('/api/chat/messages');
             if (!messages) return;
-
-            chatMessagesArea.innerHTML = ''; // Limpa antes de adicionar as novas mensagens
-
-            messages.forEach(msg => displaySecureMessage(msg)); // Usa a nova função segura
-            
-            // Auto-scroll apenas se o usuário não estiver rolando para cima
+            chatMessagesArea.innerHTML = '';
+            messages.forEach(msg => displaySecureMessage(msg));
             const isScrolledToBottom = chatMessagesArea.scrollHeight - chatMessagesArea.clientHeight <= chatMessagesArea.scrollTop + 1;
             if(isScrolledToBottom) {
                 chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight;
             }
         }
-
-        // NOVA FUNÇÃO PARA EXIBIR MENSAGENS DE FORMA SEGURA
         function displaySecureMessage(msg) {
-            // 1. Cria o elemento container da mensagem
             const messageElement = document.createElement('div');
             messageElement.className = 'chat-message';
-
-            // 2. Cria o elemento do nome de usuário e usa .textContent
             const usernameElement = document.createElement('span');
             usernameElement.className = 'chat-username';
-            usernameElement.textContent = `${msg.username}: `; // Garante que o nome é SÓ TEXTO
-
-            // 3. Cria o elemento da mensagem e usa .textContent
+            usernameElement.textContent = `${msg.username}: `;
             const textElement = document.createElement('span');
             textElement.className = 'chat-message-text';
-            textElement.textContent = msg.message; // Garante que a mensagem é SÓ TEXTO
-
-            // 4. Monta o elemento da mensagem de forma segura
+            textElement.textContent = msg.message;
             messageElement.appendChild(usernameElement);
             messageElement.appendChild(textElement);
             chatMessagesArea.appendChild(messageElement);
         }
-
-
         async function postMessage() {
             const message = chatInput.value;
-            // A validação de 'vazio' agora é feita principalmente no backend, mas mantemos aqui para feedback rápido
             if (!message || message.trim() === '') return;
-
-            // Desabilita o botão para evitar envios duplos
             chatSendBtn.disabled = true;
             const result = await apiRequest('/api/chat/send', 'POST', { message });
-            chatSendBtn.disabled = false; // Reabilita o botão
-
+            chatSendBtn.disabled = false;
             if (result) {
                 chatInput.value = '';
-                displaySecureMessage(result); // Adiciona a mensagem enviada imediatamente
-                chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight; // Rola para o final
+                displaySecureMessage(result);
+                chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight;
             }
         }
-
         function openChat() {
             chatModal.style.display = 'flex';
             fetchMessages();
             if (chatUpdateInterval) clearInterval(chatUpdateInterval);
-            chatUpdateInterval = setInterval(fetchMessages, 5000); // Intervalo um pouco mais rápido
+            chatUpdateInterval = setInterval(fetchMessages, 5000);
         }
-
         function closeChat() {
             chatModal.style.display = 'none';
             if (chatUpdateInterval) clearInterval(chatUpdateInterval);
         }
 
-        // --- FUNÇÕES DE AUTENTICAÇÃO ---
+        // --- FUNÇÕES DE AUTENTICAÇÃO (COM CORREÇÃO) ---
         const handleLogin = async () => {
             const username = document.getElementById('login-username').value;
             const password = document.getElementById('login-password').value;
@@ -794,8 +775,12 @@
         
         let autoSaveInterval = null;
         
-        const handleLogout = () => {
-            if (gameState) { saveGame(); }
+        // << CORREÇÃO: A função agora aceita um parâmetro para não salvar o jogo em logout forçado
+        const handleLogout = (force = false) => {
+            // Só tenta salvar o jogo se NÃO for um logout forçado
+            if (gameState && !force) {
+                saveGame();
+            }
             if (autoSaveInterval) clearInterval(autoSaveInterval);
             localStorage.removeItem('token'); 
             authContainer.style.display = 'flex'; 
@@ -805,6 +790,7 @@
             if (terminalLoopInterval) clearInterval(terminalLoopInterval);
             if(chatUpdateInterval) clearInterval(chatUpdateInterval); 
         };
+
         const showAuthMessage = (msg, color = 'var(--red-alert)') => { authMessage.textContent = msg; authMessage.style.color = color; };
         
         const toggleForms = () => {
@@ -814,7 +800,7 @@
             authMessage.textContent = '';
         };
 
-        // --- FUNÇÕES DE GERENCIAMENTO DO JOGO ---
+        // --- FUNÇÕES DE GERENCIAMENTO DO JOGO (COM CORREÇÃO) ---
         const initializeGame = async () => {
             const data = await apiRequest('/api/game/state');
             if (data && data.gameState) {
@@ -832,7 +818,10 @@
                 userAvatar.textContent = 'L';
                 updateUI(); 
                 startLoops();
-            } else { handleLogout(); }
+            } else { 
+                // Se a inicialização falhar (provavelmente token inválido), força o logout
+                handleLogout(true); 
+            }
         };
         const saveGame = async () => {
             if (!gameState) return;
@@ -1260,7 +1249,7 @@
         registerBtn.addEventListener('click', handleRegister);
         showRegisterLink.addEventListener('click', toggleForms);
         showLoginLink.addEventListener('click', toggleForms);
-        logoutBtn.addEventListener('click', handleLogout); 
+        logoutBtn.addEventListener('click', () => handleLogout(false)); // Logout normal pelo botão
         openShopBtn.addEventListener('click', openShop);
         closeShopBtn.addEventListener('click', closeShop);
         openInventoryBtn.addEventListener('click', openInventory);
