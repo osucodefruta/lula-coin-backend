@@ -3,11 +3,10 @@
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
-// Este é o "ajudante" que verifica se o usuário está logado
-// antes de permitir que ele envie uma mensagem no chat.
 module.exports = function(req, res, next) {
     // Pega o token do cabeçalho da requisição
-    const token = req.header('Authorization')?.split(' ')[1];
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
 
     // Verifica se não há token
     if (!token) {
@@ -17,7 +16,12 @@ module.exports = function(req, res, next) {
     // Verifica o token
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = decoded.user;
+
+        // CORREÇÃO: Em vez de procurar por 'decoded.user',
+        // nós agora pegamos todo o conteúdo decodificado do token.
+        // Isso é mais robusto e compatível com a forma como seu token é criado.
+        req.user = decoded.user || decoded; 
+
         next();
     } catch (err) {
         res.status(401).json({ msg: 'Token não é válido.' });
