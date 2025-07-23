@@ -4,7 +4,7 @@ const express = require('express');
 const router = express.Router();
 const ChatMessage = require('../models/ChatMessage');
 const authMiddleware = require('../middleware/auth');
-const User = require('../models/User');
+// const User = require('../models/User'); // << NÃO PRECISAMOS MAIS DESTA LINHA
 
 // @route   POST /api/chat/send
 // @desc    Envia uma nova mensagem para o chat
@@ -15,14 +15,16 @@ router.post('/send', authMiddleware, async (req, res) => {
             return res.status(400).json({ msg: 'A mensagem não pode estar vazia.' });
         }
 
-        const user = await User.findById(req.user.id).select('username');
-        if (!user) {
-            return res.status(404).json({ msg: 'Usuário não encontrado.' });
+        // CORREÇÃO: Pegamos o username diretamente do token decodificado pelo middleware,
+        // o que é mais rápido e evita o erro.
+        const username = req.user.username;
+        if (!username) {
+            return res.status(401).json({ msg: 'Token inválido ou não contém nome de usuário.' });
         }
 
         const newMessage = new ChatMessage({
-            username: user.username,
-            message: message.substring(0, 150)
+            username: username,
+            message: message.substring(0, 150) // Limita o tamanho da mensagem
         });
 
         await newMessage.save();
@@ -40,7 +42,7 @@ router.get('/messages', authMiddleware, async (req, res) => {
     try {
         const messages = await ChatMessage.find().sort({ $natural: 1 });
         res.json(messages);
-    } catch (err) { // << CORREÇÃO: A chave { que faltava foi adicionada aqui.
+    } catch (err) {
         console.error("Erro em /api/chat/messages:", err.message);
         res.status(500).json({ msg: 'Erro no Servidor' });
     }
