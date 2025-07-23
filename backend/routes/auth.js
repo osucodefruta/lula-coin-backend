@@ -72,12 +72,12 @@ router.post(
         return res.status(400).json({ message: 'Credenciais inválidas.' });
       }
 
-      const payload = {
-        user: {
-          id: user.id,
-        },
-      };
-
+   const payload = {
+  user: {
+    id: user.id,
+    username: user.username  // ESSENCIAL PARA O CHAT FUNCIONAR!
+  }
+};
       const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
 
       res.json({ token });
