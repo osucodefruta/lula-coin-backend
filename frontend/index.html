@@ -131,21 +131,32 @@
             background-color: #1e272e;
             border: 10px solid #6d4c41;
             border-radius: 8px;
-            padding: 15px;
             box-shadow: 5px 5px 15px rgba(0,0,0,0.5);
             color: #ecf0f1;
             z-index: 5;
             font-family: 'Share Tech Mono', monospace;
+            transition: all 0.3s ease;
         }
-        #global-ranking-board h2 {
+        #ranking-header {
+            padding: 10px 15px;
+            cursor: pointer;
+        }
+        #ranking-header h2 {
             font-size: 1.1em;
             text-align: center;
-            margin-bottom: 10px;
             color: var(--primary-color);
-            border-bottom: 1px solid rgba(255, 59, 59, 0.4);
-            padding-bottom: 5px;
+            margin: 0;
         }
-        #global-ranking-board ol { list-style: none; padding: 0; }
+        #ranking-body {
+            padding: 0 15px 15px 15px;
+            border-top: 1px solid rgba(255, 59, 59, 0.4);
+            margin-top: 10px;
+        }
+        #global-ranking-board ol {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
         #global-ranking-board li {
             display: flex;
             justify-content: space-between;
@@ -153,14 +164,15 @@
             font-size: 0.9em;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
-        #global-ranking-board li:last-child { border-bottom: none; }
+        #global-ranking-board li:last-child {
+            border-bottom: none;
+        }
         #global-ranking-board li span:first-child {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             max-width: 110px;
         }
-
 
         #rack-placement-area { position: absolute; bottom: 30px; width: calc(100% - 350px); left: 280px; height: calc(80% - 60px); display: flex; justify-content: space-around; align-items: flex-end; padding-bottom: 80px; z-index: 1; }
         .rack-placement-slot { width: 220px; height: 100%; border: 2px dashed rgba(255, 59, 59, 0.4); border-radius: 8px; display: flex; justify-content: center; align-items: flex-end; padding: 10px; position: relative; transition: border-color 0.3s ease, background-color 0.3s ease; cursor: pointer; z-index: 2; }
@@ -268,7 +280,6 @@
             display: flex; justify-content: space-between; align-items: center; 
             margin-bottom: 20px; 
             border-bottom: 1px solid var(--border-color); 
-            padding-bottom: 15px; 
         }
         .shop-title, .inventory-title, .chat-title { 
             font-family: 'Orbitron', sans-serif; 
@@ -448,11 +459,14 @@
         <main class="main-content">
             <div class="mining-room" id="mining-room">
                 <div id="global-ranking-board">
-                    <h2>🏆 Ranking Global (Top 5)</h2>
-                    <ol id="ranking-list">
-                        <li>Carregando...</li>
-                    </ol>
+                    <div id="ranking-header">
+                        <h2>🏆 Ranking Global (Top 5)</h2>
+                    </div>
+                    <div id="ranking-body" style="display: none;">
+                        <ol id="ranking-list"></ol>
+                    </div>
                 </div>
+
                 <div class="computer-setup">
                     <div class="desk"></div>
                     <div class="monitor">
@@ -597,6 +611,8 @@
         const chatMessagesArea = document.getElementById('chat-messages-area');
         const chatInput = document.getElementById('chat-input');
         const chatSendBtn = document.getElementById('chat-send-btn');
+        const rankingHeader = document.getElementById('ranking-header');
+        const rankingBody = document.getElementById('ranking-body');
 
         // --- FUNÇÕES DE API ---
         const apiRequest = async (endpoint, method = 'GET', body = null) => {
@@ -614,7 +630,6 @@
                 return data;
             } catch (error) {
                 const messageArea = appContainer.style.display === 'flex' ? terminalTextElement : authMessage;
-                // Exibe a mensagem de erro de forma mais amigável
                 if (error instanceof SyntaxError) {
                     messageArea.textContent = `Erro: Resposta inesperada do servidor.`;
                 } else {
@@ -625,17 +640,18 @@
             }
         };
 
-        // --- FUNÇÃO PARA BUSCAR E EXIBIR O RANKING ---
+        // --- LÓGICA DO RANKING ---
         async function fetchGlobalRanking() {
             const rankingList = document.getElementById('ranking-list');
+            rankingList.innerHTML = '<li>Carregando...</li>';
             try {
                 const response = await fetch(`${API_BASE_URL}/api/ranking/top5/balance`);
                 const players = await response.json();
 
-                rankingList.innerHTML = ''; // Limpa a lista "Carregando..."
+                rankingList.innerHTML = ''; 
 
                 if (players.length === 0) {
-                    rankingList.innerHTML = '<li>Nenhum jogador no ranking ainda.</li>';
+                    rankingList.innerHTML = '<li>Nenhum jogador no ranking.</li>';
                     return;
                 }
 
@@ -648,7 +664,17 @@
 
             } catch (error) {
                 console.error('Erro ao buscar o ranking:', error);
-                rankingList.innerHTML = '<li>Não foi possível carregar o ranking.</li>';
+                rankingList.innerHTML = '<li>Erro ao carregar o ranking.</li>';
+            }
+        }
+
+        function handleRankingClick() {
+            const isHidden = rankingBody.style.display === 'none';
+            if (isHidden) {
+                rankingBody.style.display = 'block';
+                fetchGlobalRanking(); // Busca os dados apenas quando o ranking é aberto
+            } else {
+                rankingBody.style.display = 'none';
             }
         }
         
@@ -657,14 +683,13 @@
             const messages = await apiRequest('/api/chat/messages');
             if (!messages) return;
 
-            chatMessagesArea.innerHTML = ''; // Limpa as mensagens antigas
+            chatMessagesArea.innerHTML = ''; 
             messages.forEach(msg => {
                 const messageDiv = document.createElement('div');
                 messageDiv.className = 'chat-message';
                 messageDiv.innerHTML = `<span class="username">${msg.username}:</span><span class="message-text">${msg.message}</span>`;
                 chatMessagesArea.appendChild(messageDiv);
             });
-            // Rola para a mensagem mais recente
             chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight;
         }
 
@@ -675,58 +700,46 @@
             const result = await apiRequest('/api/chat/send', 'POST', { message });
             if (result) {
                 chatInput.value = '';
-                fetchMessages(); // Atualiza imediatamente após enviar
+                fetchMessages(); 
             }
         }
 
         function openChat() {
             chatModal.style.display = 'flex';
             fetchMessages();
-            // Inicia a atualização automática a cada 15 segundos
             if (chatUpdateInterval) clearInterval(chatUpdateInterval);
-            chatUpdateInterval = setInterval(fetchMessages, 15000); // NOSSA ESTRATÉGIA DE ECONOMIA
+            chatUpdateInterval = setInterval(fetchMessages, 15000);
         }
 
         function closeChat() {
             chatModal.style.display = 'none';
-            // Para a atualização automática quando o chat está fechado
             if (chatUpdateInterval) clearInterval(chatUpdateInterval);
         }
 
         // --- FUNÇÕES DE AUTENTICAÇÃO ---
         const handleLogin = async () => {
-            console.log("Função handleLogin iniciada.");
             const username = document.getElementById('login-username').value;
             const password = document.getElementById('login-password').value;
             if (!username || !password) {
                 return showAuthMessage('Preencha todos os campos.');
             }
-            console.log("Enviando dados de login para o servidor:", { username });
             const data = await apiRequest('/api/auth/login', 'POST', { username, password });
             if (data && data.token) { 
-                console.log("Login bem-sucedido, recebido token.");
                 localStorage.setItem('token', data.token); 
                 await initializeGame(); 
-            } else {
-                console.log("Falha no login, dados recebidos:", data);
             }
         };
 
         const handleRegister = async () => {
-            console.log("Função handleRegister iniciada.");
             const username = document.getElementById('register-username').value;
             const password = document.getElementById('register-password').value;
             if (!username || !password) {
                 return showAuthMessage('Preencha todos os campos.');
             }
-            console.log("Enviando dados de registro para o servidor:", { username });
             const data = await apiRequest('/api/auth/register', 'POST', { username, password });
             if (data) {
-                console.log("Registro bem-sucedido, resposta:", data);
                 showAuthMessage(data.message, 'lime'); 
                 toggleForms(); 
-            } else {
-                console.log("Falha no registro, dados recebidos:", data);
             }
         };
         
@@ -741,7 +754,7 @@
             gameState = null; 
             if (gameLoopInterval) clearInterval(gameLoopInterval); 
             if (terminalLoopInterval) clearInterval(terminalLoopInterval);
-            if(chatUpdateInterval) clearInterval(chatUpdateInterval); // Garante que o chat pare ao deslogar
+            if(chatUpdateInterval) clearInterval(chatUpdateInterval); 
         };
         const showAuthMessage = (msg, color = 'var(--red-alert)') => { authMessage.textContent = msg; authMessage.style.color = color; };
         
@@ -770,10 +783,6 @@
                 userAvatar.textContent = 'L';
                 updateUI(); 
                 startLoops();
-                
-                // --- INICIA A ATUALIZAÇÃO DO RANKING ---
-                fetchGlobalRanking(); // Busca o ranking na primeira vez que entra
-                setInterval(fetchGlobalRanking, 60000); // Atualiza a cada 60 segundos
             } else { handleLogout(); }
         };
         const saveGame = async () => {
@@ -1197,11 +1206,12 @@
             autoSaveInterval = setInterval(() => { if(gameState) { saveGame(); } }, 30000);
         }
 
+        // --- INICIALIZAÇÃO E EVENT LISTENERS ---
         loginBtn.addEventListener('click', handleLogin);
         registerBtn.addEventListener('click', handleRegister);
         showRegisterLink.addEventListener('click', toggleForms);
         showLoginLink.addEventListener('click', toggleForms);
-        logoutBtn.addEventListener('click', handleLogout);
+        logoutBtn.addEventListener('click', handleLogout); // << CORREÇÃO ESTAVA AQUI
         openShopBtn.addEventListener('click', openShop);
         closeShopBtn.addEventListener('click', closeShop);
         openInventoryBtn.addEventListener('click', openInventory);
@@ -1210,7 +1220,7 @@
         shopCategoryBtns.forEach(btn => btn.addEventListener('click', () => { shopCategoryBtns.forEach(b => b.classList.remove('active')); btn.classList.add('active'); renderShop(btn.dataset.category); }));
         inventoryCategoryBtns.forEach(btn => btn.addEventListener('click', () => { inventoryCategoryBtns.forEach(b => b.classList.remove('active')); btn.classList.add('active'); renderInventory(btn.dataset.category); }));
         
-        // --- EVENT LISTENERS DO CHAT ---
+        // Listeners do Chat e Ranking
         openChatBtn.addEventListener('click', openChat);
         closeChatBtn.addEventListener('click', closeChat);
         chatSendBtn.addEventListener('click', postMessage);
@@ -1219,11 +1229,15 @@
                 postMessage();
             }
         });
+        rankingHeader.addEventListener('click', handleRankingClick);
 
         window.addEventListener('beforeunload', () => { if (gameState) { saveGame(); } });
 
-        if (localStorage.getItem('token')) { initializeGame(); } 
-        else { authContainer.style.display = 'flex'; }
+        if (localStorage.getItem('token')) {
+            initializeGame();
+        } else {
+            authContainer.style.display = 'flex';
+        }
     });
     </script>
 </body>
