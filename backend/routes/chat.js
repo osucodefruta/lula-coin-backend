@@ -1,47 +1,62 @@
-// backend/routes/chat.js
+// backend/routes/chat.js (ATUALIZADO E SEGURO)
 
 const express = require('express');
 const router = express.Router();
 const ChatMessage = require('../models/ChatMessage');
 const authMiddleware = require('../middleware/auth');
-// const User = require('../models/User'); // << NÃO PRECISAMOS MAIS DESTA LINHA
+const { body, validationResult } = require('express-validator'); // << ADICIONADO
 
 // @route   POST /api/chat/send
-// @desc    Envia uma nova mensagem para o chat
-router.post('/send', authMiddleware, async (req, res) => {
-    try {
-        const { message } = req.body;
-        if (!message || message.trim() === '') {
-            return res.status(400).json({ msg: 'A mensagem não pode estar vazia.' });
+// @desc    Envia uma nova mensagem para o chat (AGORA COM VALIDAÇÃO E SANITIZAÇÃO)
+router.post('/send', 
+    authMiddleware, 
+    // --- Início das Regras de Segurança ---
+    body('message')
+        .notEmpty().withMessage('A mensagem não pode estar vazia.')
+        .isLength({ max: 200 }).withMessage('A mensagem não pode ter mais de 200 caracteres.')
+        .trim()      // Remove espaços em branco no início e no fim
+        .escape(),   // << CONVERTE CARACTERES HTML (<, >) EM TEXTO SEGURO
+    // --- Fim das Regras de Segurança ---
+    async (req, res) => {
+        // Verifica se as regras de validação encontraram algum erro
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
         }
 
-        // CORREÇÃO: Pegamos o username diretamente do token decodificado pelo middleware,
-        // o que é mais rápido e evita o erro.
-        const username = req.user.username;
-        if (!username) {
-            return res.status(401).json({ msg: 'Token inválido ou não contém nome de usuário.' });
+        try {
+            // A mensagem já foi limpa e validada. Podemos usá-la com segurança.
+            const { message } = req.body;
+            const username = req.user.username;
+            
+            if (!username) {
+                // Esta verificação é uma segurança extra, mas o authMiddleware já deve garantir isso.
+                return res.status(401).json({ msg: 'Token inválido ou não contém nome de usuário.' });
+            }
+
+            const newMessage = new ChatMessage({
+                username: username,
+                message: message // A mensagem já está sanitizada
+            });
+
+            await newMessage.save();
+            // A resposta é um pouco diferente para se alinhar com a forma como o frontend vai consumir
+            res.status(201).json(newMessage);
+
+        } catch (err) {
+            console.error("Erro em /api/chat/send:", err.message);
+            res.status(500).json({ msg: 'Erro no Servidor' });
         }
-
-        const newMessage = new ChatMessage({
-            username: username,
-            message: message.substring(0, 150) // Limita o tamanho da mensagem
-        });
-
-        await newMessage.save();
-        res.status(201).json({ msg: 'Mensagem enviada.' });
-
-    } catch (err) {
-        console.error("Erro em /api/chat/send:", err.message);
-        res.status(500).json({ msg: 'Erro no Servidor' });
     }
-});
+);
 
 // @route   GET /api/chat/messages
 // @desc    Busca as últimas mensagens do chat
 router.get('/messages', authMiddleware, async (req, res) => {
     try {
-        const messages = await ChatMessage.find().sort({ $natural: 1 });
-        res.json(messages);
+        // A ordenação foi alterada para buscar as 50 mais recentes
+        const messages = await ChatMessage.find().sort({ timestamp: -1 }).limit(50);
+        res.json(messages.reverse()); // Inverte para exibir na ordem correta (antiga para nova)
     } catch (err) {
         console.error("Erro em /api/chat/messages:", err.message);
         res.status(500).json({ msg: 'Erro no Servidor' });

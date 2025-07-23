@@ -7,7 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
-        /* Variáveis CSS para fácil tematização */
+        /* Todos os seus estilos permanecem os mesmos */
         :root {
             --primary-color: #ff3b3b; /* Vermelho Neon */
             --secondary-color: #2e008a; /* Azul Escuro */
@@ -372,8 +372,10 @@
             padding: 8px 12px;
             border-radius: 5px;
             max-width: 90%;
+            word-break: break-word; /* Garante que mensagens longas quebrem a linha */
         }
-        .chat-message .username {
+        /* O estilo do .username foi movido para o JS, mas podemos manter um base aqui */
+        .chat-username {
             font-weight: bold;
             color: var(--primary-color);
             margin-right: 8px;
@@ -405,7 +407,6 @@
     </style>
 </head>
 <body>
-
     <div id="auth-container">
         <div id="falling-coins-container">
             <div class="coin-fall">L</div><div class="coin-fall">L</div><div class="coin-fall">L</div>
@@ -535,7 +536,7 @@
                 <div class="chat-messages-area" id="chat-messages-area">
                     </div>
                 <div class="chat-input-area">
-                    <input type="text" id="chat-input" placeholder="Digite sua mensagem..." maxlength="150">
+                    <input type="text" id="chat-input" placeholder="Digite sua mensagem..." maxlength="200">
                     <button id="chat-send-btn">Enviar</button>
                 </div>
             </div>
@@ -625,17 +626,31 @@
                 const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
                 if (response.status === 401) { handleLogout(); showAuthMessage('Sessão inválida. Faça login novamente.'); return null; }
                 if (response.status === 204 || response.headers.get("content-length") === "0") { return { success: true, message: "Operação bem-sucedida." }; }
+                
+                // --- TRATAMENTO DE ERRO DE VALIDAÇÃO ---
+                // Verifica se a resposta é um erro de validação do express-validator
+                if (response.status === 400 || response.status === 429) {
+                    const errorData = await response.json();
+                    // Para rate-limit, a mensagem vem direto. Para validação, vem em um array 'errors'.
+                    const errorMessage = errorData.message || (errorData.errors && errorData.errors[0].msg) || 'Erro de validação.';
+                    displayTerminalMessage(errorMessage, 'red'); // Exibe a mensagem de erro específica
+                    throw new Error(errorMessage);
+                }
+
                 const data = await response.json();
                 if (!response.ok) { throw new Error(data.message || 'Ocorreu um erro.'); }
                 return data;
             } catch (error) {
-                const messageArea = appContainer.style.display === 'flex' ? terminalTextElement : authMessage;
-                if (error instanceof SyntaxError) {
-                    messageArea.textContent = `Erro: Resposta inesperada do servidor.`;
-                } else {
-                    messageArea.textContent = `Erro: ${error.message}`;
+                // Evita exibir o mesmo erro duas vezes
+                if (! (error.message.includes('mensagens muito rápido') || error.message.includes('A mensagem'))) {
+                    const messageArea = appContainer.style.display === 'flex' ? terminalTextElement : authMessage;
+                    if (error instanceof SyntaxError) {
+                        messageArea.textContent = `Erro: Resposta inesperada do servidor.`;
+                    } else {
+                        messageArea.textContent = `Erro: ${error.message}`;
+                    }
+                    messageArea.style.color = 'var(--red-alert)'; 
                 }
-                messageArea.style.color = 'var(--red-alert)'; 
                 return null;
             }
         };
@@ -645,8 +660,12 @@
             const rankingList = document.getElementById('ranking-list');
             rankingList.innerHTML = '<li>Carregando...</li>';
             try {
-                const response = await fetch(`${API_BASE_URL}/api/ranking/top5/balance`);
-                const players = await response.json();
+                // Usa a função apiRequest para padronizar as chamadas
+                const players = await apiRequest('/api/ranking/top5/balance');
+                if (!players) {
+                    rankingList.innerHTML = '<li>Erro ao carregar o ranking.</li>';
+                    return;
+                }
 
                 rankingList.innerHTML = ''; 
 
@@ -672,35 +691,65 @@
             const isHidden = rankingBody.style.display === 'none';
             if (isHidden) {
                 rankingBody.style.display = 'block';
-                fetchGlobalRanking(); // Busca os dados apenas quando o ranking é aberto
+                fetchGlobalRanking(); 
             } else {
                 rankingBody.style.display = 'none';
             }
         }
         
-        // --- LÓGICA DO CHAT ---
+        // --- LÓGICA DO CHAT (ATUALIZADA E SEGURA) ---
         async function fetchMessages() {
             const messages = await apiRequest('/api/chat/messages');
             if (!messages) return;
 
-            chatMessagesArea.innerHTML = ''; 
-            messages.forEach(msg => {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = 'chat-message';
-                messageDiv.innerHTML = `<span class="username">${msg.username}:</span><span class="message-text">${msg.message}</span>`;
-                chatMessagesArea.appendChild(messageDiv);
-            });
-            chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight;
+            chatMessagesArea.innerHTML = ''; // Limpa antes de adicionar as novas mensagens
+
+            messages.forEach(msg => displaySecureMessage(msg)); // Usa a nova função segura
+            
+            // Auto-scroll apenas se o usuário não estiver rolando para cima
+            const isScrolledToBottom = chatMessagesArea.scrollHeight - chatMessagesArea.clientHeight <= chatMessagesArea.scrollTop + 1;
+            if(isScrolledToBottom) {
+                chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight;
+            }
         }
+
+        // NOVA FUNÇÃO PARA EXIBIR MENSAGENS DE FORMA SEGURA
+        function displaySecureMessage(msg) {
+            // 1. Cria o elemento container da mensagem
+            const messageElement = document.createElement('div');
+            messageElement.className = 'chat-message';
+
+            // 2. Cria o elemento do nome de usuário e usa .textContent
+            const usernameElement = document.createElement('span');
+            usernameElement.className = 'chat-username';
+            usernameElement.textContent = `${msg.username}: `; // Garante que o nome é SÓ TEXTO
+
+            // 3. Cria o elemento da mensagem e usa .textContent
+            const textElement = document.createElement('span');
+            textElement.className = 'chat-message-text';
+            textElement.textContent = msg.message; // Garante que a mensagem é SÓ TEXTO
+
+            // 4. Monta o elemento da mensagem de forma segura
+            messageElement.appendChild(usernameElement);
+            messageElement.appendChild(textElement);
+            chatMessagesArea.appendChild(messageElement);
+        }
+
 
         async function postMessage() {
             const message = chatInput.value;
+            // A validação de 'vazio' agora é feita principalmente no backend, mas mantemos aqui para feedback rápido
             if (!message || message.trim() === '') return;
 
+            // Desabilita o botão para evitar envios duplos
+            chatSendBtn.disabled = true;
             const result = await apiRequest('/api/chat/send', 'POST', { message });
+            chatSendBtn.disabled = false; // Reabilita o botão
+
             if (result) {
                 chatInput.value = '';
-                fetchMessages(); 
+                displaySecureMessage(result); // Adiciona a mensagem enviada imediatamente
+                chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight; // Rola para o final
             }
         }
 
@@ -708,7 +757,7 @@
             chatModal.style.display = 'flex';
             fetchMessages();
             if (chatUpdateInterval) clearInterval(chatUpdateInterval);
-            chatUpdateInterval = setInterval(fetchMessages, 15000);
+            chatUpdateInterval = setInterval(fetchMessages, 5000); // Intervalo um pouco mais rápido
         }
 
         function closeChat() {
@@ -1211,7 +1260,7 @@
         registerBtn.addEventListener('click', handleRegister);
         showRegisterLink.addEventListener('click', toggleForms);
         showLoginLink.addEventListener('click', toggleForms);
-        logoutBtn.addEventListener('click', handleLogout); // << CORREÇÃO ESTAVA AQUI
+        logoutBtn.addEventListener('click', handleLogout); 
         openShopBtn.addEventListener('click', openShop);
         closeShopBtn.addEventListener('click', closeShop);
         openInventoryBtn.addEventListener('click', openInventory);
