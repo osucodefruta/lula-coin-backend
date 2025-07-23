@@ -57,16 +57,20 @@ router.post('/login', async (req, res) => {
             return res.status(400).json({ message: 'Credenciais inválidas.' });
         }
 
-        // Cria o payload para o token JWT
+        // --- CORREÇÃO AQUI ---
+        // Cria o payload para o token JWT, agora incluindo também o username.
         const payload = {
-            id: user.id
+            user: {
+                id: user.id,
+                username: user.username // Adicionamos o nome de usuário ao token
+            }
         };
 
         // Gera e assina o token JWT
         jwt.sign(
             payload,
             process.env.JWT_SECRET,
-            { expiresIn: '24h' }, // Token expira em 24 horas
+            { expiresIn: '24h' }, // Token expira em 24 horas (está ótimo)
             (err, token) => {
                 if (err) throw err;
                 // Retorna o token para o cliente
@@ -81,4 +85,3 @@ router.post('/login', async (req, res) => {
 });
 
 module.exports = router;
-
