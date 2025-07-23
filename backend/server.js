@@ -1,4 +1,4 @@
-// backend/server.js (ATUALIZADO E SEGURO)
+// backend/server.js (VERSÃO FINAL CORRIGIDA)
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
@@ -11,37 +11,38 @@ const chatRoutes = require('./routes/chat');
 
 const app = express();
 
+// --- CORREÇÃO PRINCIPAL ---
+// Esta linha é essencial para o funcionamento em plataformas como a Render.
+// Ela faz o Express confiar no cabeçalho X-Forwarded-For enviado pelo proxy
+// e corrige o erro que estava quebrando o limitador de frequência do chat.
+app.set('trust proxy', 1);
+
 // Middleware para permitir requisições de outras origens (CORS)
 app.use(cors());
 
 // Middleware para interpretar o corpo das requisições como JSON
 app.use(express.json());
 
-// --- Limitador de Tentativas para Autenticação (EXISTENTE) ---
+// --- Limitador de Tentativas para Autenticação ---
 const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // Janela de 15 minutos
-    max: 10, // Permite no máximo 10 requisições por IP nesta janela
+    windowMs: 15 * 60 * 1000,
+    max: 10,
     message: 'Muitas tentativas de login a partir deste IP, por favor, tente novamente em 15 minutos.',
     standardHeaders: true,
     legacyHeaders: false,
 });
-
-// Aplica o limitador de autenticação APENAS às rotas /api/auth
 app.use('/api/auth', authLimiter);
 
 
-// --- NOVO LIMITADOR PARA O CHAT (ADICIONADO) ---
+// --- Limitador para o Chat ---
 const chatLimiter = rateLimit({
-    windowMs: 60 * 1000, // Janela de 1 minuto
-    max: 20, // Permite no máximo 20 mensagens por minuto por IP
+    windowMs: 60 * 1000,
+    max: 20,
     message: 'Você está enviando mensagens muito rápido!',
     standardHeaders: true,
     legacyHeaders: false,
 });
-
-// Aplica o limitador de chat APENAS às rotas /api/chat
 app.use('/api/chat', chatLimiter);
-// --- FIM DO NOVO LIMITADOR ---
 
 
 // Conexão com o MongoDB
@@ -53,7 +54,7 @@ mongoose.connect(process.env.MONGO_URI)
 app.use('/api/auth', authRoutes);
 app.use('/api/game', gameRoutes);
 app.use('/api/ranking', rankingRoutes);
-app.use('/api/chat', chatRoutes); // As rotas do chat já estão aqui
+app.use('/api/chat', chatRoutes);
 
 // --- Rota de Health Check ---
 app.get('/api/health', (req, res) => {

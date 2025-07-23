@@ -19,7 +19,6 @@
             --red-alert: #ff4500;
             --border-color: rgba(255, 59, 59, 0.3);
             --glow-color: rgba(255, 59, 59, 0.6);
-            /* Cores da Parede e Chão */
             --brick-color-1: #2c1d1d;
             --brick-color-2: #3a2a2a;
             --brick-mortar: #1a1a1a;
@@ -29,7 +28,6 @@
             --rack-side-color: #222;
             --rack-top-color: #444;
             --monitor-screen: #0f1c2c;
-            /* Cores de Energia */
             --energy-full: #00ff7f;
             --energy-low: #ffa500;
             --energy-empty: #ff3b3b;
@@ -37,8 +35,6 @@
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Share Tech Mono', monospace; }
         body { background-color: #0a0a0a; color: var(--text-color); overflow: hidden; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-
-        /* --- Tela de Autenticação --- */
         #auth-container { display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; height: 100%; background: var(--tertiary-color); z-index: 200; position: absolute; top: 0; left: 0; overflow: hidden; }
         .auth-box { background-color: rgba(26, 26, 26, 0.8); backdrop-filter: blur(5px); padding: 40px; border-radius: 10px; border: 1px solid var(--border-color); width: 90%; max-width: 400px; text-align: center; z-index: 2; animation: pulse 2.5s infinite; }
         .auth-box h2 { font-family: 'Orbitron', sans-serif; color: var(--primary-color); margin-bottom: 20px; text-shadow: 0 0 8px var(--primary-color); }
@@ -50,7 +46,6 @@
         .auth-toggle a:hover { text-decoration: underline; }
         #register-form { display: none; }
         #auth-message { margin-top: 15px; color: var(--red-alert); font-weight: bold; min-height: 20px; }
-        
         #falling-coins-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
         .coin-fall { position: absolute; top: -10%; background-color: #ffd700; color: #b8860b; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-family: 'Orbitron', sans-serif; animation: fall linear infinite; }
         @keyframes fall { to { transform: translateY(110vh) rotate(360deg); } }
@@ -64,13 +59,9 @@
         .coin-fall:nth-child(8) { width: 28px; height: 28px; left: 80%; animation-duration: 6.5s; animation-delay: 2.5s; font-size: 1.2em; }
         .coin-fall:nth-child(9) { width: 38px; height: 38px; left: 90%; animation-duration: 7.5s; animation-delay: 5s; font-size: 1.5em; }
         .coin-fall:nth-child(10){ width: 22px; height: 22px; left: 5%; animation-duration: 8.5s; animation-delay: 3.5s; font-size: 1.1em; }
-
-
         #app { display: none; flex-direction: column; width: 100vw; height: 100vh; max-width: 1920px; max-height: 1080px; border: 2px solid var(--border-color); box-shadow: 0 0 20px var(--glow-color); background-color: var(--dark-gray); position: relative; overflow: hidden; }
-        
         .placing-item .rack-placement-slot.available,
         .placing-item .slot.empty { border-color: var(--primary-color); background-color: rgba(255, 59, 59, 0.2); animation: pulse 1.5s infinite; }
-
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes pulse { 0%, 100% { box-shadow: 0 0 15px var(--glow-color), 0 0 5px var(--glow-color); } 50% { box-shadow: 0 0 30px var(--glow-color), 0 0 10px var(--glow-color); } }
         @keyframes place-item-anim { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -78,8 +69,6 @@
         .item-placed { animation: place-item-anim 0.3s ease-out; }
         .item-removed { animation: remove-item-anim 0.3s ease-out; }
         @keyframes blink-red { 0%, 48%, 100% { background-color: #4d0000; box-shadow: none; } 50% { background-color: #ff0000; box-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000; } }
-        
-
         header { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background-color: var(--tertiary-color); border-bottom: 1px solid var(--border-color); z-index: 10; position: relative; }
         .user-profile { display: flex; align-items: center; justify-content: flex-end; flex-grow: 1; }
         .user-avatar { width: 40px; height: 40px; background-color: var(--primary-color); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.8em; font-weight: bold; margin-right: 15px; box-shadow: 0 0 10px var(--primary-color); }
@@ -88,9 +77,7 @@
         .stat-label { font-size: 0.8em; color: var(--light-gray); margin-bottom: 3px; }
         .stat-value { font-size: 1.1em; color: var(--text-color); font-weight: bold; display: flex; align-items: center; }
         .stat-value .icon { margin-right: 8px; font-size: 1.2em; color: var(--text-color); width: 24px; height: 24px; background-color: var(--primary-color); border-radius: 50%; display: inline-flex; justify-content: center; align-items: center; flex-shrink: 0; }
-
         .main-content { flex-grow: 1; display: flex; position: relative; overflow: hidden; }
-
         .mining-room {
             flex-grow: 1; display: flex; justify-content: center; align-items: flex-end;
             position: relative; overflow: hidden;
@@ -121,8 +108,6 @@
             border-top: 5px solid var(--floor-gap); 
             z-index: 0;
         }
-
-        /* --- ESTILO DO QUADRO DE RANKING --- */
         #global-ranking-board {
             position: absolute;
             top: 10%;
@@ -137,43 +122,13 @@
             font-family: 'Share Tech Mono', monospace;
             transition: all 0.3s ease;
         }
-        #ranking-header {
-            padding: 10px 15px;
-            cursor: pointer;
-        }
-        #ranking-header h2 {
-            font-size: 1.1em;
-            text-align: center;
-            color: var(--primary-color);
-            margin: 0;
-        }
-        #ranking-body {
-            padding: 0 15px 15px 15px;
-            border-top: 1px solid rgba(255, 59, 59, 0.4);
-            margin-top: 10px;
-        }
-        #global-ranking-board ol {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        #global-ranking-board li {
-            display: flex;
-            justify-content: space-between;
-            padding: 4px 0;
-            font-size: 0.9em;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        #global-ranking-board li:last-child {
-            border-bottom: none;
-        }
-        #global-ranking-board li span:first-child {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 110px;
-        }
-
+        #ranking-header { padding: 10px 15px; cursor: pointer; }
+        #ranking-header h2 { font-size: 1.1em; text-align: center; color: var(--primary-color); margin: 0; }
+        #ranking-body { padding: 0 15px 15px 15px; border-top: 1px solid rgba(255, 59, 59, 0.4); margin-top: 10px; }
+        #global-ranking-board ol { list-style: none; padding: 0; margin: 0; }
+        #global-ranking-board li { display: flex; justify-content: space-between; padding: 4px 0; font-size: 0.9em; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+        #global-ranking-board li:last-child { border-bottom: none; }
+        #global-ranking-board li span:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 110px; }
         #rack-placement-area { position: absolute; bottom: 30px; width: calc(100% - 350px); left: 280px; height: calc(80% - 60px); display: flex; justify-content: space-around; align-items: flex-end; padding-bottom: 80px; z-index: 1; }
         .rack-placement-slot { width: 220px; height: 100%; border: 2px dashed rgba(255, 59, 59, 0.4); border-radius: 8px; display: flex; justify-content: center; align-items: flex-end; padding: 10px; position: relative; transition: border-color 0.3s ease, background-color 0.3s ease; cursor: pointer; z-index: 2; }
         .rack-placement-slot.occupied { border: none; background-color: transparent; cursor: default; }
@@ -182,7 +137,6 @@
         .rack-placement-slot.available:hover::after { opacity: 1; }
         .placing-item .rack-placement-slot.available::after { content: 'CLIQUE PARA COLOCAR'; opacity: 1; color: var(--primary-color); }
         .placing-item .slot.empty::after { content: 'CLIQUE'; position: absolute; font-size: 0.8em; color: var(--primary-color); opacity: 1;}
-
         .rack-2-5d { width: 200px; position: relative; transform-style: preserve-3d; z-index: 1; }
         .rack-front { width: 100%; height: 100%; background-color: var(--medium-gray); border: 2px solid var(--border-color); border-radius: 8px; padding: 15px; padding-bottom: 25px; display: flex; flex-direction: column; gap: 10px; position: relative; transform: translateZ(10px); }
         .rack-side, .rack-top { position: absolute; background-color: var(--rack-side-color); border-radius: 2px; }
@@ -195,7 +149,6 @@
         .slot { width: 100%; height: 60px; background-color: var(--dark-gray); border: 1px dashed var(--border-color); border-radius: 5px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: all 0.3s ease; position: relative; overflow: hidden; }
         .slot.empty:not(.placing-item .slot.empty):hover { border-color: var(--primary-color); background-color: rgba(255, 59, 59, 0.1); }
         .slot.occupied:hover { background-color: rgba(255, 59, 59, 0.2); }
-
         .miner-gpu { width: 95%; height: 95%; display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 5px; position: relative; cursor: pointer; }
         .gpu-shroud { width: 100%; height: 100%; background-color: #222; border: 2px solid; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.5), inset 0 0 8px rgba(0,0,0,0.7); padding: 4px; display: flex; flex-direction: column; justify-content: space-between; }
         .gpu-pcb { width: 100%; height: 4px; background-color: #004d40; }
@@ -208,7 +161,6 @@
         .gpu-leds-container { display: flex; justify-content: flex-end; gap: 5px; }
         .gpu-led { width: 6px; height: 6px; border-radius: 50%; animation: pulse 1.5s ease-in-out infinite; }
         .no-energy .gpu-led { animation: none; background-color: #333; }
-
         .computer-setup { position: absolute; left: 20px; bottom: 30px; width: 250px; height: 250px; z-index: 2; }
         .desk { width: 180px; height: 10px; background-color: #4e342e; position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%) perspective(150px) rotateX(15deg); border-radius: 2px; box-shadow: 0 15px 10px rgba(0,0,0,0.4); }
         .desk::before, .desk::after { content: ''; position: absolute; bottom: -60px; width: 10px; height: 60px; background-color: #3e2723; }
@@ -222,11 +174,9 @@
         .cpu-box { width: 50px; height: 100px; background-color: #333; position: absolute; bottom: 0; left: 0; border-radius: 5px; box-shadow: 5px 5px 15px rgba(0,0,0,0.5); }
         .cpu-box::before { content: ''; position: absolute; top: 0; right: -10px; width: 10px; height: 100%; background-color: #222; border-radius: 0 5px 5px 0; transform: skewY(-10deg); }
         .cpu-led-light { width: 8px; height: 8px; border-radius: 50%; position: absolute; bottom: 10px; left: 15px; animation: blink-red 2s linear infinite; }
-
         .stats-bar { display: flex; justify-content: center; align-items: center; gap: 15px; padding: 10px 20px; background-color: var(--tertiary-color); border-top: 1px solid var(--border-color); z-index: 10; }
         .stats-bar .action-btn { background-color: var(--primary-color); color: var(--dark-gray); border: none; border-radius: 5px; padding: 10px 15px; font-size: 0.9em; cursor: pointer; font-weight: bold; text-transform: uppercase; box-shadow: 0 0 10px var(--primary-color); transition: all 0.3s ease; }
         .stats-bar .action-btn:hover { filter: brightness(1.2); transform: scale(1.05); }
-        
         #energy-btn {
             background-color: var(--medium-gray);
             border: 1px solid var(--energy-full);
@@ -246,18 +196,13 @@
         #energy-text { position: relative; z-index: 1; font-weight: bold; }
         #energy-btn.rechargeable { cursor: pointer; animation: pulse 1.5s infinite; }
         #energy-btn:disabled { cursor: not-allowed; filter: grayscale(0.7); }
-        
         .energy-label, .energy-icon, .energy-value {
             color: var(--energy-full);
             text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
         }
-
-
         .room-btn { padding: 5px 10px; background-color: var(--medium-gray); border: none; border-radius: 5px; color: var(--text-color); font-weight: bold; cursor: pointer; transition: all 0.2s ease; }
         .room-btn.active { background-color: #fff; color: var(--primary-color); box-shadow: 0 0 8px #fff; }
         #add-room { background-color: var(--primary-color); color: var(--dark-gray); padding: 7px 15px; font-size: 1.1em; box-shadow: 0 0 10px var(--primary-color); }
-        
-        /* Otimização de CSS: Agrupando seletores de modais */
         .shop-modal, .inventory-modal, .chat-modal { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
             background-color: rgba(0, 0, 0, 0.8); 
@@ -297,13 +242,10 @@
         .close-shop-btn:hover, .close-inventory-btn:hover, .close-chat-btn:hover { 
             color: var(--red-alert); 
         }
-
-        /* Estilos específicos de cada modal */
         .shop-content, .inventory-content { padding: 30px; }
         .chat-content { padding: 20px; height: 70%; max-height: 500px; width: 90%; max-width: 600px; }
         .shop-header, .inventory-header { padding-bottom: 15px; }
         .chat-header { padding-bottom: 10px; }
-        
         .shop-categories, .inventory-categories { display: flex; gap: 15px; margin-bottom: 20px; }
         .shop-category-btn, .inventory-category-btn { background-color: var(--medium-gray); color: var(--text-color); border: 1px solid var(--border-color); padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: all 0.2s ease; }
         .shop-category-btn.active, .shop-category-btn:hover, .inventory-category-btn.active, .inventory-category-btn:hover { background-color: var(--primary-color); color: var(--dark-gray); box-shadow: 0 0 10px var(--primary-color); }
@@ -321,7 +263,6 @@
         .item-name { font-size: 1.1em; font-weight: bold; color: var(--text-color); }
         .item-stats { font-size: 0.9em; color: var(--light-gray); }
         .item-price { font-size: 1.2em; color: limegreen; font-weight: bold; margin-top: auto; }
-
         .buy-btn {
             background-color: var(--primary-color); color: var(--dark-gray);
             padding: 12px 20px; width: 100%; border-radius: 5px;
@@ -333,7 +274,6 @@
             box-shadow: 0 0 15px #28a745;
             filter: brightness(1.1);
         }
-        
         .item-sell-price { font-size: 1.0em; color: var(--energy-low); font-weight: bold; margin-bottom: 5px; }
         .item-actions { display: flex; gap: 5px; width: 100%; margin-top: auto; }
         .use-item-btn, .sell-item-btn { 
@@ -349,7 +289,6 @@
         .use-item-btn:hover, .sell-item-btn:hover { 
             filter: brightness(1.2); transform: scale(1.02); 
         }
-
         .buy-btn:disabled, .use-item-btn[disabled], .sell-item-btn[disabled] { 
             background-color: var(--medium-gray); 
             color: var(--light-gray); 
@@ -358,8 +297,6 @@
             transform: none;
             cursor: default;
         }
-
-        /* Estilos do Chat Modal */
         .chat-messages-area {
             flex-grow: 1;
             overflow-y: auto;
@@ -372,9 +309,8 @@
             padding: 8px 12px;
             border-radius: 5px;
             max-width: 90%;
-            word-break: break-word; /* Garante que mensagens longas quebrem a linha */
+            word-break: break-word;
         }
-        /* O estilo do .username foi movido para o JS, mas podemos manter um base aqui */
         .chat-username {
             font-weight: bold;
             color: var(--primary-color);
@@ -402,8 +338,6 @@
             font-weight: bold;
             cursor: pointer;
         }
-
-
     </style>
 </head>
 <body>
@@ -615,13 +549,12 @@
         const rankingHeader = document.getElementById('ranking-header');
         const rankingBody = document.getElementById('ranking-body');
 
-        // --- FUNÇÕES DE API (COM CORREÇÃO) ---
+        // --- FUNÇÕES DE API (COM CORREÇÃO DE LOGOUT) ---
         const apiRequest = async (endpoint, method = 'GET', body = null) => {
             const token = localStorage.getItem('token');
-            // Se não houver token (e não for uma rota de autenticação), força o logout
             if (!token && !endpoint.startsWith('/api/auth')) { 
                 showAuthMessage('Sessão expirada. Faça login novamente.'); 
-                handleLogout(true); // << ALTERADO: Indica que é um logout forçado
+                handleLogout(true);
                 return null; 
             }
             const options = { method, headers: { 'Content-Type': 'application/json' } };
@@ -630,9 +563,8 @@
             try {
                 const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
                 
-                // << CORREÇÃO: Trata o erro 401 primeiro
                 if (response.status === 401) { 
-                    handleLogout(true); // << Indica que é um logout forçado
+                    handleLogout(true);
                     showAuthMessage('Sessão inválida. Faça login novamente.'); 
                     return null; 
                 }
@@ -746,7 +678,7 @@
             if (chatUpdateInterval) clearInterval(chatUpdateInterval);
         }
 
-        // --- FUNÇÕES DE AUTENTICAÇÃO (COM CORREÇÃO) ---
+        // --- FUNÇÕES DE AUTENTICAÇÃO (COM CORREÇÃO DE LOGOUT) ---
         const handleLogin = async () => {
             const username = document.getElementById('login-username').value;
             const password = document.getElementById('login-password').value;
@@ -775,7 +707,6 @@
         
         let autoSaveInterval = null;
         
-        // << CORREÇÃO: A função agora aceita um parâmetro para não salvar o jogo em logout forçado
         const handleLogout = (force = false) => {
             // Só tenta salvar o jogo se NÃO for um logout forçado
             if (gameState && !force) {
@@ -800,7 +731,7 @@
             authMessage.textContent = '';
         };
 
-        // --- FUNÇÕES DE GERENCIAMENTO DO JOGO (COM CORREÇÃO) ---
+        // --- FUNÇÕES DE GERENCIAMENTO DO JOGO ---
         const initializeGame = async () => {
             const data = await apiRequest('/api/game/state');
             if (data && data.gameState) {
@@ -819,7 +750,6 @@
                 updateUI(); 
                 startLoops();
             } else { 
-                // Se a inicialização falhar (provavelmente token inválido), força o logout
                 handleLogout(true); 
             }
         };
@@ -1249,7 +1179,7 @@
         registerBtn.addEventListener('click', handleRegister);
         showRegisterLink.addEventListener('click', toggleForms);
         showLoginLink.addEventListener('click', toggleForms);
-        logoutBtn.addEventListener('click', () => handleLogout(false)); // Logout normal pelo botão
+        logoutBtn.addEventListener('click', () => handleLogout(false));
         openShopBtn.addEventListener('click', openShop);
         closeShopBtn.addEventListener('click', closeShop);
         openInventoryBtn.addEventListener('click', openInventory);
@@ -1258,7 +1188,6 @@
         shopCategoryBtns.forEach(btn => btn.addEventListener('click', () => { shopCategoryBtns.forEach(b => b.classList.remove('active')); btn.classList.add('active'); renderShop(btn.dataset.category); }));
         inventoryCategoryBtns.forEach(btn => btn.addEventListener('click', () => { inventoryCategoryBtns.forEach(b => b.classList.remove('active')); btn.classList.add('active'); renderInventory(btn.dataset.category); }));
         
-        // Listeners do Chat e Ranking
         openChatBtn.addEventListener('click', openChat);
         closeChatBtn.addEventListener('click', closeChat);
         chatSendBtn.addEventListener('click', postMessage);
