@@ -4,26 +4,26 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 module.exports = function(req, res, next) {
-    // Pega o token do cabeçalho da requisição
+    // Pega o token do cabeçalho da requisição (Ex: "Bearer TOKEN...")
     const authHeader = req.header('Authorization');
     const token = authHeader && authHeader.split(' ')[1];
 
-    // Verifica se não há token
+    // Se não houver token, nega o acesso
     if (!token) {
         return res.status(401).json({ msg: 'Não há token, autorização negada.' });
     }
 
-    // Verifica o token
+    // Se houver token, verifica se é válido
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        // CORREÇÃO: Em vez de procurar por 'decoded.user',
-        // nós agora pegamos todo o conteúdo decodificado do token.
-        // Isso é mais robusto e compatível com a forma como seu token é criado.
+        // Esta linha é a mais importante: ela pega as informações do token
+        // e as anexa ao pedido (req) para que as próximas rotas saibam quem é o usuário.
         req.user = decoded.user || decoded; 
 
-        next();
+        next(); // Permite que a requisição continue para a rota do jogo/chat
     } catch (err) {
+        // Se o token for inválido ou expirado, nega o acesso
         res.status(401).json({ msg: 'Token não é válido.' });
     }
 };
