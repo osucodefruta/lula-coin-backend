@@ -5,7 +5,8 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const authRoutes = require('./routes/auth');
 const gameRoutes = require('./routes/game');
-const rankingRoutes = require('./routes/ranking'); // << 1. ADICIONADO: Importa a nova rota de ranking
+const rankingRoutes = require('./routes/ranking');
+const chatRoutes = require('./routes/chat'); // << 1. ADICIONADO: Importa a nova rota de chat
 
 const app = express();
 
@@ -23,7 +24,8 @@ mongoose.connect(process.env.MONGO_URI)
 // Definição das rotas da API
 app.use('/api/auth', authRoutes);
 app.use('/api/game', gameRoutes);
-app.use('/api/ranking', rankingRoutes); // << 2. ADICIONADO: Usa a nova rota de ranking
+app.use('/api/ranking', rankingRoutes);
+app.use('/api/chat', chatRoutes); // << 2. ADICIONADO: Usa a nova rota de chat
 
 // --- Rota de Health Check ---
 // Mantém o servidor ativo em plataformas de hospedagem gratuitas.

@@ -311,6 +311,73 @@
             cursor: default;
         }
 
+        /* Estilos do Chat Modal */
+        .chat-modal {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: none; /* Começa escondido */
+            justify-content: center; align-items: center;
+            z-index: 101; /* Fica por cima de outros modais se necessário */
+        }
+        .chat-content {
+            background-color: var(--dark-gray);
+            border: 2px solid var(--primary-color);
+            border-radius: 10px;
+            padding: 20px;
+            width: 90%; max-width: 600px;
+            height: 70%; max-height: 500px;
+            display: flex; flex-direction: column;
+            box-shadow: 0 0 25px var(--glow-color);
+        }
+        .chat-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 15px; border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+        .chat-title { font-family: 'Orbitron', sans-serif; color: var(--primary-color); }
+        .close-chat-btn { background: none; border: none; font-size: 2em; color: var(--light-gray); cursor: pointer; }
+        .chat-messages-area {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding-right: 10px;
+            display: flex; flex-direction: column;
+            gap: 8px;
+        }
+        .chat-message {
+            background-color: var(--tertiary-color);
+            padding: 8px 12px;
+            border-radius: 5px;
+            max-width: 90%;
+        }
+        .chat-message .username {
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-right: 8px;
+        }
+        .chat-input-area {
+            display: flex;
+            margin-top: 15px;
+            gap: 10px;
+        }
+        #chat-input {
+            flex-grow: 1;
+            background-color: var(--tertiary-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            border-radius: 5px;
+            padding: 10px;
+        }
+        #chat-send-btn {
+            background-color: var(--primary-color);
+            color: var(--dark-gray);
+            border: none;
+            border-radius: 5px;
+            padding: 10px 15px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+
     </style>
 </head>
 <body>
@@ -394,6 +461,7 @@
         <div class="stats-bar">
             <button class="action-btn" id="open-shop-btn">Loja</button>
             <button class="action-btn" id="open-inventory-btn">Inventário</button>
+            <button class="action-btn" id="open-chat-btn">Chat</button>
             <button class="action-btn" id="logout-btn">Sair</button>
             <button class="action-btn" id="energy-btn" disabled>
                 <div id="energy-bar"></div>
@@ -430,6 +498,21 @@
                 <div class="inventory-content-area" id="racks-inventory-content" style="display: none;"></div>
             </div>
         </div>
+        
+        <div class="chat-modal" id="chat-modal">
+            <div class="chat-content">
+                <div class="chat-header">
+                    <h2 class="chat-title">Chat Global</h2>
+                    <button class="close-chat-btn" id="close-chat-btn">&times;</button>
+                </div>
+                <div class="chat-messages-area" id="chat-messages-area">
+                    </div>
+                <div class="chat-input-area">
+                    <input type="text" id="chat-input" placeholder="Digite sua mensagem..." maxlength="150">
+                    <button id="chat-send-btn">Enviar</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <audio id="sell-sound" src="https://cdn.pixabay.com/download/audio/2022/03/10/audio_c394c55a5b.mp3"></audio>
@@ -459,6 +542,7 @@
         let currentRoomIndex = 0;
         let placingItem = null;
         let isTransactionInProgress = false;
+        let chatUpdateInterval = null;
         
         // --- ELEMENTOS DO DOM ---
         const lcoPerHourElement = document.getElementById('lco-per-hour');
@@ -494,6 +578,12 @@
         const energyBtn = document.getElementById('energy-btn');
         const energyBar = document.getElementById('energy-bar');
         const energyText = document.getElementById('energy-text');
+        const openChatBtn = document.getElementById('open-chat-btn');
+        const closeChatBtn = document.getElementById('close-chat-btn');
+        const chatModal = document.getElementById('chat-modal');
+        const chatMessagesArea = document.getElementById('chat-messages-area');
+        const chatInput = document.getElementById('chat-input');
+        const chatSendBtn = document.getElementById('chat-send-btn');
 
         // --- FUNÇÕES DE API ---
         const apiRequest = async (endpoint, method = 'GET', body = null) => {
@@ -541,6 +631,45 @@
                 rankingList.innerHTML = '<li>Não foi possível carregar o ranking.</li>';
             }
         }
+        
+        // --- LÓGICA DO CHAT ---
+        async function fetchMessages() {
+            const messages = await apiRequest('/api/chat/messages');
+            if (!messages) return;
+
+            chatMessagesArea.innerHTML = ''; // Limpa as mensagens antigas
+            messages.forEach(msg => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'chat-message';
+                messageDiv.innerHTML = `<span class="username">${msg.username}:</span><span class="message-text">${msg.message}</span>`;
+                chatMessagesArea.appendChild(messageDiv);
+            });
+            // Rola para a mensagem mais recente
+            chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight;
+        }
+
+        async function postMessage() {
+            const message = chatInput.value;
+            if (!message || message.trim() === '') return;
+
+            await apiRequest('/api/chat/send', 'POST', { message });
+            chatInput.value = '';
+            fetchMessages(); // Atualiza imediatamente após enviar
+        }
+
+        function openChat() {
+            chatModal.style.display = 'flex';
+            fetchMessages();
+            // Inicia a atualização automática a cada 15 segundos
+            if (chatUpdateInterval) clearInterval(chatUpdateInterval);
+            chatUpdateInterval = setInterval(fetchMessages, 15000); // NOSSA ESTRATÉGIA DE ECONOMIA
+        }
+
+        function closeChat() {
+            chatModal.style.display = 'none';
+            // Para a atualização automática quando o chat está fechado
+            if (chatUpdateInterval) clearInterval(chatUpdateInterval);
+        }
 
         // --- FUNÇÕES DE AUTENTICAÇÃO ---
         const handleLogin = async () => {
@@ -569,6 +698,7 @@
             gameState = null; 
             if (gameLoopInterval) clearInterval(gameLoopInterval); 
             if (terminalLoopInterval) clearInterval(terminalLoopInterval);
+            if(chatUpdateInterval) clearInterval(chatUpdateInterval); // Garante que o chat pare ao deslogar
         };
         const showAuthMessage = (msg, color = 'var(--red-alert)') => { authMessage.textContent = msg; authMessage.style.color = color; };
         const toggleForms = () => {
@@ -1050,6 +1180,16 @@
         shopCategoryBtns.forEach(btn => btn.addEventListener('click', () => { shopCategoryBtns.forEach(b => b.classList.remove('active')); btn.classList.add('active'); renderShop(btn.dataset.category); }));
         inventoryCategoryBtns.forEach(btn => btn.addEventListener('click', () => { inventoryCategoryBtns.forEach(b => b.classList.remove('active')); btn.classList.add('active'); renderInventory(btn.dataset.category); }));
         
+        // --- EVENT LISTENERS DO CHAT ---
+        openChatBtn.addEventListener('click', openChat);
+        closeChatBtn.addEventListener('click', closeChat);
+        chatSendBtn.addEventListener('click', postMessage);
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                postMessage();
+            }
+        });
+
         window.addEventListener('beforeunload', () => { if (gameState) { saveGame(); } });
 
         if (localStorage.getItem('token')) { initializeGame(); } 
