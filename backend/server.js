@@ -17,7 +17,7 @@ app.set('trust proxy', 1);
 // --- CORS PERSONALIZADO ---
 // Substitua pela URL real do seu frontend do Netlify
 const allowedOrigins = [
-  'https://SEU-FRONTEND.netlify.app', // EXEMPLO: 'https://lula-coin.netlify.app'
+  'https://sweet-praline-ee4bd7.netlify.app', // EXEMPLO: 'https://lula-coin.netlify.app'
   'http://localhost:3000'
 ];
 
