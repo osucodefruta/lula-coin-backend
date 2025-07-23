@@ -851,9 +851,17 @@
             if (gameState.balance >= roomCost) {
                 const data = await apiRequest('/api/game/buy-room', 'POST', { cost: roomCost });
                 if (data && data.gameState) {
-                    gameState = data.gameState; currentRoomIndex = gameState.placedRacksPerRoom.length - 1;
+                    // *** INÍCIO DA CORREÇÃO ***
+                    // Preserva o valor da energia do cliente, que é mais preciso.
+                    const currentEnergy = gameState.energy;
+                    gameState = data.gameState;
+                    gameState.energy = currentEnergy; // Restaura o valor após a atualização.
+                    // *** FIM DA CORREÇÃO ***
+
+                    currentRoomIndex = gameState.placedRacksPerRoom.length - 1;
                     displayTerminalMessage(`Sala ${currentRoomIndex + 1} comprada!`, "lime");
-                    updateUI(); saveGame();
+                    updateUI(); 
+                    saveGame();
                 }
             } else { displayTerminalMessage(`LCO insuficiente! Necessário ${roomCost} LCO.`, "red"); }
         }
@@ -925,8 +933,17 @@
                 if (gameState.balance < itemData.price) { displayTerminalMessage('Saldo insuficiente!', 'red'); return; }
                 const data = await apiRequest('/api/game/buy-item', 'POST', { itemId, category, price: itemData.price });
                 if (data && data.gameState) {
-                    gameState = data.gameState; displayTerminalMessage(data.message, 'lime');
-                    updateUI(); renderShop(category); renderInventory(category);
+                    // *** INÍCIO DA CORREÇÃO ***
+                    // Preserva o valor da energia do cliente, que é mais preciso.
+                    const currentEnergy = gameState.energy;
+                    gameState = data.gameState;
+                    gameState.energy = currentEnergy; // Restaura o valor após a atualização.
+                    // *** FIM DA CORREÇÃO ***
+
+                    displayTerminalMessage(data.message, 'lime');
+                    updateUI(); 
+                    renderShop(category); 
+                    renderInventory(category);
                     saveGame();
                 }
             } finally {
