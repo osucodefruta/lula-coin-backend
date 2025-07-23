@@ -125,11 +125,11 @@
         /* --- ESTILO DO QUADRO DE RANKING --- */
         #global-ranking-board {
             position: absolute;
-            top: 10%; /* AJUSTADO PARA SUBIR O QUADRO */
+            top: 10%;
             left: 30px;
             width: 230px;
-            background-color: #1e272e; /* Cor de quadro negro */
-            border: 10px solid #6d4c41; /* Moldura de madeira */
+            background-color: #1e272e;
+            border: 10px solid #6d4c41;
             border-radius: 8px;
             padding: 15px;
             box-shadow: 5px 5px 15px rgba(0,0,0,0.5);
@@ -145,10 +145,7 @@
             border-bottom: 1px solid rgba(255, 59, 59, 0.4);
             padding-bottom: 5px;
         }
-        #global-ranking-board ol {
-            list-style: none;
-            padding: 0;
-        }
+        #global-ranking-board ol { list-style: none; padding: 0; }
         #global-ranking-board li {
             display: flex;
             justify-content: space-between;
@@ -156,9 +153,7 @@
             font-size: 0.9em;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
-        #global-ranking-board li:last-child {
-            border-bottom: none;
-        }
+        #global-ranking-board li:last-child { border-bottom: none; }
         #global-ranking-board li span:first-child {
             white-space: nowrap;
             overflow: hidden;
@@ -250,12 +245,12 @@
         .room-btn.active { background-color: #fff; color: var(--primary-color); box-shadow: 0 0 8px #fff; }
         #add-room { background-color: var(--primary-color); color: var(--dark-gray); padding: 7px 15px; font-size: 1.1em; box-shadow: 0 0 10px var(--primary-color); }
         
-        .shop-modal, .inventory-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.8); display: none; justify-content: center; align-items: center; z-index: 100; }
-        .shop-content, .inventory-content { background-color: var(--dark-gray); border: 2px solid var(--primary-color); border-radius: 10px; padding: 30px; width: 90%; max-width: 900px; height: 90%; max-height: 700px; display: flex; flex-direction: column; position: relative; box-shadow: 0 0 25px var(--glow-color); overflow: hidden; }
-        .shop-header, .inventory-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
-        .shop-title, .inventory-title { font-family: 'Orbitron', sans-serif; font-size: 2em; color: var(--primary-color); text-shadow: 0 0 10px var(--primary-color); }
-        .close-shop-btn, .close-inventory-btn { background: none; border: none; font-size: 2em; color: var(--light-gray); cursor: pointer; transition: color 0.2s ease; }
-        .close-shop-btn:hover, .close-inventory-btn:hover { color: var(--red-alert); }
+        .shop-modal, .inventory-modal, .chat-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.8); display: none; justify-content: center; align-items: center; z-index: 100; }
+        .shop-content, .inventory-content, .chat-content { background-color: var(--dark-gray); border: 2px solid var(--primary-color); border-radius: 10px; padding: 30px; width: 90%; max-width: 900px; height: 90%; max-height: 700px; display: flex; flex-direction: column; position: relative; box-shadow: 0 0 25px var(--glow-color); overflow: hidden; }
+        .shop-header, .inventory-header, .chat-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
+        .shop-title, .inventory-title, .chat-title { font-family: 'Orbitron', sans-serif; font-size: 2em; color: var(--primary-color); text-shadow: 0 0 10px var(--primary-color); }
+        .close-shop-btn, .close-inventory-btn, .close-chat-btn { background: none; border: none; font-size: 2em; color: var(--light-gray); cursor: pointer; transition: color 0.2s ease; }
+        .close-shop-btn:hover, .close-inventory-btn:hover, .close-chat-btn:hover { color: var(--red-alert); }
         .shop-categories, .inventory-categories { display: flex; gap: 15px; margin-bottom: 20px; }
         .shop-category-btn, .inventory-category-btn { background-color: var(--medium-gray); color: var(--text-color); border: 1px solid var(--border-color); padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: all 0.2s ease; }
         .shop-category-btn.active, .shop-category-btn:hover, .inventory-category-btn.active, .inventory-category-btn:hover { background-color: var(--primary-color); color: var(--dark-gray); box-shadow: 0 0 10px var(--primary-color); }
@@ -312,30 +307,14 @@
         }
 
         /* Estilos do Chat Modal */
-        .chat-modal {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
-            display: none; /* Começa escondido */
-            justify-content: center; align-items: center;
-            z-index: 101; /* Fica por cima de outros modais se necessário */
-        }
         .chat-content {
-            background-color: var(--dark-gray);
-            border: 2px solid var(--primary-color);
-            border-radius: 10px;
             padding: 20px;
-            width: 90%; max-width: 600px;
             height: 70%; max-height: 500px;
-            display: flex; flex-direction: column;
-            box-shadow: 0 0 25px var(--glow-color);
+            width: 90%; max-width: 600px;
         }
         .chat-header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 15px; border-bottom: 1px solid var(--border-color);
             padding-bottom: 10px;
         }
-        .chat-title { font-family: 'Orbitron', sans-serif; color: var(--primary-color); }
-        .close-chat-btn { background: none; border: none; font-size: 2em; color: var(--light-gray); cursor: pointer; }
         .chat-messages-area {
             flex-grow: 1;
             overflow-y: auto;
@@ -601,7 +580,14 @@
                 return data;
             } catch (error) {
                 const messageArea = appContainer.style.display === 'flex' ? terminalTextElement : authMessage;
-                messageArea.textContent = `Erro: ${error.message}`; messageArea.style.color = 'var(--red-alert)'; return null;
+                // Exibe a mensagem de erro de forma mais amigável
+                if (error instanceof SyntaxError) {
+                    messageArea.textContent = `Erro: Resposta inesperada do servidor.`;
+                } else {
+                    messageArea.textContent = `Erro: ${error.message}`;
+                }
+                messageArea.style.color = 'var(--red-alert)'; 
+                return null;
             }
         };
 
@@ -652,9 +638,11 @@
             const message = chatInput.value;
             if (!message || message.trim() === '') return;
 
-            await apiRequest('/api/chat/send', 'POST', { message });
-            chatInput.value = '';
-            fetchMessages(); // Atualiza imediatamente após enviar
+            const result = await apiRequest('/api/chat/send', 'POST', { message });
+            if (result) {
+                chatInput.value = '';
+                fetchMessages(); // Atualiza imediatamente após enviar
+            }
         }
 
         function openChat() {
@@ -673,18 +661,39 @@
 
         // --- FUNÇÕES DE AUTENTICAÇÃO ---
         const handleLogin = async () => {
+            console.log("Função handleLogin iniciada.");
             const username = document.getElementById('login-username').value;
             const password = document.getElementById('login-password').value;
-            if (!username || !password) return showAuthMessage('Preencha todos os campos.');
+            if (!username || !password) {
+                return showAuthMessage('Preencha todos os campos.');
+            }
+            console.log("Enviando dados de login para o servidor:", { username });
             const data = await apiRequest('/api/auth/login', 'POST', { username, password });
-            if (data && data.token) { localStorage.setItem('token', data.token); await initializeGame(); }
+            if (data && data.token) { 
+                console.log("Login bem-sucedido, recebido token.");
+                localStorage.setItem('token', data.token); 
+                await initializeGame(); 
+            } else {
+                console.log("Falha no login, dados recebidos:", data);
+            }
         };
+
         const handleRegister = async () => {
+            console.log("Função handleRegister iniciada.");
             const username = document.getElementById('register-username').value;
             const password = document.getElementById('register-password').value;
-            if (!username || !password) return showAuthMessage('Preencha todos os campos.');
+            if (!username || !password) {
+                return showAuthMessage('Preencha todos os campos.');
+            }
+            console.log("Enviando dados de registro para o servidor:", { username });
             const data = await apiRequest('/api/auth/register', 'POST', { username, password });
-            if (data) { showAuthMessage(data.message, 'lime'); toggleForms(); }
+            if (data) {
+                console.log("Registro bem-sucedido, resposta:", data);
+                showAuthMessage(data.message, 'lime'); 
+                toggleForms(); 
+            } else {
+                console.log("Falha no registro, dados recebidos:", data);
+            }
         };
         
         let autoSaveInterval = null;
@@ -701,6 +710,7 @@
             if(chatUpdateInterval) clearInterval(chatUpdateInterval); // Garante que o chat pare ao deslogar
         };
         const showAuthMessage = (msg, color = 'var(--red-alert)') => { authMessage.textContent = msg; authMessage.style.color = color; };
+        
         const toggleForms = () => {
             const loginDisplay = window.getComputedStyle(loginForm).display;
             loginForm.style.display = loginDisplay === 'none' ? 'block' : 'none';
@@ -739,32 +749,18 @@
         };
 
         // --- FUNÇÕES DE EFEITOS E ANIMAÇÕES ---
-        // Cria o contexto de áudio global uma única vez
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-        /**
-         * Toca um tom gerado por código usando a Web Audio API.
-         * @param {object} options - Opções para o tom.
-         * @param {number} options.frequency - A frequência do tom em Hz (ex: 440).
-         * @param {number} options.duration - A duração do som em milissegundos (ex: 100).
-         * @param {number} options.volume - O volume do som (de 0.0 a 1.0).
-         * @param {string} options.type - O tipo de onda ('sine', 'square', 'sawtooth', 'triangle').
-         */
         function playTone({ frequency = 440, duration = 100, volume = 0.5, type = 'sine' }) {
             if (!audioCtx) return;
-
             const oscillator = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
-
             oscillator.connect(gainNode);
             gainNode.connect(audioCtx.destination);
-
             oscillator.type = type;
             oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
-            
             gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration / 1000);
-
             oscillator.start(audioCtx.currentTime);
             oscillator.stop(audioCtx.currentTime + duration / 1000);
         }
@@ -1171,7 +1167,6 @@
         registerBtn.addEventListener('click', handleRegister);
         showRegisterLink.addEventListener('click', toggleForms);
         showLoginLink.addEventListener('click', toggleForms);
-        logoutBtn.addEventListener('click', handleLogout);
         openShopBtn.addEventListener('click', openShop);
         closeShopBtn.addEventListener('click', closeShop);
         openInventoryBtn.addEventListener('click', openInventory);
