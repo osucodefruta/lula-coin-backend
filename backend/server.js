@@ -3,10 +3,11 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const rateLimit = require('express-rate-limit'); // << ADICIONADO: Importa o limitador
 const authRoutes = require('./routes/auth');
 const gameRoutes = require('./routes/game');
 const rankingRoutes = require('./routes/ranking');
-const chatRoutes = require('./routes/chat'); // << 1. ADICIONADO: Importa a nova rota de chat
+const chatRoutes = require('./routes/chat');
 
 const app = express();
 
@@ -15,6 +16,20 @@ app.use(cors());
 
 // Middleware para interpretar o corpo das requisições como JSON
 app.use(express.json());
+
+// --- INÍCIO: Configuração do Limitador de Tentativas (Rate Limiting) ---
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // Janela de 15 minutos
+    max: 10, // Permite no máximo 10 requisições por IP nesta janela
+    message: 'Muitas tentativas de login a partir deste IP, por favor, tente novamente em 15 minutos.',
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// Aplica o limitador APENAS às rotas de autenticação para proteger contra força bruta
+app.use('/api/auth', authLimiter);
+// --- FIM: Configuração do Limitador de Tentativas ---
+
 
 // Conexão com o MongoDB
 mongoose.connect(process.env.MONGO_URI)
@@ -25,7 +40,7 @@ mongoose.connect(process.env.MONGO_URI)
 app.use('/api/auth', authRoutes);
 app.use('/api/game', gameRoutes);
 app.use('/api/ranking', rankingRoutes);
-app.use('/api/chat', chatRoutes); // << 2. ADICIONADO: Usa a nova rota de chat
+app.use('/api/chat', chatRoutes);
 
 // --- Rota de Health Check ---
 // Mantém o servidor ativo em plataformas de hospedagem gratuitas.
