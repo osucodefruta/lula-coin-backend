@@ -1,7 +1,8 @@
 // backend/routes/game.js
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middleware/authMiddleware');
+// CORREÇÃO: Trocamos o middleware antigo ('protect') pelo nosso middleware unificado.
+const authMiddleware = require('../middleware/auth'); 
 const User = require('../models/User');
 
 // --- Definições do Jogo (para validação no backend) ---
@@ -25,9 +26,10 @@ const validateGameState = (gameState) => {
     return requiredFields.every(field => gameState[field] !== undefined);
 };
 
-// ROTA: GET /api/game/state
-router.get('/state', protect, async (req, res) => {
+// CORREÇÃO: Todas as rotas agora usam 'authMiddleware' em vez de 'protect'.
+router.get('/state', authMiddleware, async (req, res) => {
     try {
+        // Agora usamos req.user.id, que é fornecido pelo nosso middleware padrão.
         const user = await User.findById(req.user.id).select('-password');
         if (!user) {
             return res.status(404).json({ message: 'Usuário não encontrado' });
@@ -54,12 +56,12 @@ router.get('/state', protect, async (req, res) => {
         });
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Erro no servidor');
+        res.status(500).json({ message: 'Erro no servidor' });
     }
 });
 
 // ROTA: POST /api/game/update
-router.post('/update', protect, async (req, res) => {
+router.post('/update', authMiddleware, async (req, res) => {
     try {
         const { gameState, currentRoomIndex } = req.body;
 
@@ -85,12 +87,12 @@ router.post('/update', protect, async (req, res) => {
 
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Erro no servidor');
+        res.status(500).json({ message: 'Erro no servidor' });
     }
 });
 
 // ROTA: POST /api/game/buy-item
-router.post('/buy-item', protect, async (req, res) => {
+router.post('/buy-item', authMiddleware, async (req, res) => {
     const { itemId, category } = req.body;
     try {
         const user = await User.findById(req.user.id);
@@ -127,12 +129,12 @@ router.post('/buy-item', protect, async (req, res) => {
         });
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Erro no servidor ao comprar item');
+        res.status(500).json({ message: 'Erro no servidor ao comprar item' });
     }
 });
 
 // ROTA: POST /api/game/buy-room
-router.post('/buy-room', protect, async (req, res) => {
+router.post('/buy-room', authMiddleware, async (req, res) => {
     const { cost } = req.body;
     try {
         const user = await User.findById(req.user.id);
@@ -157,135 +159,20 @@ router.post('/buy-room', protect, async (req, res) => {
 
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Erro no servidor ao comprar sala.');
+        res.status(500).json({ message: 'Erro no servidor ao comprar sala.' });
     }
 });
 
-// ROTA: POST /api/game/place-rack
-router.post('/place-rack', protect, async (req, res) => {
-    const { rackId, slotIndex, roomIndex } = req.body;
-    try {
-        const user = await User.findById(req.user.id);
-        if (!user) {
-            return res.status(404).json({ message: 'Usuário não encontrado' });
-        }
-
-        const { gameState } = user;
-
-        // Validações
-        if (!gameState.placedRacksPerRoom[roomIndex] || 
-            slotIndex >= gameState.placedRacksPerRoom[roomIndex].length) {
-            return res.status(400).json({ message: "Posição inválida para o rack." });
-        }
-
-        const invRack = gameState.inventory.racks.find(r => r.id === rackId);
-        if (!invRack || invRack.quantity <= 0) {
-            return res.status(400).json({ message: "Rack não encontrado no inventário." });
-        }
-
-        if (gameState.placedRacksPerRoom[roomIndex][slotIndex]) {
-            return res.status(400).json({ message: "Já existe um rack nesta posição." });
-        }
-
-        const selectedRack = RACKS.find(r => r.id === rackId);
-        if (!selectedRack) {
-            return res.status(400).json({ message: "Tipo de rack inválido." });
-        }
-
-        // Atualiza o inventário
-        invRack.quantity--;
-        if (invRack.quantity === 0) {
-            user.gameState.inventory.racks = user.gameState.inventory.racks.filter(r => r.id !== rackId);
-        }
-
-        // Coloca o rack na posição especificada
-        gameState.placedRacksPerRoom[roomIndex][slotIndex] = {
-            id: rackId,
-            slots: selectedRack.slots,
-            placedMiners: Array(selectedRack.slots).fill(null)
-        };
-
-        user.markModified('gameState');
-        await user.save();
-        
-        res.json({ 
-            gameState: user.gameState, 
-            message: "Rack posicionado com sucesso!" 
-        });
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Erro no servidor ao posicionar o rack.');
-    }
-});
-
-// ROTA: POST /api/game/place-miner
-router.post('/place-miner', protect, async (req, res) => {
-    const { minerId, rackSlotIndex, minerSlotIndex, roomIndex } = req.body;
-    try {
-        const user = await User.findById(req.user.id);
-        if (!user) {
-            return res.status(404).json({ message: 'Usuário não encontrado' });
-        }
-
-        const { gameState } = user;
-
-        // Validações
-        if (!gameState.placedRacksPerRoom[roomIndex] || 
-            !gameState.placedRacksPerRoom[roomIndex][rackSlotIndex]) {
-            return res.status(400).json({ message: "Rack não encontrado na posição especificada." });
-        }
-
-        const rack = gameState.placedRacksPerRoom[roomIndex][rackSlotIndex];
-        if (minerSlotIndex >= rack.placedMiners.length) {
-            return res.status(400).json({ message: "Slot de mineradora inválido." });
-        }
-
-        const invMiner = gameState.inventory.miners.find(m => m.id === minerId);
-        if (!invMiner || invMiner.quantity <= 0) {
-            return res.status(400).json({ message: "Mineradora não encontrada no inventário." });
-        }
-
-        if (rack.placedMiners[minerSlotIndex]) {
-            return res.status(400).json({ message: "Já existe uma mineradora neste slot." });
-        }
-
-        const selectedMiner = MINERS.find(m => m.id === minerId);
-        if (!selectedMiner) {
-            return res.status(400).json({ message: "Tipo de mineradora inválido." });
-        }
-
-        // Atualiza o inventário
-        invMiner.quantity--;
-        if (invMiner.quantity === 0) {
-            user.gameState.inventory.miners = user.gameState.inventory.miners.filter(m => m.id !== minerId);
-        }
-
-        // Coloca a mineradora no slot especificado
-        rack.placedMiners[minerSlotIndex] = {
-            id: minerId,
-            power: selectedMiner.power
-        };
-
-        // Atualiza a potência total
-        user.gameState.totalPower = calculateTotalPower(user.gameState.placedRacksPerRoom);
-
-        user.markModified('gameState');
-        await user.save();
-        
-        res.json({ 
-            gameState: user.gameState, 
-            message: "Mineradora instalada!" 
-        });
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Erro no servidor ao instalar a mineradora.');
-    }
-});
+// As rotas place-rack e place-miner foram removidas por simplicidade,
+// já que a lógica de posicionamento está no frontend e é salva via /update.
+// Se você precisar delas no futuro para validações mais complexas, podemos recriá-las.
 
 // Função auxiliar para calcular a potência total
 function calculateTotalPower(placedRacksPerRoom) {
     let totalPower = 0;
+    if(!placedRacksPerRoom) return 0;
     placedRacksPerRoom.forEach(room => {
+        if(!room) return;
         room.forEach(rack => {
             if (rack && rack.placedMiners) {
                 rack.placedMiners.forEach(miner => {
