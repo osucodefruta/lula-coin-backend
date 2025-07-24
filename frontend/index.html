@@ -850,7 +850,7 @@
             };
             updateTerminal(); 
             terminalLoopInterval = setInterval(updateTerminal, 4000);
-            autoSaveInterval = setInterval(() => { if(gameState) { saveGame(); } }, 30000); // Salva a cada 30 segundos
+            autoSaveInterval = setInterval(() => { if(gameState) { saveGame(); } }, 10000); // Salva a cada 30 segundos
         }
 
         // --- FUNÇÕES DE UI E RENDERIZAÇÃO ---
