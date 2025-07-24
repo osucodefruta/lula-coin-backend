@@ -7,8 +7,32 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
-        /* Todos os seus estilos (CSS) permanecem exatamente os mesmos. */
-        :root { --primary-color: #ff3b3b; --secondary-color: #2e008a; --tertiary-color: #0a0e2a; --text-color: #e0e0e0; --dark-gray: #1a1a1a; --medium-gray: #282828; --light-gray: #555; --red-alert: #ff4500; --border-color: rgba(255, 59, 59, 0.3); --glow-color: rgba(255, 59, 59, 0.6); --brick-color-1: #2c1d1d; --brick-color-2: #3a2a2a; --brick-mortar: #1a1a1a; --floor-plate-dark: #2a343a; --floor-plate-light: #444f56; --floor-gap: #111; --rack-side-color: #222; --rack-top-color: #444; --monitor-screen: #0f1c2c; --energy-full: #00ff7f; --energy-low: #ffa500; --energy-empty: #ff3b3b; }
+        /* Todos os seus estilos permanecem os mesmos */
+        :root {
+            --primary-color: #ff3b3b; /* Vermelho Neon */
+            --secondary-color: #2e008a; /* Azul Escuro */
+            --tertiary-color: #0a0e2a; /* Azul Quase Preto */
+            --text-color: #e0e0e0;
+            --dark-gray: #1a1a1a;
+            --medium-gray: #282828;
+            --light-gray: #555;
+            --red-alert: #ff4500;
+            --border-color: rgba(255, 59, 59, 0.3);
+            --glow-color: rgba(255, 59, 59, 0.6);
+            --brick-color-1: #2c1d1d;
+            --brick-color-2: #3a2a2a;
+            --brick-mortar: #1a1a1a;
+            --floor-plate-dark: #2a343a;
+            --floor-plate-light: #444f56;
+            --floor-gap: #111;
+            --rack-side-color: #222;
+            --rack-top-color: #444;
+            --monitor-screen: #0f1c2c;
+            --energy-full: #00ff7f;
+            --energy-low: #ffa500;
+            --energy-empty: #ff3b3b;
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Share Tech Mono', monospace; }
         body { background-color: #0a0a0a; color: var(--text-color); overflow: hidden; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
         #auth-container { display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; height: 100%; background: var(--tertiary-color); z-index: 200; position: absolute; top: 0; left: 0; overflow: hidden; }
@@ -179,61 +203,56 @@
         .room-btn { padding: 5px 10px; background-color: var(--medium-gray); border: none; border-radius: 5px; color: var(--text-color); font-weight: bold; cursor: pointer; transition: all 0.2s ease; }
         .room-btn.active { background-color: #fff; color: var(--primary-color); box-shadow: 0 0 8px #fff; }
         #add-room { background-color: var(--primary-color); color: var(--dark-gray); padding: 7px 15px; font-size: 1.1em; box-shadow: 0 0 10px var(--primary-color); }
-        .shop-modal, .inventory-modal, .chat-modal, .games-modal { 
+        .shop-modal, .inventory-modal, .chat-modal { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
             background-color: rgba(0, 0, 0, 0.8); 
             display: none; 
             justify-content: center; align-items: center; 
             z-index: 100; 
         }
-        .shop-content, .inventory-content, .chat-content, .games-content { 
+        .shop-content, .inventory-content, .chat-content { 
             background-color: var(--dark-gray); 
             border: 2px solid var(--primary-color); 
             border-radius: 10px; 
-            width: 90%; 
+            width: 90%; max-width: 900px; 
+            height: 90%; max-height: 700px; 
             display: flex; flex-direction: column; 
             position: relative; 
             box-shadow: 0 0 25px var(--glow-color); 
             overflow: hidden; 
         }
-        .shop-content, .inventory-content { max-width: 900px; height: 90%; max-height: 700px; padding: 30px; }
-        .chat-content { max-width: 600px; height: 70%; max-height: 500px; padding: 20px; }
-        .games-content { max-width: 500px; padding: 30px; }
-
-        .shop-header, .inventory-header, .chat-header, .games-header { 
+        .shop-header, .inventory-header, .chat-header { 
             display: flex; justify-content: space-between; align-items: center; 
             margin-bottom: 20px; 
             border-bottom: 1px solid var(--border-color); 
-            padding-bottom: 15px;
         }
-        .chat-header, .games-header { padding-bottom: 10px; }
-        
-        .shop-title, .inventory-title, .chat-title, .games-title { 
+        .shop-title, .inventory-title, .chat-title { 
             font-family: 'Orbitron', sans-serif; 
             font-size: 2em; 
             color: var(--primary-color); 
             text-shadow: 0 0 10px var(--primary-color); 
         }
-
-        .close-shop-btn, .close-inventory-btn, .close-chat-btn, .close-games-btn { 
+        .close-shop-btn, .close-inventory-btn, .close-chat-btn { 
             background: none; border: none; 
             font-size: 2em; 
             color: var(--light-gray); 
             cursor: pointer; 
             transition: color 0.2s ease; 
         }
-        .close-shop-btn:hover, .close-inventory-btn:hover, .close-chat-btn:hover, .close-games-btn:hover { 
+        .close-shop-btn:hover, .close-inventory-btn:hover, .close-chat-btn:hover { 
             color: var(--red-alert); 
         }
-        
+        .shop-content, .inventory-content { padding: 30px; }
+        .chat-content { padding: 20px; height: 70%; max-height: 500px; width: 90%; max-width: 600px; }
+        .shop-header, .inventory-header { padding-bottom: 15px; }
+        .chat-header { padding-bottom: 10px; }
         .shop-categories, .inventory-categories { display: flex; gap: 15px; margin-bottom: 20px; }
         .shop-category-btn, .inventory-category-btn { background-color: var(--medium-gray); color: var(--text-color); border: 1px solid var(--border-color); padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: all 0.2s ease; }
         .shop-category-btn.active, .shop-category-btn:hover, .inventory-category-btn.active, .inventory-category-btn:hover { background-color: var(--primary-color); color: var(--dark-gray); box-shadow: 0 0 10px var(--primary-color); }
         .shop-content-area, .inventory-content-area { flex-grow: 1; overflow-y: auto; padding-right: 10px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; align-content: start; }
-        .shop-content-area::-webkit-scrollbar, .inventory-content-area::-webkit-scrollbar, .chat-messages-area::-webkit-scrollbar { width: 8px; }
-        .shop-content-area::-webkit-scrollbar-track, .inventory-content-area::-webkit-scrollbar-track, .chat-messages-area::-webkit-scrollbar-track { background: var(--tertiary-color); border-radius: 10px; }
-        .shop-content-area::-webkit-scrollbar-thumb, .inventory-content-area::-webkit-scrollbar-thumb, .chat-messages-area::-webkit-scrollbar-thumb { background: var(--primary-color); border-radius: 10px; box-shadow: 0 0 5px var(--primary-color); }
-        
+        .shop-content-area::-webkit-scrollbar, .inventory-content-area::-webkit-scrollbar { width: 8px; }
+        .shop-content-area::-webkit-scrollbar-track, .inventory-content-area::-webkit-scrollbar-track { background: var(--tertiary-color); border-radius: 10px; }
+        .shop-content-area::-webkit-scrollbar-thumb, .inventory-content-area::-webkit-scrollbar-thumb { background: var(--primary-color); border-radius: 10px; box-shadow: 0 0 5px var(--primary-color); }
         .shop-item, .inventory-item { background-color: var(--tertiary-color); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; transition: transform 0.2s ease, box-shadow 0.2s ease; }
         .shop-item:hover { transform: translateY(-5px); box-shadow: 0 0 20px rgba(255, 59, 59, 0.4); }
         .item-icon { width: 150px; height: 120px; display: flex; justify-content: center; align-items: center; margin-bottom: 5px; position: relative; overflow: visible;}
@@ -245,12 +264,16 @@
         .item-stats { font-size: 0.9em; color: var(--light-gray); }
         .item-price { font-size: 1.2em; color: limegreen; font-weight: bold; margin-top: auto; }
         .buy-btn {
-            background-color: #28a745; color: white;
+            background-color: var(--primary-color); color: var(--dark-gray);
             padding: 12px 20px; width: 100%; border-radius: 5px;
             border: none; cursor: pointer; font-weight: bold; text-transform: uppercase;
-            box-shadow: 0 0 10px #28a745; transition: all 0.2s ease;
+            box-shadow: 0 0 10px var(--primary-color); transition: all 0.2s ease;
         }
-        .buy-btn:not(:disabled):hover { filter: brightness(1.1); }
+        .buy-btn:not(:disabled):hover {
+            background-color: #28a745; 
+            box-shadow: 0 0 15px #28a745;
+            filter: brightness(1.1);
+        }
         .item-sell-price { font-size: 1.0em; color: var(--energy-low); font-weight: bold; margin-bottom: 5px; }
         .item-actions { display: flex; gap: 5px; width: 100%; margin-top: auto; }
         .use-item-btn, .sell-item-btn { 
@@ -315,38 +338,7 @@
             font-weight: bold;
             cursor: pointer;
         }
-        .games-list { display: flex; flex-direction: column; gap: 15px; }
-        .game-item { 
-            background-color: var(--tertiary-color); 
-            padding: 20px; 
-            border-radius: 8px; 
-            text-align: center; 
-        }
-        .game-item h3 {
-            margin-top: 0;
-            font-family: 'Orbitron', sans-serif; 
-        }
-        .game-item p { 
-            margin: 10px 0; 
-            color: var(--light-gray); 
-        }
-        .game-item button { 
-            background-color: var(--energy-full); 
-            color: var(--dark-gray); 
-            border: none; 
-            padding: 12px 25px; 
-            font-size: 1.1em; 
-            border-radius: 5px; 
-            cursor: pointer; 
-            font-weight: bold; 
-            transition: background-color 0.3s;
-        }
-        .game-item button:disabled {
-            background-color: #555;
-            cursor: not-allowed;
-        }
     </style>
-    <audio id="sell-sound" src="https://cdn.pixabay.com/download/audio/2022/03/10/audio_c394c55a5b.mp3"></audio>
 </head>
 <body>
     <div id="auth-container">
@@ -432,7 +424,6 @@
             <button class="action-btn" id="open-shop-btn">Loja</button>
             <button class="action-btn" id="open-inventory-btn">Inventário</button>
             <button class="action-btn" id="open-chat-btn">Chat</button>
-            <button class="action-btn" id="open-games-btn">Jogos</button>
             <button class="action-btn" id="logout-btn">Sair</button>
             <button class="action-btn" id="energy-btn" disabled>
                 <div id="energy-bar"></div>
@@ -484,24 +475,11 @@
                 </div>
             </div>
         </div>
-    
-        <div class="games-modal" id="games-modal">
-            <div class="games-content">
-                <div class="games-header">
-                    <h2 class="games-title">Central de Jogos</h2>
-                    <button class="close-games-btn" id="close-games-btn">&times;</button>
-                </div>
-                <div class="games-list">
-                    <div class="game-item">
-                        <h3>Damas Multiplayer</h3>
-                        <p>Aposta: 25 LCO | Prêmio: 50 LCO</p>
-                        <button id="play-damas-btn">Procurar Partida</button>
-                        <div id="damas-matchmaking-status" style="margin-top: 10px; color: var(--energy-low);"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
+
+    <audio id="sell-sound" src="https://cdn.pixabay.com/download/audio/2022/03/10/audio_c394c55a5b.mp3"></audio>
+
+
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         // --- CONFIGURAÇÕES E CONSTANTES ---
@@ -570,12 +548,6 @@
         const chatSendBtn = document.getElementById('chat-send-btn');
         const rankingHeader = document.getElementById('ranking-header');
         const rankingBody = document.getElementById('ranking-body');
-        const openGamesBtn = document.getElementById('open-games-btn');
-        const gamesModal = document.getElementById('games-modal');
-        const closeGamesBtn = document.getElementById('close-games-btn');
-        const playDamasBtn = document.getElementById('play-damas-btn');
-        const damasMatchmakingStatus = document.getElementById('damas-matchmaking-status');
-
 
         // --- FUNÇÕES DE API (COM CORREÇÃO DE LOGOUT) ---
         const apiRequest = async (endpoint, method = 'GET', body = null) => {
@@ -602,10 +574,7 @@
                 if (response.status === 400 || response.status === 429) {
                     const errorData = await response.json();
                     const errorMessage = errorData.message || (errorData.errors && errorData.errors[0].msg) || 'Erro de validação.';
-                    // Para o lobby, não queremos mostrar no terminal principal
-                    if (!endpoint.includes('/api/damas')) {
-                        displayTerminalMessage(errorMessage, 'red');
-                    }
+                    displayTerminalMessage(errorMessage, 'red');
                     throw new Error(errorMessage);
                 }
 
@@ -617,12 +586,12 @@
                     const messageArea = appContainer.style.display === 'flex' ? terminalTextElement : authMessage;
                     if (error instanceof SyntaxError) {
                         messageArea.textContent = `Erro: Resposta inesperada do servidor.`;
-                    } else if (!endpoint.includes('/api/damas')) { // Não poluir o terminal com erros do lobby
+                    } else {
                         messageArea.textContent = `Erro: ${error.message}`;
                     }
                     messageArea.style.color = 'var(--red-alert)'; 
                 }
-                return { message: error.message }; // Retorna o erro para o lobby tratar
+                return null;
             }
         };
 
@@ -632,7 +601,7 @@
             rankingList.innerHTML = '<li>Carregando...</li>';
             try {
                 const players = await apiRequest('/api/ranking/top5/balance');
-                if (!players || !Array.isArray(players)) {
+                if (!players) {
                     rankingList.innerHTML = '<li>Erro ao carregar o ranking.</li>';
                     return;
                 }
@@ -739,7 +708,10 @@
         let autoSaveInterval = null;
         
         const handleLogout = (force = false) => {
-            // *** CORREÇÃO: Removido o saveGame() daqui para não zerar o relógio offline ***
+            // Só tenta salvar o jogo se NÃO for um logout forçado
+            if (gameState && !force) {
+                saveGame();
+            }
             if (autoSaveInterval) clearInterval(autoSaveInterval);
             localStorage.removeItem('token'); 
             authContainer.style.display = 'flex'; 
@@ -747,8 +719,7 @@
             gameState = null; 
             if (gameLoopInterval) clearInterval(gameLoopInterval); 
             if (terminalLoopInterval) clearInterval(terminalLoopInterval);
-            if(chatUpdateInterval) clearInterval(chatUpdateInterval);
-            if(matchmakingInterval) clearInterval(matchmakingInterval);
+            if(chatUpdateInterval) clearInterval(chatUpdateInterval); 
         };
 
         const showAuthMessage = (msg, color = 'var(--red-alert)') => { authMessage.textContent = msg; authMessage.style.color = color; };
@@ -774,12 +745,8 @@
                 if (!gameState.placedRacksPerRoom || gameState.placedRacksPerRoom.length === 0) {
                     gameState.placedRacksPerRoom = [Array(NUM_RACK_PLACEMENT_SLOTS).fill(null)]; currentRoomIndex = 0;
                 }
-                
-                // *** CORREÇÃO: Chamada para salvar o progresso offline recebido ***
-                await saveGame();
-
                 authContainer.style.display = 'none'; appContainer.style.display = 'flex';
-                userAvatar.textContent = (data.username ? data.username.charAt(0).toUpperCase() : 'L');
+                userAvatar.textContent = 'L';
                 updateUI(); 
                 startLoops();
             } else { 
@@ -788,7 +755,7 @@
         };
         const saveGame = async () => {
             if (!gameState) return;
-            // *** CORREÇÃO: Removida a atualização do timestamp daqui ***
+            gameState.lastEnergyUpdate = Date.now();
             await apiRequest('/api/game/update', 'POST', { gameState, currentRoomIndex });
         };
 
@@ -884,13 +851,9 @@
             if (gameState.balance >= roomCost) {
                 const data = await apiRequest('/api/game/buy-room', 'POST', { cost: roomCost });
                 if (data && data.gameState) {
-                    const currentEnergy = gameState.energy;
-                    gameState = data.gameState;
-                    gameState.energy = currentEnergy; 
-                    currentRoomIndex = gameState.placedRacksPerRoom.length - 1;
+                    gameState = data.gameState; currentRoomIndex = gameState.placedRacksPerRoom.length - 1;
                     displayTerminalMessage(`Sala ${currentRoomIndex + 1} comprada!`, "lime");
-                    updateUI(); 
-                    saveGame();
+                    updateUI(); saveGame();
                 }
             } else { displayTerminalMessage(`LCO insuficiente! Necessário ${roomCost} LCO.`, "red"); }
         }
@@ -962,13 +925,8 @@
                 if (gameState.balance < itemData.price) { displayTerminalMessage('Saldo insuficiente!', 'red'); return; }
                 const data = await apiRequest('/api/game/buy-item', 'POST', { itemId, category, price: itemData.price });
                 if (data && data.gameState) {
-                    const currentEnergy = gameState.energy;
-                    gameState = data.gameState;
-                    gameState.energy = currentEnergy; 
-                    displayTerminalMessage(data.message, 'lime');
-                    updateUI(); 
-                    renderShop(category); 
-                    renderInventory(category);
+                    gameState = data.gameState; displayTerminalMessage(data.message, 'lime');
+                    updateUI(); renderShop(category); renderInventory(category);
                     saveGame();
                 }
             } finally {
@@ -982,17 +940,22 @@
             const button = event.currentTarget;
             const itemId = button.dataset.id;
             const category = button.dataset.category;
+
             const itemConfig = (category === 'miners' ? MINERS : RACKS).find(i => i.id === itemId);
             if (!itemConfig) return;
+
             const sellPrice = itemConfig.price / 2;
             const inventoryCategory = category === 'miners' ? 'miners' : 'racks';
             let invItem = gameState.inventory[inventoryCategory].find(i => i.id === itemId);
+
             if (invItem && invItem.quantity > 0) {
                 invItem.quantity--;
                 gameState.balance += sellPrice;
+
                 if (invItem.quantity <= 0) {
                     gameState.inventory[inventoryCategory] = gameState.inventory[inventoryCategory].filter(i => i.id !== itemId);
                 }
+                
                 playSound('sell-sound');
                 displayTerminalMessage(`${itemConfig.name} vendido por ◎${sellPrice.toFixed(2)}!`, 'lime');
                 updateUI();
@@ -1011,16 +974,20 @@
             const inventorySource = category === 'miners' ? gameState.inventory.miners : gameState.inventory.racks;
             contentArea.style.display = 'grid'; 
             contentArea.innerHTML = ''; 
+
             if (!inventorySource || inventorySource.length === 0) { 
                 contentArea.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; margin-top: 20px;">Inventário Vazio</p>'; 
                 return; 
             } 
+            
             inventorySource.forEach(invItem => { 
                 const itemConfig = (category === 'miners' ? MINERS : RACKS).find(i => i.id === invItem.id); 
                 if (!itemConfig) return; 
+
                 const sellPrice = itemConfig.price / 2;
                 const itemDiv = document.createElement('div'); 
                 itemDiv.className = 'inventory-item'; 
+                
                 itemDiv.innerHTML = `
                     <div class="item-icon">${category === 'miners' ? createGpuSprite(itemConfig).outerHTML : createRackSprite(itemConfig).outerHTML}</div>
                     <div class="item-name">${itemConfig.name} (x${invItem.quantity})</div>
@@ -1032,6 +999,7 @@
                 `; 
                 contentArea.appendChild(itemDiv); 
             }); 
+            
             contentArea.querySelectorAll('.use-item-btn').forEach(btn => btn.addEventListener('click', startPlacement));
             contentArea.querySelectorAll('.sell-item-btn').forEach(btn => btn.addEventListener('click', sellItem));
         }
@@ -1143,75 +1111,23 @@
         }
 
         function handleEnergyRecharge() {
-            let recharged = false;
             if (gameState.energy <= 0) { // Custo de 1 LCO
                 if (gameState.balance >= 1) {
                     gameState.balance -= 1;
                     gameState.energy = 100;
-                    recharged = true;
+                    gameState.lastEnergyUpdate = Date.now();
                     displayTerminalMessage("Energia restaurada!", "lime");
+                    updateUI();
                 } else {
                     displayTerminalMessage("LCO insuficiente para recarregar!", "red");
                 }
             } else if (gameState.energy <= 20) { // Recarga grátis
                 gameState.energy = 100;
-                recharged = true;
+                gameState.lastEnergyUpdate = Date.now();
                 displayTerminalMessage("Energia restaurada gratuitamente!", "lime");
-            }
-            if(recharged) {
                 updateUI();
-                saveGame();
             }
         }
-
-        // << CÓDIGO ADICIONADO >>: Lógica do Lobby de Jogos
-        let matchmakingInterval = null; 
-
-        function openGames() {
-            gamesModal.style.display = 'flex';
-        }
-
-        function closeGames() {
-            gamesModal.style.display = 'none';
-            if (matchmakingInterval) {
-                clearInterval(matchmakingInterval);
-            }
-            damasMatchmakingStatus.textContent = '';
-            playDamasBtn.disabled = false;
-        }
-
-        async function joinDamasMatchmaking() {
-            playDamasBtn.disabled = true;
-            damasMatchmakingStatus.textContent = 'Entrando na fila...';
-            
-            const joinResponse = await apiRequest('/api/damas/matchmaking/join', 'POST');
-            
-            if (joinResponse && joinResponse.message) {
-                damasMatchmakingStatus.textContent = joinResponse.message;
-
-                if (joinResponse.message === "Procurando partida..." || joinResponse.message === "Você já está na fila.") {
-                    if (matchmakingInterval) clearInterval(matchmakingInterval); 
-                    matchmakingInterval = setInterval(checkMatchmakingStatus, 3000); 
-                } else {
-                    playDamasBtn.disabled = false;
-                }
-            } else {
-                const errorMsg = (joinResponse && joinResponse.message) ? joinResponse.message : 'Erro ao entrar na fila.';
-                damasMatchmakingStatus.textContent = errorMsg;
-                playDamasBtn.disabled = false;
-            }
-        }
-
-        async function checkMatchmakingStatus() {
-            const statusResponse = await apiRequest('/api/damas/matchmaking/status');
-            
-            if (statusResponse && statusResponse.matchFound) {
-                clearInterval(matchmakingInterval);
-                damasMatchmakingStatus.textContent = 'Partida encontrada! Redirecionando...';
-                window.location.href = `jogodedamas.html?gameId=${statusResponse.gameId}`;
-            }
-        }
-
 
         let gameLoopInterval, terminalLoopInterval;
         function startLoops() {
@@ -1255,7 +1171,7 @@
             updateTerminal(); 
             terminalLoopInterval = setInterval(updateTerminal, 4000);
             
-            autoSaveInterval = setInterval(() => { if(gameState) { saveGame(); } }, 10000);
+            autoSaveInterval = setInterval(() => { if(gameState) { saveGame(); } }, 30000);
         }
 
         // --- INICIALIZAÇÃO E EVENT LISTENERS ---
@@ -1281,10 +1197,6 @@
             }
         });
         rankingHeader.addEventListener('click', handleRankingClick);
-
-        openGamesBtn.addEventListener('click', openGames);
-        closeGamesBtn.addEventListener('click', closeGames);
-        playDamasBtn.addEventListener('click', joinDamasMatchmaking);
 
         window.addEventListener('beforeunload', () => { if (gameState) { saveGame(); } });
 
