@@ -7,35 +7,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
-        /* Todos os seus estilos permanecem os mesmos */
-        :root {
-            --primary-color: #ff3b3b; /* Vermelho Neon */
-            --secondary-color: #2e008a; /* Azul Escuro */
-            --tertiary-color: #0a0e2a; /* Azul Quase Preto */
-            --text-color: #e0e0e0;
-            --dark-gray: #1a1a1a;
-            --medium-gray: #282828;
-            --light-gray: #555;
-            --red-alert: #ff4500;
-            --border-color: rgba(255, 59, 59, 0.3);
-            --glow-color: rgba(255, 59, 59, 0.6);
-            --brick-color-1: #2c1d1d;
-            --brick-color-2: #3a2a2a;
-            --brick-mortar: #1a1a1a;
-            --floor-plate-dark: #2a343a;
-            --floor-plate-light: #444f56;
-            --floor-gap: #111;
-            --rack-side-color: #222;
-            --rack-top-color: #444;
-            --monitor-screen: #0f1c2c;
-            --energy-full: #00ff7f;
-            --energy-low: #ffa500;
-            --energy-empty: #ff3b3b;
-        }
-
+        /* Todos os seus estilos (CSS) permanecem exatamente os mesmos. */
+        :root { --primary-color: #ff3b3b; --secondary-color: #2e008a; --tertiary-color: #0a0e2a; --text-color: #e0e0e0; --dark-gray: #1a1a1a; --medium-gray: #282828; --light-gray: #555; --red-alert: #ff4500; --border-color: rgba(255, 59, 59, 0.3); --glow-color: rgba(255, 59, 59, 0.6); --brick-color-1: #2c1d1d; --brick-color-2: #3a2a2a; --brick-mortar: #1a1a1a; --floor-plate-dark: #2a343a; --floor-plate-light: #444f56; --floor-gap: #111; --rack-side-color: #222; --rack-top-color: #444; --monitor-screen: #0f1c2c; --energy-full: #00ff7f; --energy-low: #ffa500; --energy-empty: #ff3b3b; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Share Tech Mono', monospace; }
         body { background-color: #0a0a0a; color: var(--text-color); overflow: hidden; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        #auth-container { display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; height: 100%; background: var(--tertiary-color); z-index: 200; position: absolute; top: 0; left: 0; overflow: hidden; }
+        #auth-container { display: none; flex-direction: column; justify-content: center; align-items: center; width: 100%; height: 100%; background: var(--tertiary-color); z-index: 200; position: absolute; top: 0; left: 0; overflow: hidden; }
         .auth-box { background-color: rgba(26, 26, 26, 0.8); backdrop-filter: blur(5px); padding: 40px; border-radius: 10px; border: 1px solid var(--border-color); width: 90%; max-width: 400px; text-align: center; z-index: 2; animation: pulse 2.5s infinite; }
         .auth-box h2 { font-family: 'Orbitron', sans-serif; color: var(--primary-color); margin-bottom: 20px; text-shadow: 0 0 8px var(--primary-color); }
         .auth-box input { width: 100%; padding: 12px; margin-bottom: 15px; background-color: var(--tertiary-color); border: 1px solid var(--border-color); color: var(--text-color); border-radius: 5px; }
@@ -46,7 +22,7 @@
         .auth-toggle a:hover { text-decoration: underline; }
         #register-form { display: none; }
         #auth-message { margin-top: 15px; color: var(--red-alert); font-weight: bold; min-height: 20px; }
-        #falling-coins-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        #falling-coins-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
         .coin-fall { position: absolute; top: -10%; background-color: #ffd700; color: #b8860b; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-family: 'Orbitron', sans-serif; animation: fall linear infinite; }
         @keyframes fall { to { transform: translateY(110vh) rotate(360deg); } }
         .coin-fall:nth-child(1) { width: 40px; height: 40px; left: 10%; animation-duration: 7s; animation-delay: 0s; font-size: 1.5em; }
@@ -70,13 +46,14 @@
         .item-removed { animation: remove-item-anim 0.3s ease-out; }
         @keyframes blink-red { 0%, 48%, 100% { background-color: #4d0000; box-shadow: none; } 50% { background-color: #ff0000; box-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000; } }
         header { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background-color: var(--tertiary-color); border-bottom: 1px solid var(--border-color); z-index: 10; position: relative; }
+        .logo h1 { font-family: 'Orbitron', sans-serif; font-size: 1.5em; color: var(--primary-color); text-shadow: 0 0 10px var(--primary-color); }
         .user-profile { display: flex; align-items: center; justify-content: flex-end; flex-grow: 1; }
         .user-avatar { width: 40px; height: 40px; background-color: var(--primary-color); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.8em; font-weight: bold; margin-right: 15px; box-shadow: 0 0 10px var(--primary-color); }
         .user-stats { display: flex; gap: 25px; align-items: center; }
         .stat-item { display: flex; flex-direction: column; align-items: flex-end; min-width: 140px; text-align: right; }
         .stat-label { font-size: 0.8em; color: var(--light-gray); margin-bottom: 3px; }
         .stat-value { font-size: 1.1em; color: var(--text-color); font-weight: bold; display: flex; align-items: center; }
-        .stat-value .icon { margin-right: 8px; font-size: 1.2em; color: var(--text-color); width: 24px; height: 24px; background-color: var(--primary-color); border-radius: 50%; display: inline-flex; justify-content: center; align-items: center; flex-shrink: 0; }
+        .stat-value .icon { margin-right: 8px; font-size: 1.2em; color: var(--dark-gray); width: 24px; height: 24px; background-color: var(--primary-color); border-radius: 50%; display: inline-flex; justify-content: center; align-items: center; flex-shrink: 0; }
         .main-content { flex-grow: 1; display: flex; position: relative; overflow: hidden; }
         .mining-room {
             flex-grow: 1; display: flex; justify-content: center; align-items: flex-end;
@@ -203,56 +180,61 @@
         .room-btn { padding: 5px 10px; background-color: var(--medium-gray); border: none; border-radius: 5px; color: var(--text-color); font-weight: bold; cursor: pointer; transition: all 0.2s ease; }
         .room-btn.active { background-color: #fff; color: var(--primary-color); box-shadow: 0 0 8px #fff; }
         #add-room { background-color: var(--primary-color); color: var(--dark-gray); padding: 7px 15px; font-size: 1.1em; box-shadow: 0 0 10px var(--primary-color); }
-        .shop-modal, .inventory-modal, .chat-modal { 
+        .shop-modal, .inventory-modal, .chat-modal, .games-modal { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
             background-color: rgba(0, 0, 0, 0.8); 
             display: none; 
             justify-content: center; align-items: center; 
             z-index: 100; 
         }
-        .shop-content, .inventory-content, .chat-content { 
+        .shop-content, .inventory-content, .chat-content, .games-content { 
             background-color: var(--dark-gray); 
             border: 2px solid var(--primary-color); 
             border-radius: 10px; 
-            width: 90%; max-width: 900px; 
-            height: 90%; max-height: 700px; 
+            width: 90%; 
             display: flex; flex-direction: column; 
             position: relative; 
             box-shadow: 0 0 25px var(--glow-color); 
             overflow: hidden; 
         }
-        .shop-header, .inventory-header, .chat-header { 
+        .shop-content, .inventory-content { max-width: 900px; height: 90%; max-height: 700px; padding: 30px; }
+        .chat-content { max-width: 600px; height: 70%; max-height: 500px; padding: 20px; }
+        .games-content { max-width: 500px; padding: 30px; }
+
+        .shop-header, .inventory-header, .chat-header, .games-header { 
             display: flex; justify-content: space-between; align-items: center; 
             margin-bottom: 20px; 
             border-bottom: 1px solid var(--border-color); 
+            padding-bottom: 15px;
         }
-        .shop-title, .inventory-title, .chat-title { 
+        .chat-header, .games-header { padding-bottom: 10px; }
+        
+        .shop-title, .inventory-title, .chat-title, .games-title { 
             font-family: 'Orbitron', sans-serif; 
             font-size: 2em; 
             color: var(--primary-color); 
             text-shadow: 0 0 10px var(--primary-color); 
         }
-        .close-shop-btn, .close-inventory-btn, .close-chat-btn { 
+
+        .close-shop-btn, .close-inventory-btn, .close-chat-btn, .close-games-btn { 
             background: none; border: none; 
             font-size: 2em; 
             color: var(--light-gray); 
             cursor: pointer; 
             transition: color 0.2s ease; 
         }
-        .close-shop-btn:hover, .close-inventory-btn:hover, .close-chat-btn:hover { 
+        .close-shop-btn:hover, .close-inventory-btn:hover, .close-chat-btn:hover, .close-games-btn:hover { 
             color: var(--red-alert); 
         }
-        .shop-content, .inventory-content { padding: 30px; }
-        .chat-content { padding: 20px; height: 70%; max-height: 500px; width: 90%; max-width: 600px; }
-        .shop-header, .inventory-header { padding-bottom: 15px; }
-        .chat-header { padding-bottom: 10px; }
+        
         .shop-categories, .inventory-categories { display: flex; gap: 15px; margin-bottom: 20px; }
         .shop-category-btn, .inventory-category-btn { background-color: var(--medium-gray); color: var(--text-color); border: 1px solid var(--border-color); padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: all 0.2s ease; }
         .shop-category-btn.active, .shop-category-btn:hover, .inventory-category-btn.active, .inventory-category-btn:hover { background-color: var(--primary-color); color: var(--dark-gray); box-shadow: 0 0 10px var(--primary-color); }
         .shop-content-area, .inventory-content-area { flex-grow: 1; overflow-y: auto; padding-right: 10px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; align-content: start; }
-        .shop-content-area::-webkit-scrollbar, .inventory-content-area::-webkit-scrollbar { width: 8px; }
-        .shop-content-area::-webkit-scrollbar-track, .inventory-content-area::-webkit-scrollbar-track { background: var(--tertiary-color); border-radius: 10px; }
-        .shop-content-area::-webkit-scrollbar-thumb, .inventory-content-area::-webkit-scrollbar-thumb { background: var(--primary-color); border-radius: 10px; box-shadow: 0 0 5px var(--primary-color); }
+        .shop-content-area::-webkit-scrollbar, .inventory-content-area::-webkit-scrollbar, .chat-messages-area::-webkit-scrollbar { width: 8px; }
+        .shop-content-area::-webkit-scrollbar-track, .inventory-content-area::-webkit-scrollbar-track, .chat-messages-area::-webkit-scrollbar-track { background: var(--tertiary-color); border-radius: 10px; }
+        .shop-content-area::-webkit-scrollbar-thumb, .inventory-content-area::-webkit-scrollbar-thumb, .chat-messages-area::-webkit-scrollbar-thumb { background: var(--primary-color); border-radius: 10px; box-shadow: 0 0 5px var(--primary-color); }
+        
         .shop-item, .inventory-item { background-color: var(--tertiary-color); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; transition: transform 0.2s ease, box-shadow 0.2s ease; }
         .shop-item:hover { transform: translateY(-5px); box-shadow: 0 0 20px rgba(255, 59, 59, 0.4); }
         .item-icon { width: 150px; height: 120px; display: flex; justify-content: center; align-items: center; margin-bottom: 5px; position: relative; overflow: visible;}
@@ -264,16 +246,12 @@
         .item-stats { font-size: 0.9em; color: var(--light-gray); }
         .item-price { font-size: 1.2em; color: limegreen; font-weight: bold; margin-top: auto; }
         .buy-btn {
-            background-color: var(--primary-color); color: var(--dark-gray);
+            background-color: #28a745; color: white;
             padding: 12px 20px; width: 100%; border-radius: 5px;
             border: none; cursor: pointer; font-weight: bold; text-transform: uppercase;
-            box-shadow: 0 0 10px var(--primary-color); transition: all 0.2s ease;
+            box-shadow: 0 0 10px #28a745; transition: all 0.2s ease;
         }
-        .buy-btn:not(:disabled):hover {
-            background-color: #28a745; 
-            box-shadow: 0 0 15px #28a745;
-            filter: brightness(1.1);
-        }
+        .buy-btn:not(:disabled):hover { filter: brightness(1.1); }
         .item-sell-price { font-size: 1.0em; color: var(--energy-low); font-weight: bold; margin-bottom: 5px; }
         .item-actions { display: flex; gap: 5px; width: 100%; margin-top: auto; }
         .use-item-btn, .sell-item-btn { 
@@ -338,65 +316,7 @@
             font-weight: bold;
             cursor: pointer;
         }
-    </style>
-    <div class="games-modal" id="games-modal" style="display: none;">
-        <div class="games-content">
-            <div class="games-header">
-                <h2 class="games-title">Central de Jogos</h2>
-                <button class="close-games-btn" id="close-games-btn">&times;</button>
-            </div>
-            <div class="games-list">
-                <div class="game-item">
-                    <h3>Damas Multiplayer</h3>
-                    <p>Aposta: 25 LCO | Prêmio: 50 LCO</p>
-                    <button id="play-damas-btn">Procurar Partida</button>
-                    <div id="damas-matchmaking-status" style="margin-top: 10px; color: var(--energy-low);"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <style>
-        .games-modal {
-            position: absolute; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%;
-            background-color: rgba(0,0,0,0.8); 
-            display: flex;
-            justify-content: center; 
-            align-items: center; 
-            z-index: 150;
-        }
-        .games-content {
-            background-color: var(--dark-gray); 
-            padding: 30px;
-            border: 2px solid var(--primary-color); 
-            border-radius: 10px;
-            width: 90%; 
-            max-width: 500px;
-            box-shadow: 0 0 20px var(--glow-color);
-        }
-        .games-header { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            border-bottom: 1px solid var(--border-color); 
-            padding-bottom: 15px; 
-            margin-bottom: 20px; 
-        }
-        .games-title { 
-            font-family: 'Orbitron', sans-serif; 
-            color: var(--primary-color); 
-            margin: 0;
-        }
-        .close-games-btn { 
-            background: none; 
-            border: none; 
-            font-size: 2em; 
-            color: var(--light-gray); 
-            cursor: pointer; 
-        }
+        .games-list { display: flex; flex-direction: column; gap: 15px; }
         .game-item { 
             background-color: var(--tertiary-color); 
             padding: 20px; 
@@ -429,7 +349,161 @@
     </style>
     <audio id="sell-sound" src="https://cdn.pixabay.com/download/audio/2022/03/10/audio_c394c55a5b.mp3"></audio>
 
+</head>
+<body>
+    <div id="auth-container">
+        <div id="falling-coins-container">
+            <div class="coin-fall">L</div><div class="coin-fall">L</div><div class="coin-fall">L</div>
+            <div class="coin-fall">L</div><div class="coin-fall">L</div><div class="coin-fall">L</div>
+            <div class="coin-fall">L</div><div class="coin-fall">L</div><div class="coin-fall">L</div>
+            <div class="coin-fall">L</div>
+        </div>
+        <div class="auth-box">
+            <div id="login-form">
+                <h2>Login</h2>
+                <input type="text" id="login-username" placeholder="Usuário" required>
+                <input type="password" id="login-password" placeholder="Senha" required>
+                <button id="login-btn">Entrar</button>
+                <p class="auth-toggle">Não tem uma conta? <a id="show-register-link">Cadastre-se</a></p>
+            </div>
+            <div id="register-form">
+                <h2>Registrar</h2>
+                <input type="text" id="register-username" placeholder="Usuário" required>
+                <input type="password" id="register-password" placeholder="Senha" required>
+                <button id="register-btn">Registrar</button>
+                <p class="auth-toggle">Já tem uma conta? <a id="show-login-link">Faça Login</a></p>
+            </div>
+            <div id="auth-message"></div>
+        </div>
+    </div>
 
+    <div id="app">
+        <header>
+            <div class="logo"><h1>Lula Coin Miner</h1></div>
+            <div class="user-profile">
+                <div class="user-avatar" id="user-avatar">L</div>
+                <div class="user-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Saldo LCO</span>
+                        <span class="stat-value"><span class="icon">$</span><span id="balance">0.00</span></span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Potência Total</span>
+                        <span class="stat-value"><span class="icon">⚡</span><span id="total-power">0 TH/s</span></span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">LCO por Hora</span>
+                        <span class="stat-value"><span class="icon">💰</span><span id="lco-per-hour">0.00</span></span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div id="room-controls" style="position: absolute; top: 80px; left: 50%; transform: translateX(-50%); z-index: 20; display: flex; gap: 10px; align-items: center;"></div>
+
+        <main class="main-content">
+            <div class="mining-room" id="mining-room">
+                <div id="global-ranking-board">
+                    <div id="ranking-header">
+                        <h2>🏆 Ranking Global (Top 5)</h2>
+                    </div>
+                    <div id="ranking-body" style="display: none;">
+                        <ol id="ranking-list"></ol>
+                    </div>
+                </div>
+
+                <div class="computer-setup">
+                    <div class="desk"></div>
+                    <div class="monitor">
+                        <div class="monitor-screen">
+                            <div class="scanline-effect"></div>
+                            <pre class="monitor-text" id="terminal-text"></pre>
+                        </div>
+                    </div>
+                    <div class="keyboard"></div>
+                    <div class="mouse"></div>
+                    <div class="cpu-box">
+                        <div class="cpu-led-light"></div>
+                    </div>
+                </div>
+                <div id="rack-placement-area"></div>
+            </div>
+        </main>
+
+        <div class="stats-bar">
+            <button class="action-btn" id="open-shop-btn">Loja</button>
+            <button class="action-btn" id="open-inventory-btn">Inventário</button>
+            <button class="action-btn" id="open-chat-btn">Chat</button>
+            <button class="action-btn" id="open-games-btn">Jogos</button>
+            <button class="action-btn" id="logout-btn">Sair</button>
+            <button class="action-btn" id="energy-btn" disabled>
+                <div id="energy-bar"></div>
+                <span id="energy-text"></span>
+            </button>
+        </div>
+
+        <div class="shop-modal" id="shop-modal">
+            <div class="shop-content">
+                <div class="shop-header">
+                    <h2 class="shop-title">Loja do Minerador</h2>
+                    <button class="close-shop-btn" id="close-shop-btn">&times;</button>
+                </div>
+                <div class="shop-categories">
+                    <button class="shop-category-btn active" data-category="miners">Mineradoras</button>
+                    <button class="shop-category-btn" data-category="racks">Racks</button>
+                </div>
+                <div class="shop-content-area" id="miners-shop-content"></div>
+                <div class="shop-content-area" id="racks-shop-content" style="display: none;"></div>
+            </div>
+        </div>
+
+        <div class="inventory-modal" id="inventory-modal">
+            <div class="inventory-content">
+                <div class="inventory-header">
+                    <h2 class="inventory-title">Meus Itens</h2>
+                    <button class="close-inventory-btn" id="close-inventory-btn">&times;</button>
+                </div>
+                <div class="inventory-categories">
+                    <button class="inventory-category-btn active" data-category="miners">Mineradoras</button>
+                    <button class="inventory-category-btn" data-category="racks">Racks</button>
+                </div>
+                <div class="inventory-content-area" id="miners-inventory-content"></div>
+                <div class="inventory-content-area" id="racks-inventory-content" style="display: none;"></div>
+            </div>
+        </div>
+        
+        <div class="chat-modal" id="chat-modal">
+            <div class="chat-content">
+                <div class="chat-header">
+                    <h2 class="chat-title">Chat Global</h2>
+                    <button class="close-chat-btn" id="close-chat-btn">&times;</button>
+                </div>
+                <div class="chat-messages-area" id="chat-messages-area"></div>
+                <div class="chat-input-area">
+                    <input type="text" id="chat-input" placeholder="Digite sua mensagem..." maxlength="200">
+                    <button id="chat-send-btn">Enviar</button>
+                </div>
+            </div>
+        </div>
+    
+        <div class="games-modal" id="games-modal">
+            <div class="games-content">
+                <div class="games-header">
+                    <h2 class="games-title">Central de Jogos</h2>
+                    <button class="close-games-btn" id="close-games-btn">&times;</button>
+                </div>
+                <div class="games-list">
+                    <div class="game-item">
+                        <h3>Damas Multiplayer</h3>
+                        <p>Aposta: 25 LCO | Prêmio: 50 LCO</p>
+                        <button id="play-damas-btn">Procurar Partida</button>
+                        <div id="damas-matchmaking-status" style="margin-top: 10px; color: var(--energy-low);"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         // --- CONFIGURAÇÕES E CONSTANTES ---
@@ -498,15 +572,13 @@
         const chatSendBtn = document.getElementById('chat-send-btn');
         const rankingHeader = document.getElementById('ranking-header');
         const rankingBody = document.getElementById('ranking-body');
-        // << CÓDIGO ADICIONADO >>: Constantes para os elementos do Lobby
         const openGamesBtn = document.getElementById('open-games-btn');
         const gamesModal = document.getElementById('games-modal');
         const closeGamesBtn = document.getElementById('close-games-btn');
         const playDamasBtn = document.getElementById('play-damas-btn');
         const damasMatchmakingStatus = document.getElementById('damas-matchmaking-status');
 
-
-        // --- FUNÇÕES DE API (COM CORREÇÃO DE LOGOUT) ---
+        // --- FUNÇÕES DE API ---
         const apiRequest = async (endpoint, method = 'GET', body = null) => {
             const token = localStorage.getItem('token');
             if (!token && !endpoint.startsWith('/api/auth')) { 
@@ -519,45 +591,39 @@
             if (body) { options.body = JSON.stringify(body); }
             try {
                 const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
-                
                 if (response.status === 401) { 
                     handleLogout(true);
                     showAuthMessage('Sessão inválida. Faça login novamente.'); 
                     return null; 
                 }
-
                 if (response.status === 204 || response.headers.get("content-length") === "0") { return { success: true, message: "Operação bem-sucedida." }; }
-                
-                if (response.status === 400 || response.status === 429) {
+                if (response.status >= 400) {
                     const errorData = await response.json();
-                    const errorMessage = errorData.message || (errorData.errors && errorData.errors[0].msg) || 'Erro de validação.';
-                    // Para o lobby, não queremos mostrar no terminal principal
+                    const errorMessage = errorData.message || (errorData.errors && errorData.errors[0].msg) || `Erro ${response.status}.`;
                     if (!endpoint.includes('/api/damas')) {
                         displayTerminalMessage(errorMessage, 'red');
                     }
                     throw new Error(errorMessage);
                 }
-
-                const data = await response.json();
-                if (!response.ok) { throw new Error(data.message || 'Ocorreu um erro.'); }
-                return data;
+                return await response.json();
             } catch (error) {
-                if (! (error.message.includes('mensagens muito rápido') || error.message.includes('A mensagem'))) {
+                if (!(error.message.includes('mensagens muito rápido') || error.message.includes('A mensagem'))) {
                     const messageArea = appContainer.style.display === 'flex' ? terminalTextElement : authMessage;
                     if (error instanceof SyntaxError) {
                         messageArea.textContent = `Erro: Resposta inesperada do servidor.`;
-                    } else if (!endpoint.includes('/api/damas')) { // Não poluir o terminal com erros do lobby
+                    } else if (!endpoint.includes('/api/damas')) {
                         messageArea.textContent = `Erro: ${error.message}`;
                     }
                     messageArea.style.color = 'var(--red-alert)'; 
                 }
-                return { message: error.message }; // Retorna o erro para o lobby tratar
+                return { message: error.message }; 
             }
         };
 
         // --- LÓGICA DO RANKING ---
         async function fetchGlobalRanking() {
             const rankingList = document.getElementById('ranking-list');
+            if(!rankingList) return;
             rankingList.innerHTML = '<li>Carregando...</li>';
             try {
                 const players = await apiRequest('/api/ranking/top5/balance');
@@ -621,7 +687,7 @@
             chatSendBtn.disabled = true;
             const result = await apiRequest('/api/chat/send', 'POST', { message });
             chatSendBtn.disabled = false;
-            if (result) {
+            if (result && result._id) {
                 chatInput.value = '';
                 displaySecureMessage(result);
                 chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight;
@@ -638,40 +704,29 @@
             if (chatUpdateInterval) clearInterval(chatUpdateInterval);
         }
 
-        // --- FUNÇÕES DE AUTENTICAÇÃO (COM CORREÇÃO DE LOGOUT) ---
+        // --- FUNÇÕES DE AUTENTICAÇÃO ---
         const handleLogin = async () => {
             const username = document.getElementById('login-username').value;
             const password = document.getElementById('login-password').value;
-            if (!username || !password) {
-                return showAuthMessage('Preencha todos os campos.');
-            }
+            if (!username || !password) { return showAuthMessage('Preencha todos os campos.'); }
             const data = await apiRequest('/api/auth/login', 'POST', { username, password });
             if (data && data.token) { 
                 localStorage.setItem('token', data.token); 
                 await initializeGame(); 
             }
         };
-
         const handleRegister = async () => {
             const username = document.getElementById('register-username').value;
             const password = document.getElementById('register-password').value;
-            if (!username || !password) {
-                return showAuthMessage('Preencha todos os campos.');
-            }
+            if (!username || !password) { return showAuthMessage('Preencha todos os campos.'); }
             const data = await apiRequest('/api/auth/register', 'POST', { username, password });
             if (data) {
                 showAuthMessage(data.message, 'lime'); 
                 toggleForms(); 
             }
         };
-        
-        let autoSaveInterval = null;
-        
         const handleLogout = (force = false) => {
-            // A chamada saveGame() no logout é importante para salvar o último estado online.
-            if (gameState && !force) {
-                saveGame();
-            }
+            if (gameState && !force) { saveGame(); }
             if (autoSaveInterval) clearInterval(autoSaveInterval);
             localStorage.removeItem('token'); 
             authContainer.style.display = 'flex'; 
@@ -682,9 +737,7 @@
             if(chatUpdateInterval) clearInterval(chatUpdateInterval);
             if(matchmakingInterval) clearInterval(matchmakingInterval);
         };
-
         const showAuthMessage = (msg, color = 'var(--red-alert)') => { authMessage.textContent = msg; authMessage.style.color = color; };
-        
         const toggleForms = () => {
             const loginDisplay = window.getComputedStyle(loginForm).display;
             loginForm.style.display = loginDisplay === 'none' ? 'block' : 'none';
@@ -692,7 +745,7 @@
             authMessage.textContent = '';
         };
 
-        // --- FUNÇÕES DE GERENCIAMENTO DO JOGO (COM A ARQUITETURA CORRIGIDA) ---
+        // --- FUNÇÕES DE GERENCIAMENTO DO JOGO (COM ARQUITETURA CORRIGIDA) ---
         const initializeGame = async () => {
             // 1. Busca o estado do jogo. O backend calcula o progresso offline e retorna o resultado.
             const data = await apiRequest('/api/game/state');
@@ -703,9 +756,7 @@
                 currentRoomIndex = data.currentRoomIndex || 0;
                 
                 // Validações para garantir que o estado do jogo não esteja corrompido
-                if (typeof gameState.energy === 'undefined') {
-                    gameState.energy = 100;
-                }
+                if (typeof gameState.energy === 'undefined') gameState.energy = 100;
                 if (!gameState.placedRacksPerRoom || gameState.placedRacksPerRoom.length === 0) {
                     gameState.placedRacksPerRoom = [Array(NUM_RACK_PLACEMENT_SLOTS).fill(null)]; 
                     currentRoomIndex = 0;
@@ -734,30 +785,49 @@
             // Não precisamos mais definir `gameState.lastEnergyUpdate = Date.now();` aqui.
             await apiRequest('/api/game/update', 'POST', { gameState, currentRoomIndex });
         };
-
-        // --- FUNÇÕES DE EFEITOS E ANIMAÇÕES ---
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-        function playTone({ frequency = 440, duration = 100, volume = 0.5, type = 'sine' }) {
-            if (!audioCtx) return;
-            const oscillator = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            oscillator.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            oscillator.type = type;
-            oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
-            gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration / 1000);
-            oscillator.start(audioCtx.currentTime);
-            oscillator.stop(audioCtx.currentTime + duration / 1000);
-        }
-
-        function playSound(soundId) {
-            const sound = document.getElementById(soundId);
-            if(sound) {
-                sound.currentTime = 0;
-                sound.play().catch(e => console.error("Erro ao tocar som:", e));
-            }
+        
+        let autoSaveInterval = null;
+        let gameLoopInterval, terminalLoopInterval;
+        function startLoops() {
+            if (gameLoopInterval) clearInterval(gameLoopInterval);
+            if (terminalLoopInterval) clearInterval(terminalLoopInterval);
+            if (autoSaveInterval) clearInterval(autoSaveInterval);
+            let lastUpdateTime = Date.now();
+            gameLoopInterval = setInterval(() => {
+                if (!gameState || !gameState.totalPower) return;
+                const now = Date.now();
+                const deltaTime = (now - lastUpdateTime) / 1000;
+                lastUpdateTime = now;
+                if (gameState.energy > 0) {
+                    const powerDraw = gameState.totalPower;
+                    // Ajuste na fórmula de consumo de energia para ser mais escalável
+                    const baseConsumption = 0.05; // Consumo base por segundo
+                    const consumptionPerPower = 0.002; // Consumo adicional por cada TH/s
+                    const totalConsumption = (baseConsumption + (powerDraw * consumptionPerPower));
+                    
+                    gameState.energy -= totalConsumption * deltaTime;
+                    
+                    if (gameState.energy < 0) {
+                        gameState.energy = 0;
+                        updateTotalPower(); // Recalcula a potência para zero se a energia acabar
+                    }
+                    gameState.balance += (gameState.totalPower * (LCO_PER_THS_PER_MINUTE / 60)) * deltaTime;
+                }
+                updateBalance();
+                updateEnergyUI();
+            }, 1000);
+            
+            const terminalMessages = ["Conectando ao núcleo...", "Minerando blocos...", "Sincronizando...", "Verificando integridade...", "Aguardando transações..."];
+            let terminalMessageIndex = 0;
+            const updateTerminal = () => {
+                if(!placingItem) {
+                    displayTerminalMessage(terminalMessages[terminalMessageIndex]);
+                    terminalMessageIndex = (terminalMessageIndex + 1) % terminalMessages.length;
+                }
+            };
+            updateTerminal(); 
+            terminalLoopInterval = setInterval(updateTerminal, 4000);
+            autoSaveInterval = setInterval(() => { if(gameState) { saveGame(); } }, 30000); // Salva a cada 30 segundos
         }
 
         // --- FUNÇÕES DE UI E RENDERIZAÇÃO ---
@@ -779,12 +849,11 @@
             rackSprite.innerHTML = `<div class="rack-top" style="background-color: ${rack.color};"></div><div class="rack-side" style="background-color: ${rack.color}; filter: brightness(0.6);"></div><div class="rack-front" style="border-color: ${rack.color};"><div class="rack-label">${rack.name}</div><div class="slots-container">${slotsHtml}</div><div class="rack-leg front-left"></div><div class="rack-leg front-right"></div></div>`;
             return rackSprite;
         }
-        
         function updateUI() { if (!gameState) return; updateBalance(); updateTotalPower(); renderRoomControls(); renderRackPlacementArea(); updateAddRoomButtonState(); updateEnergyUI(); }
         function updateBalance() { balanceElement.textContent = gameState.balance.toFixed(2); }
         function updateTotalPower() {
             let totalPower = 0;
-            if (gameState.energy > 0) {
+            if (gameState.energy > 0) { // A potência é zero se não houver energia
                 gameState.placedRacksPerRoom.forEach(room => {
                     if(room) room.forEach(rackSlot => {
                         if (rackSlot && rackSlot.placedMiners) {
@@ -827,9 +896,7 @@
             if (gameState.balance >= roomCost) {
                 const data = await apiRequest('/api/game/buy-room', 'POST', { cost: roomCost });
                 if (data && data.gameState) {
-                    const currentEnergy = gameState.energy;
                     gameState = data.gameState;
-                    gameState.energy = currentEnergy; 
                     currentRoomIndex = gameState.placedRacksPerRoom.length - 1;
                     displayTerminalMessage(`Sala ${currentRoomIndex + 1} comprada!`, "lime");
                     updateUI(); 
@@ -847,6 +914,7 @@
         function renderRackPlacementArea() {
             rackPlacementArea.innerHTML = '';
             const currentRoomData = gameState.placedRacksPerRoom[currentRoomIndex];
+            if(!currentRoomData) return;
             for (let i = 0; i < NUM_RACK_PLACEMENT_SLOTS; i++) {
                 const rackData = currentRoomData[i];
                 const slotDiv = document.createElement('div');
@@ -855,6 +923,7 @@
                 if (rackData) {
                     slotDiv.classList.add('occupied');
                     const rackConfig = RACKS.find(r => r.id === rackData.id);
+                    if(!rackConfig) continue;
                     const rackElement = document.createElement('div');
                     rackElement.className = 'rack-2-5d';
                     rackElement.style.height = `${rackConfig.slots * 60 + 60}px`;
@@ -873,9 +942,12 @@
                         minerSlotDiv.className = 'slot';
                         if (miner) {
                             minerSlotDiv.classList.add('occupied');
-                            const gpuSprite = createGpuSprite(MINERS.find(m => m.id === miner.id));
-                            if (miner.isNew) { gpuSprite.classList.add('item-placed'); delete miner.isNew; }
-                            minerSlotDiv.appendChild(gpuSprite);
+                            const minerConfig = MINERS.find(m => m.id === miner.id);
+                            if(minerConfig) {
+                                const gpuSprite = createGpuSprite(minerConfig);
+                                if (miner.isNew) { gpuSprite.classList.add('item-placed'); delete miner.isNew; }
+                                minerSlotDiv.appendChild(gpuSprite);
+                            }
                         } else {
                             minerSlotDiv.classList.add('empty');
                         }
@@ -897,31 +969,26 @@
         }
         
         async function buyItem(itemId, category) {
-            if (isTransactionInProgress) { displayTerminalMessage("Aguarde a transação anterior...", "orange"); return; }
+            if (isTransactionInProgress) return;
             isTransactionInProgress = true;
             try {
                 displayTerminalMessage('Processando compra...', 'yellow');
                 const itemData = (category === 'miners' ? MINERS : RACKS).find(i => i.id === itemId);
                 if (gameState.balance < itemData.price) { displayTerminalMessage('Saldo insuficiente!', 'red'); return; }
-                const data = await apiRequest('/api/game/buy-item', 'POST', { itemId, category, price: itemData.price });
+                const data = await apiRequest('/api/game/buy-item', 'POST', { itemId, category });
                 if (data && data.gameState) {
-                    const currentEnergy = gameState.energy;
                     gameState = data.gameState;
-                    gameState.energy = currentEnergy; 
                     displayTerminalMessage(data.message, 'lime');
                     updateUI(); 
                     renderShop(category); 
                     renderInventory(category);
-                    saveGame();
                 }
             } finally {
                 isTransactionInProgress = false;
-                const activeCategory = document.querySelector('.shop-category-btn.active').dataset.category;
-                renderShop(activeCategory);
             }
         }
 
-        function sellItem(event) {
+        async function sellItem(event) {
             const button = event.currentTarget;
             const itemId = button.dataset.id;
             const category = button.dataset.category;
@@ -936,11 +1003,12 @@
                 if (invItem.quantity <= 0) {
                     gameState.inventory[inventoryCategory] = gameState.inventory[inventoryCategory].filter(i => i.id !== itemId);
                 }
-                playSound('sell-sound');
+                const audio = new Audio("https://cdn.pixabay.com/download/audio/2022/03/10/audio_c394c55a5b.mp3");
+                audio.play();
                 displayTerminalMessage(`${itemConfig.name} vendido por ◎${sellPrice.toFixed(2)}!`, 'lime');
                 updateUI();
                 renderInventory(category);
-                saveGame();
+                await saveGame();
             }
         }
         
@@ -989,44 +1057,47 @@
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { cancelPlacement(); } });
 
         function handlePlacement(target) {
+            if (!placingItem) return;
+            let itemUsed = false;
             if (placingItem.type === 'rack' && target.classList.contains('available')) {
                 const slotIndex = parseInt(target.dataset.slotIndex);
                 const invItem = gameState.inventory.racks.find(r => r.id === placingItem.item.id);
-                invItem.quantity--;
-                const newRackData = { id: placingItem.item.id, placedMiners: Array(placingItem.item.slots).fill(null), isNew: true };
-                gameState.placedRacksPerRoom[currentRoomIndex][slotIndex] = newRackData;
-                displayTerminalMessage(`Rack ${placingItem.item.name} colocado!`, 'lime');
-                playTone({ frequency: 220, duration: 150, type: 'square', volume: 0.2 });
-                cancelPlacement(); updateUI(); saveGame();
+                if (invItem && invItem.quantity > 0) {
+                    invItem.quantity--;
+                    if (invItem.quantity <= 0) gameState.inventory.racks = gameState.inventory.racks.filter(r => r.id !== invItem.id);
+                    const newRackData = { id: placingItem.item.id, placedMiners: Array(placingItem.item.slots).fill(null), isNew: true };
+                    gameState.placedRacksPerRoom[currentRoomIndex][slotIndex] = newRackData;
+                    displayTerminalMessage(`Rack ${placingItem.item.name} colocado!`, 'lime');
+                    playTone({ frequency: 220, duration: 150, type: 'square', volume: 0.2 });
+                    itemUsed = true;
+                }
             }
             else if (placingItem.type === 'miner' && target.classList.contains('empty')) {
                 const rackSlotIndex = parseInt(target.dataset.rackSlotIndex);
                 const minerSlotIndex = parseInt(target.dataset.minerSlotIndex);
                 const invItem = gameState.inventory.miners.find(m => m.id === placingItem.item.id);
-                invItem.quantity--;
-                gameState.placedRacksPerRoom[currentRoomIndex][rackSlotIndex].placedMiners[minerSlotIndex] = { id: placingItem.item.id, isNew: true };
-                displayTerminalMessage(`GPU ${placingItem.item.name} instalada!`, 'lime');
-                playTone({ frequency: 880, duration: 100, type: 'sine', volume: 0.3 });
-                cancelPlacement(); updateUI(); saveGame();
-            } else {
-                displayTerminalMessage(`Local inválido para ${placingItem.item.name}!`, 'red');
-            }
+                if (invItem && invItem.quantity > 0) {
+                    invItem.quantity--;
+                    if (invItem.quantity <= 0) gameState.inventory.miners = gameState.inventory.miners.filter(m => m.id !== invItem.id);
+                    gameState.placedRacksPerRoom[currentRoomIndex][rackSlotIndex].placedMiners[minerSlotIndex] = { id: placingItem.item.id, isNew: true };
+                    displayTerminalMessage(`GPU ${placingItem.item.name} instalada!`, 'lime');
+                    playTone({ frequency: 880, duration: 100, type: 'sine', volume: 0.3 });
+                    itemUsed = true;
+                }
+            } else { displayTerminalMessage(`Local inválido para ${placingItem.item.name}!`, 'red'); }
+            
+            if (itemUsed) { cancelPlacement(); updateUI(); saveGame(); }
         }
         
         function returnItemToInventory(itemId, category) { 
             const inventoryCategory = category === 'miner' ? gameState.inventory.miners : gameState.inventory.racks;
             let invItem = inventoryCategory.find(i => i.id === itemId);
-            if (invItem) {
-                invItem.quantity++;
-            } else {
-                inventoryCategory.push({ id: itemId, quantity: 1 });
-            }
+            if (invItem) { invItem.quantity++; } else { inventoryCategory.push({ id: itemId, quantity: 1 }); }
         }
 
         async function handleWorldClick(event) {
             const target = event.currentTarget;
             if (placingItem) { handlePlacement(target); return; }
-
             if (target.classList.contains('slot') && target.classList.contains('occupied')) {
                 const rackSlotIndex = parseInt(target.dataset.rackSlotIndex);
                 const minerSlotIndex = parseInt(target.dataset.minerSlotIndex);
@@ -1058,16 +1129,15 @@
         }
 
         function updateEnergyUI() {
+            if (!gameState) return;
             const energyPercent = gameState.energy;
             energyBar.style.width = `${energyPercent}%`;
-            energyText.innerHTML = `<span class="energy-icon">⚡</span> <span class="energy-label">Energia:</span> <span class="energy-value">${energyPercent.toFixed(0)}%</span>`;
-
             if (energyPercent <= 0) {
                 energyBar.style.backgroundColor = 'var(--energy-empty)';
                 energyBtn.style.borderColor = 'var(--energy-empty)';
                 energyBtn.classList.add('rechargeable');
                 energyText.innerHTML = `Recarregar (<span class="energy-value">1 LCO</span>)`;
-                energyBtn.disabled = false;
+                energyBtn.disabled = gameState.balance < 1;
                 miningRoom.classList.add('no-energy');
             } else if (energyPercent <= 20) {
                 energyBar.style.backgroundColor = 'var(--energy-low)';
@@ -1080,53 +1150,47 @@
                 energyBar.style.backgroundColor = 'var(--energy-full)';
                 energyBtn.style.borderColor = 'var(--energy-full)';
                 energyBtn.classList.remove('rechargeable');
+                energyText.innerHTML = `<span class="energy-icon">⚡</span> <span class="energy-label">Energia:</span> <span class="energy-value">${energyPercent.toFixed(0)}%</span>`;
                 energyBtn.disabled = true;
                 miningRoom.classList.remove('no-energy');
             }
         }
-
         function handleEnergyRecharge() {
+            let recharged = false;
             if (gameState.energy <= 0) { // Custo de 1 LCO
                 if (gameState.balance >= 1) {
                     gameState.balance -= 1;
                     gameState.energy = 100;
-                    updateUI();
-                    saveGame(); // Salva o estado após recarregar
+                    recharged = true;
+                    displayTerminalMessage("Energia restaurada!", "lime");
                 } else {
                     displayTerminalMessage("LCO insuficiente para recarregar!", "red");
                 }
             } else if (gameState.energy <= 20) { // Recarga grátis
                 gameState.energy = 100;
+                recharged = true;
+                displayTerminalMessage("Energia restaurada gratuitamente!", "lime");
+            }
+            if(recharged) {
                 updateUI();
-                saveGame(); // Salva o estado após recarregar
+                saveGame();
             }
         }
 
-        // << CÓDIGO ADICIONADO >>: Lógica do Lobby de Jogos
         let matchmakingInterval = null; 
-
-        function openGames() {
-            gamesModal.style.display = 'flex';
-        }
-
+        function openGames() { gamesModal.style.display = 'flex'; }
         function closeGames() {
             gamesModal.style.display = 'none';
-            if (matchmakingInterval) {
-                clearInterval(matchmakingInterval);
-            }
+            if (matchmakingInterval) { clearInterval(matchmakingInterval); }
             damasMatchmakingStatus.textContent = '';
             playDamasBtn.disabled = false;
         }
-
         async function joinDamasMatchmaking() {
             playDamasBtn.disabled = true;
             damasMatchmakingStatus.textContent = 'Entrando na fila...';
-            
             const joinResponse = await apiRequest('/api/damas/matchmaking/join', 'POST');
-            
             if (joinResponse && joinResponse.message) {
                 damasMatchmakingStatus.textContent = joinResponse.message;
-
                 if (joinResponse.message === "Procurando partida..." || joinResponse.message === "Você já está na fila.") {
                     if (matchmakingInterval) clearInterval(matchmakingInterval); 
                     matchmakingInterval = setInterval(checkMatchmakingStatus, 3000); 
@@ -1139,60 +1203,13 @@
                 playDamasBtn.disabled = false;
             }
         }
-
         async function checkMatchmakingStatus() {
             const statusResponse = await apiRequest('/api/damas/matchmaking/status');
-            
             if (statusResponse && statusResponse.matchFound) {
                 clearInterval(matchmakingInterval);
                 damasMatchmakingStatus.textContent = 'Partida encontrada! Redirecionando...';
                 window.location.href = `jogodedamas.html?gameId=${statusResponse.gameId}`;
             }
-        }
-
-
-        let gameLoopInterval, terminalLoopInterval;
-        function startLoops() {
-            if (gameLoopInterval) clearInterval(gameLoopInterval);
-            if (terminalLoopInterval) clearInterval(terminalLoopInterval);
-            if (autoSaveInterval) clearInterval(autoSaveInterval);
-
-            let lastUpdateTime = Date.now();
-            gameLoopInterval = setInterval(() => {
-                if (!gameState) return;
-                const now = Date.now();
-                const deltaTime = (now - lastUpdateTime) / 1000;
-                lastUpdateTime = now;
-
-                if (gameState.energy > 0) {
-                    gameState.energy -= ENERGY_CONSUMPTION_RATE * deltaTime;
-                    if (gameState.energy < 0) {
-                        gameState.energy = 0;
-                        updateTotalPower();
-                    }
-                }
-                
-                if (gameState.energy > 0) {
-                    gameState.balance += (gameState.totalPower * (LCO_PER_THS_PER_MINUTE / 60)) * deltaTime;
-                }
-                
-                updateBalance();
-                updateEnergyUI();
-
-            }, 1000);
-            
-            const terminalMessages = ["Conectando ao núcleo...", "Minerando blocos...", "Sincronizando...", "Verificando integridade...", "Aguardando transações..."];
-            let terminalMessageIndex = 0;
-            const updateTerminal = () => {
-                if(!placingItem) {
-                    displayTerminalMessage(terminalMessages[terminalMessageIndex]);
-                    terminalMessageIndex = (terminalMessageIndex + 1) % terminalMessages.length;
-                }
-            };
-            updateTerminal(); 
-            terminalLoopInterval = setInterval(updateTerminal, 4000);
-            
-            autoSaveInterval = setInterval(() => { if(gameState) { saveGame(); } }, 30000);
         }
 
         // --- INICIALIZAÇÃO E EVENT LISTENERS ---
@@ -1208,22 +1225,15 @@
         energyBtn.addEventListener('click', handleEnergyRecharge);
         shopCategoryBtns.forEach(btn => btn.addEventListener('click', () => { shopCategoryBtns.forEach(b => b.classList.remove('active')); btn.classList.add('active'); renderShop(btn.dataset.category); }));
         inventoryCategoryBtns.forEach(btn => btn.addEventListener('click', () => { inventoryCategoryBtns.forEach(b => b.classList.remove('active')); btn.classList.add('active'); renderInventory(btn.dataset.category); }));
-        
         openChatBtn.addEventListener('click', openChat);
         closeChatBtn.addEventListener('click', closeChat);
         chatSendBtn.addEventListener('click', postMessage);
-        chatInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                postMessage();
-            }
-        });
+        chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') postMessage(); });
         rankingHeader.addEventListener('click', handleRankingClick);
-
         openGamesBtn.addEventListener('click', openGames);
         closeGamesBtn.addEventListener('click', closeGames);
         playDamasBtn.addEventListener('click', joinDamasMatchmaking);
-
-        window.addEventListener('beforeunload', () => { if (gameState) { saveGame(); } });
+        window.addEventListener('beforeunload', () => { if (gameState) saveGame(); });
 
         if (localStorage.getItem('token')) {
             initializeGame();
