@@ -179,56 +179,61 @@
         .room-btn { padding: 5px 10px; background-color: var(--medium-gray); border: none; border-radius: 5px; color: var(--text-color); font-weight: bold; cursor: pointer; transition: all 0.2s ease; }
         .room-btn.active { background-color: #fff; color: var(--primary-color); box-shadow: 0 0 8px #fff; }
         #add-room { background-color: var(--primary-color); color: var(--dark-gray); padding: 7px 15px; font-size: 1.1em; box-shadow: 0 0 10px var(--primary-color); }
-        .shop-modal, .inventory-modal, .chat-modal { 
+        .shop-modal, .inventory-modal, .chat-modal, .games-modal { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
             background-color: rgba(0, 0, 0, 0.8); 
             display: none; 
             justify-content: center; align-items: center; 
             z-index: 100; 
         }
-        .shop-content, .inventory-content, .chat-content { 
+        .shop-content, .inventory-content, .chat-content, .games-content { 
             background-color: var(--dark-gray); 
             border: 2px solid var(--primary-color); 
             border-radius: 10px; 
-            width: 90%; max-width: 900px; 
-            height: 90%; max-height: 700px; 
+            width: 90%; 
             display: flex; flex-direction: column; 
             position: relative; 
             box-shadow: 0 0 25px var(--glow-color); 
             overflow: hidden; 
         }
-        .shop-header, .inventory-header, .chat-header { 
+        .shop-content, .inventory-content { max-width: 900px; height: 90%; max-height: 700px; padding: 30px; }
+        .chat-content { max-width: 600px; height: 70%; max-height: 500px; padding: 20px; }
+        .games-content { max-width: 500px; padding: 30px; }
+
+        .shop-header, .inventory-header, .chat-header, .games-header { 
             display: flex; justify-content: space-between; align-items: center; 
             margin-bottom: 20px; 
             border-bottom: 1px solid var(--border-color); 
+            padding-bottom: 15px;
         }
-        .shop-title, .inventory-title, .chat-title { 
+        .chat-header, .games-header { padding-bottom: 10px; }
+        
+        .shop-title, .inventory-title, .chat-title, .games-title { 
             font-family: 'Orbitron', sans-serif; 
             font-size: 2em; 
             color: var(--primary-color); 
             text-shadow: 0 0 10px var(--primary-color); 
         }
-        .close-shop-btn, .close-inventory-btn, .close-chat-btn { 
+
+        .close-shop-btn, .close-inventory-btn, .close-chat-btn, .close-games-btn { 
             background: none; border: none; 
             font-size: 2em; 
             color: var(--light-gray); 
             cursor: pointer; 
             transition: color 0.2s ease; 
         }
-        .close-shop-btn:hover, .close-inventory-btn:hover, .close-chat-btn:hover { 
+        .close-shop-btn:hover, .close-inventory-btn:hover, .close-chat-btn:hover, .close-games-btn:hover { 
             color: var(--red-alert); 
         }
-        .shop-content, .inventory-content { padding: 30px; }
-        .chat-content { padding: 20px; height: 70%; max-height: 500px; width: 90%; max-width: 600px; }
-        .shop-header, .inventory-header { padding-bottom: 15px; }
-        .chat-header { padding-bottom: 10px; }
+        
         .shop-categories, .inventory-categories { display: flex; gap: 15px; margin-bottom: 20px; }
         .shop-category-btn, .inventory-category-btn { background-color: var(--medium-gray); color: var(--text-color); border: 1px solid var(--border-color); padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: all 0.2s ease; }
         .shop-category-btn.active, .shop-category-btn:hover, .inventory-category-btn.active, .inventory-category-btn:hover { background-color: var(--primary-color); color: var(--dark-gray); box-shadow: 0 0 10px var(--primary-color); }
         .shop-content-area, .inventory-content-area { flex-grow: 1; overflow-y: auto; padding-right: 10px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; align-content: start; }
-        .shop-content-area::-webkit-scrollbar, .inventory-content-area::-webkit-scrollbar { width: 8px; }
-        .shop-content-area::-webkit-scrollbar-track, .inventory-content-area::-webkit-scrollbar-track { background: var(--tertiary-color); border-radius: 10px; }
-        .shop-content-area::-webkit-scrollbar-thumb, .inventory-content-area::-webkit-scrollbar-thumb { background: var(--primary-color); border-radius: 10px; box-shadow: 0 0 5px var(--primary-color); }
+        .shop-content-area::-webkit-scrollbar, .inventory-content-area::-webkit-scrollbar, .chat-messages-area::-webkit-scrollbar { width: 8px; }
+        .shop-content-area::-webkit-scrollbar-track, .inventory-content-area::-webkit-scrollbar-track, .chat-messages-area::-webkit-scrollbar-track { background: var(--tertiary-color); border-radius: 10px; }
+        .shop-content-area::-webkit-scrollbar-thumb, .inventory-content-area::-webkit-scrollbar-thumb, .chat-messages-area::-webkit-scrollbar-thumb { background: var(--primary-color); border-radius: 10px; box-shadow: 0 0 5px var(--primary-color); }
+        
         .shop-item, .inventory-item { background-color: var(--tertiary-color); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; transition: transform 0.2s ease, box-shadow 0.2s ease; }
         .shop-item:hover { transform: translateY(-5px); box-shadow: 0 0 20px rgba(255, 59, 59, 0.4); }
         .item-icon { width: 150px; height: 120px; display: flex; justify-content: center; align-items: center; margin-bottom: 5px; position: relative; overflow: visible;}
@@ -240,16 +245,12 @@
         .item-stats { font-size: 0.9em; color: var(--light-gray); }
         .item-price { font-size: 1.2em; color: limegreen; font-weight: bold; margin-top: auto; }
         .buy-btn {
-            background-color: var(--primary-color); color: var(--dark-gray);
+            background-color: #28a745; color: white;
             padding: 12px 20px; width: 100%; border-radius: 5px;
             border: none; cursor: pointer; font-weight: bold; text-transform: uppercase;
-            box-shadow: 0 0 10px var(--primary-color); transition: all 0.2s ease;
+            box-shadow: 0 0 10px #28a745; transition: all 0.2s ease;
         }
-        .buy-btn:not(:disabled):hover {
-            background-color: #28a745; 
-            box-shadow: 0 0 15px #28a745;
-            filter: brightness(1.1);
-        }
+        .buy-btn:not(:disabled):hover { filter: brightness(1.1); }
         .item-sell-price { font-size: 1.0em; color: var(--energy-low); font-weight: bold; margin-bottom: 5px; }
         .item-actions { display: flex; gap: 5px; width: 100%; margin-top: auto; }
         .use-item-btn, .sell-item-btn { 
@@ -314,65 +315,7 @@
             font-weight: bold;
             cursor: pointer;
         }
-    </style>
-    <div class="games-modal" id="games-modal" style="display: none;">
-        <div class="games-content">
-            <div class="games-header">
-                <h2 class="games-title">Central de Jogos</h2>
-                <button class="close-games-btn" id="close-games-btn">&times;</button>
-            </div>
-            <div class="games-list">
-                <div class="game-item">
-                    <h3>Damas Multiplayer</h3>
-                    <p>Aposta: 25 LCO | Prêmio: 50 LCO</p>
-                    <button id="play-damas-btn">Procurar Partida</button>
-                    <div id="damas-matchmaking-status" style="margin-top: 10px; color: var(--energy-low);"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <style>
-        .games-modal {
-            position: absolute; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%;
-            background-color: rgba(0,0,0,0.8); 
-            display: flex;
-            justify-content: center; 
-            align-items: center; 
-            z-index: 150;
-        }
-        .games-content {
-            background-color: var(--dark-gray); 
-            padding: 30px;
-            border: 2px solid var(--primary-color); 
-            border-radius: 10px;
-            width: 90%; 
-            max-width: 500px;
-            box-shadow: 0 0 20px var(--glow-color);
-        }
-        .games-header { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            border-bottom: 1px solid var(--border-color); 
-            padding-bottom: 15px; 
-            margin-bottom: 20px; 
-        }
-        .games-title { 
-            font-family: 'Orbitron', sans-serif; 
-            color: var(--primary-color); 
-            margin: 0;
-        }
-        .close-games-btn { 
-            background: none; 
-            border: none; 
-            font-size: 2em; 
-            color: var(--light-gray); 
-            cursor: pointer; 
-        }
+        .games-list { display: flex; flex-direction: column; gap: 15px; }
         .game-item { 
             background-color: var(--tertiary-color); 
             padding: 20px; 
@@ -404,8 +347,161 @@
         }
     </style>
     <audio id="sell-sound" src="https://cdn.pixabay.com/download/audio/2022/03/10/audio_c394c55a5b.mp3"></audio>
+</head>
+<body>
+    <div id="auth-container">
+        <div id="falling-coins-container">
+            <div class="coin-fall">L</div><div class="coin-fall">L</div><div class="coin-fall">L</div>
+            <div class="coin-fall">L</div><div class="coin-fall">L</div><div class="coin-fall">L</div>
+            <div class="coin-fall">L</div><div class="coin-fall">L</div><div class="coin-fall">L</div>
+            <div class="coin-fall">L</div>
+        </div>
+        <div class="auth-box">
+            <div id="login-form">
+                <h2>Login</h2>
+                <input type="text" id="login-username" placeholder="Usuário" required>
+                <input type="password" id="login-password" placeholder="Senha" required>
+                <button id="login-btn">Entrar</button>
+                <p class="auth-toggle">Não tem uma conta? <a id="show-register-link">Cadastre-se</a></p>
+            </div>
+            <div id="register-form">
+                <h2>Registrar</h2>
+                <input type="text" id="register-username" placeholder="Usuário" required>
+                <input type="password" id="register-password" placeholder="Senha" required>
+                <button id="register-btn">Registrar</button>
+                <p class="auth-toggle">Já tem uma conta? <a id="show-login-link">Faça Login</a></p>
+            </div>
+            <div id="auth-message"></div>
+        </div>
+    </div>
 
+    <div id="app">
+        <header>
+            <div class="logo"><h1>Lula Coin Miner</h1></div>
+            <div class="user-profile">
+                <div class="user-avatar" id="user-avatar">L</div>
+                <div class="user-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Saldo LCO</span>
+                        <span class="stat-value"><span class="icon">$</span><span id="balance">0.00</span></span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Potência Total</span>
+                        <span class="stat-value"><span class="icon">⚡</span><span id="total-power">0 TH/s</span></span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">LCO por Hora</span>
+                        <span class="stat-value"><span class="icon">💰</span><span id="lco-per-hour">0.00</span></span>
+                    </div>
+                </div>
+            </div>
+        </header>
 
+        <div id="room-controls" style="position: absolute; top: 80px; left: 50%; transform: translateX(-50%); z-index: 20; display: flex; gap: 10px; align-items: center;"></div>
+
+        <main class="main-content">
+            <div class="mining-room" id="mining-room">
+                <div id="global-ranking-board">
+                    <div id="ranking-header">
+                        <h2>🏆 Ranking Global (Top 5)</h2>
+                    </div>
+                    <div id="ranking-body" style="display: none;">
+                        <ol id="ranking-list"></ol>
+                    </div>
+                </div>
+
+                <div class="computer-setup">
+                    <div class="desk"></div>
+                    <div class="monitor">
+                        <div class="monitor-screen">
+                            <div class="scanline-effect"></div>
+                            <pre class="monitor-text" id="terminal-text"></pre>
+                        </div>
+                    </div>
+                    <div class="keyboard"></div>
+                    <div class="mouse"></div>
+                    <div class="cpu-box">
+                        <div class="cpu-led-light"></div>
+                    </div>
+                </div>
+                <div id="rack-placement-area"></div>
+            </div>
+        </main>
+
+        <div class="stats-bar">
+            <button class="action-btn" id="open-shop-btn">Loja</button>
+            <button class="action-btn" id="open-inventory-btn">Inventário</button>
+            <button class="action-btn" id="open-chat-btn">Chat</button>
+            <button class="action-btn" id="open-games-btn">Jogos</button>
+            <button class="action-btn" id="logout-btn">Sair</button>
+            <button class="action-btn" id="energy-btn" disabled>
+                <div id="energy-bar"></div>
+                <span id="energy-text"></span>
+            </button>
+        </div>
+
+        <div class="shop-modal" id="shop-modal">
+            <div class="shop-content">
+                <div class="shop-header">
+                    <h2 class="shop-title">Loja do Minerador</h2>
+                    <button class="close-shop-btn" id="close-shop-btn">&times;</button>
+                </div>
+                <div class="shop-categories">
+                    <button class="shop-category-btn active" data-category="miners">Mineradoras</button>
+                    <button class="shop-category-btn" data-category="racks">Racks</button>
+                </div>
+                <div class="shop-content-area" id="miners-shop-content"></div>
+                <div class="shop-content-area" id="racks-shop-content" style="display: none;"></div>
+            </div>
+        </div>
+
+        <div class="inventory-modal" id="inventory-modal">
+            <div class="inventory-content">
+                <div class="inventory-header">
+                    <h2 class="inventory-title">Meus Itens</h2>
+                    <button class="close-inventory-btn" id="close-inventory-btn">&times;</button>
+                </div>
+                <div class="inventory-categories">
+                    <button class="inventory-category-btn active" data-category="miners">Mineradoras</button>
+                    <button class="inventory-category-btn" data-category="racks">Racks</button>
+                </div>
+                <div class="inventory-content-area" id="miners-inventory-content"></div>
+                <div class="inventory-content-area" id="racks-inventory-content" style="display: none;"></div>
+            </div>
+        </div>
+        
+        <div class="chat-modal" id="chat-modal">
+            <div class="chat-content">
+                <div class="chat-header">
+                    <h2 class="chat-title">Chat Global</h2>
+                    <button class="close-chat-btn" id="close-chat-btn">&times;</button>
+                </div>
+                <div class="chat-messages-area" id="chat-messages-area">
+                    </div>
+                <div class="chat-input-area">
+                    <input type="text" id="chat-input" placeholder="Digite sua mensagem..." maxlength="200">
+                    <button id="chat-send-btn">Enviar</button>
+                </div>
+            </div>
+        </div>
+    
+        <div class="games-modal" id="games-modal">
+            <div class="games-content">
+                <div class="games-header">
+                    <h2 class="games-title">Central de Jogos</h2>
+                    <button class="close-games-btn" id="close-games-btn">&times;</button>
+                </div>
+                <div class="games-list">
+                    <div class="game-item">
+                        <h3>Damas Multiplayer</h3>
+                        <p>Aposta: 25 LCO | Prêmio: 50 LCO</p>
+                        <button id="play-damas-btn">Procurar Partida</button>
+                        <div id="damas-matchmaking-status" style="margin-top: 10px; color: var(--energy-low);"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         // --- CONFIGURAÇÕES E CONSTANTES ---
@@ -474,7 +570,6 @@
         const chatSendBtn = document.getElementById('chat-send-btn');
         const rankingHeader = document.getElementById('ranking-header');
         const rankingBody = document.getElementById('ranking-body');
-        // << CÓDIGO ADICIONADO >>: Constantes para os elementos do Lobby
         const openGamesBtn = document.getElementById('open-games-btn');
         const gamesModal = document.getElementById('games-modal');
         const closeGamesBtn = document.getElementById('close-games-btn');
@@ -644,9 +739,7 @@
         let autoSaveInterval = null;
         
         const handleLogout = (force = false) => {
-            if (gameState && !force) {
-                saveGame();
-            }
+            // *** CORREÇÃO: Removido o saveGame() daqui para não zerar o relógio offline ***
             if (autoSaveInterval) clearInterval(autoSaveInterval);
             localStorage.removeItem('token'); 
             authContainer.style.display = 'flex'; 
@@ -681,6 +774,10 @@
                 if (!gameState.placedRacksPerRoom || gameState.placedRacksPerRoom.length === 0) {
                     gameState.placedRacksPerRoom = [Array(NUM_RACK_PLACEMENT_SLOTS).fill(null)]; currentRoomIndex = 0;
                 }
+                
+                // *** CORREÇÃO: Chamada para salvar o progresso offline recebido ***
+                await saveGame();
+
                 authContainer.style.display = 'none'; appContainer.style.display = 'flex';
                 userAvatar.textContent = (data.username ? data.username.charAt(0).toUpperCase() : 'L');
                 updateUI(); 
@@ -691,7 +788,7 @@
         };
         const saveGame = async () => {
             if (!gameState) return;
-            gameState.lastEnergyUpdate = Date.now();
+            // *** CORREÇÃO: Removida a atualização do timestamp daqui ***
             await apiRequest('/api/game/update', 'POST', { gameState, currentRoomIndex });
         };
 
@@ -1046,21 +1143,24 @@
         }
 
         function handleEnergyRecharge() {
+            let recharged = false;
             if (gameState.energy <= 0) { // Custo de 1 LCO
                 if (gameState.balance >= 1) {
                     gameState.balance -= 1;
                     gameState.energy = 100;
-                    gameState.lastEnergyUpdate = Date.now();
+                    recharged = true;
                     displayTerminalMessage("Energia restaurada!", "lime");
-                    updateUI();
                 } else {
                     displayTerminalMessage("LCO insuficiente para recarregar!", "red");
                 }
             } else if (gameState.energy <= 20) { // Recarga grátis
                 gameState.energy = 100;
-                gameState.lastEnergyUpdate = Date.now();
+                recharged = true;
                 displayTerminalMessage("Energia restaurada gratuitamente!", "lime");
+            }
+            if(recharged) {
                 updateUI();
+                saveGame();
             }
         }
 
@@ -1127,7 +1227,8 @@
                 lastUpdateTime = now;
 
                 if (gameState.energy > 0) {
-                    gameState.energy -= ENERGY_CONSUMPTION_RATE * deltaTime;
+                    const powerDraw = gameState.totalPower;
+                    gameState.energy -= (ENERGY_CONSUMPTION_RATE * (powerDraw / 10 + 1) / 5) * deltaTime;
                     if (gameState.energy < 0) {
                         gameState.energy = 0;
                         updateTotalPower();
@@ -1154,7 +1255,7 @@
             updateTerminal(); 
             terminalLoopInterval = setInterval(updateTerminal, 4000);
             
-            autoSaveInterval = setInterval(() => { if(gameState) { saveGame(); } }, 30000);
+            autoSaveInterval = setInterval(() => { if(gameState) { saveGame(); } }, 10000);
         }
 
         // --- INICIALIZAÇÃO E EVENT LISTENERS ---
@@ -1194,4 +1295,5 @@
         }
     });
     </script>
+</body>
 </html>

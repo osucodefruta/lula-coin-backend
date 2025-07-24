@@ -62,18 +62,18 @@ router.get('/state', authMiddleware, async (req, res) => {
             if (totalPower > 0 && user.gameState.energy > 0) {
                 // Usando as mesmas taxas do seu frontend para consistência
                 const LCO_PER_THS_PER_MINUTE = 0.1;
-                const baseConsumption = 0.05;
-                const consumptionPerPower = 0.002;
+                const ENERGY_CONSUMPTION_RATE = 100 / 600;
 
                 const lcoPerSecond = totalPower * (LCO_PER_THS_PER_MINUTE / 60);
-                const totalEnergyConsumptionPerSecond = (baseConsumption + (totalPower * consumptionPerPower));
+                // A fórmula de consumo offline precisa ser mais simples e consistente
+                const energyConsumptionPerSecond = ENERGY_CONSUMPTION_RATE;
 
-                const secondsOfMiningPossible = user.gameState.energy / totalEnergyConsumptionPerSecond;
+                const secondsOfMiningPossible = user.gameState.energy / energyConsumptionPerSecond;
                 const secondsMined = Math.min(secondsOffline, secondsOfMiningPossible);
 
                 if (secondsMined > 0) {
                     const coinsEarned = lcoPerSecond * secondsMined;
-                    const energyConsumed = totalEnergyConsumptionPerSecond * secondsMined;
+                    const energyConsumed = energyConsumptionPerSecond * secondsMined;
                     
                     updatedGameState.balance += coinsEarned;
                     updatedGameState.energy -= energyConsumed;
@@ -82,8 +82,6 @@ router.get('/state', authMiddleware, async (req, res) => {
             }
         }
         
-        // AVISO: As linhas de save() foram REMOVIDAS daqui propositalmente.
-        // A rota agora apenas retorna o estado calculado para o cliente.
         res.json({
             username: user.username,
             gameState: updatedGameState,
