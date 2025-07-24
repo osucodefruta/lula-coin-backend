@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Damas 3D - Online com Grafite</title>
+    <title>Damas 3D - Online com Grafite (Versão Corrigida)</title>
     <style>
         body { margin: 0; overflow: hidden; font-family: sans-serif; }
         #game-container { width: 100vw; height: 100vh; }
@@ -49,10 +49,9 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
     
     <script>
-        // << LÓGICA DE JOGO ATUALIZADA >> - Inclui verificação de movimentos válidos
         const LocalGameLogic = {
             isValidMove: function(board, from, to, player, isKing) {
-                if (board[to.row][to.col] !== 0) return { valid: false };
+                if (!board || !board[to.row] || board[to.row][to.col] !== 0) return { valid: false };
                 const moveDir = player === 1 ? -1 : 1;
                 const dr = to.row - from.row;
                 const dc = to.col - from.col;
@@ -114,19 +113,17 @@
                 }
                 return false;
             },
-            // << NOVO RECURSO >> - Verifica se um jogador tem algum movimento válido (captura ou normal)
             hasAnyValidMoves: function(board, player) {
                 for(let r = 0; r < 8; r++) {
                     for(let c = 0; c < 8; c++) {
                         const piece = board[r][c];
-                        if (piece !== 0 && (piece % 2 === player % 2)) {
+                        if (piece !== 0 && ((piece === 1 || piece === 3) ? 1 : 2) === player) {
                             const isKing = piece > 2;
-                            // Verifica todas as 4 direções diagonais para qualquer movimento
                             const directions = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
                             for(const [dr, dc] of directions) {
                                 if(this.isValidMove(board, {row:r, col:c}, {row: r+dr, col: c+dc}, player, isKing).valid) return true;
                                 if(this.isValidMove(board, {row:r, col:c}, {row: r+dr*2, col: c+dc*2}, player, isKing).valid) return true;
-                                if(isKing) { // Damas podem se mover mais longe
+                                if(isKing) {
                                     for(let i=3; i<8; i++) {
                                         if(this.isValidMove(board, {row:r, col:c}, {row: r+dr*i, col: c+dc*i}, player, isKing).valid) return true;
                                     }
@@ -210,7 +207,7 @@
                 boardGroup.position.y = tableHeight + (0.25 * SCALE);
                 piecesGroup.position.y = boardGroup.position.y;
                 scene.add(boardGroup, piecesGroup);
-                for (let r = 0; r < 8; r++) { for (let c = 0; c < 8; c++) { const sqMat = new THREE.MeshStandardMaterial({ color: (r + c) % 2 === 0 ? 0xffffff : 0x000000 }); const sq = new THREE.Mesh(new THREE.BoxGeometry(SCALE, 0.2*SCALE, SCALE), sqMat); sq.position.set((c - 3.5)*SCALE, 0, (r - 3.5)*SCALE); sq.receiveShadow = true; sq.userData = { row: r, col: c, type: 'square' }; boardGroup.add(sq); } }
+                for (let r = 0; r < 8; r++) { for (let c = 0; c < 8; c++) { const isWhite = (r + c) % 2 === 0; const squareMat = new THREE.MeshStandardMaterial({ color: isWhite ? 0xffffff : 0x000000 }); const squareGeo = new THREE.BoxGeometry(1 * SCALE, 0.2 * SCALE, 1 * SCALE); const square = new THREE.Mesh(squareGeo, squareMat); square.position.set((c - 3.5) * SCALE, 0, (r - 3.5) * SCALE); square.receiveShadow = true; square.userData = { row: r, col: c, type: 'square' }; boardGroup.add(square); } }
                 const floorTexture = generateWoodTexture(); floorTexture.repeat.set(10, 10);
                 const floorMaterial = new THREE.MeshStandardMaterial({ map: floorTexture, color: 0x6F4E37 });
                 const floor = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), floorMaterial);
@@ -220,31 +217,44 @@
                 const brickMaterial = new THREE.MeshStandardMaterial({ map: brickTexture });
                 const wallHeight = 100; const wallDistance = 100;
                 const wallBack = new THREE.Mesh(new THREE.PlaneGeometry(wallDistance * 2, wallHeight), brickMaterial); wallBack.position.z = -wallDistance; wallBack.position.y = wallHeight / 2; wallBack.receiveShadow = true; scene.add(wallBack);
+                const wallFront = new THREE.Mesh(new THREE.PlaneGeometry(wallDistance * 2, wallHeight), brickMaterial); wallFront.position.z = wallDistance; wallFront.position.y = wallHeight / 2; wallFront.rotation.y = Math.PI; wallFront.receiveShadow = true; scene.add(wallFront);
+                const wallLeft = new THREE.Mesh(new THREE.PlaneGeometry(wallDistance * 2, wallHeight), brickMaterial); wallLeft.position.x = -wallDistance; wallLeft.position.y = wallHeight / 2; wallLeft.rotation.y = Math.PI / 2; wallLeft.receiveShadow = true; scene.add(wallLeft);
+                const wallRight = new THREE.Mesh(new THREE.PlaneGeometry(wallDistance * 2, wallHeight), brickMaterial); wallRight.position.x = wallDistance; wallRight.position.y = wallHeight / 2; wallRight.rotation.y = -Math.PI / 2; wallRight.receiveShadow = true; scene.add(wallRight);
                 const bannerTexture = generateBannerTexture("LULACOIN");
                 const bannerMaterial = new THREE.MeshStandardMaterial({ map: bannerTexture, transparent: true });
                 const bannerGeo = new THREE.PlaneGeometry(150, 25);
                 const bannerBack = new THREE.Mesh(bannerGeo, bannerMaterial); bannerBack.position.set(0, 25, -wallDistance + 0.1); scene.add(bannerBack);
+                const bannerFront = new THREE.Mesh(bannerGeo, bannerMaterial); bannerFront.position.set(0, 25, wallDistance - 0.1); bannerFront.rotation.y = Math.PI; scene.add(bannerFront);
+                const bannerLeft = new THREE.Mesh(bannerGeo, bannerMaterial); bannerLeft.position.set(-wallDistance + 0.1, 25, 0); bannerLeft.rotation.y = Math.PI / 2; scene.add(bannerLeft);
+                const bannerRight = new THREE.Mesh(bannerGeo, bannerMaterial); bannerRight.position.set(wallDistance - 0.1, 25, 0); bannerRight.rotation.y = -Math.PI / 2; scene.add(bannerRight);
             }
 
             function syncSceneWithState() {
-                while(piecesGroup.children.length) { piecesGroup.remove(piecesGroup.children[0]); }
+                while(piecesGroup.children.length > 0){ piecesGroup.remove(piecesGroup.children[0]); }
                 if (!onlineState.board || onlineState.board.length === 0) return;
-                for (let row = 0; row < 8; row++) { for (let col = 0; col < 8; col++) {
-                    const pieceType = onlineState.board[row][col];
-                    if (pieceType === 0) continue;
-                    const isKing = pieceType > 2;
-                    const player = (pieceType === 1 || pieceType === 3) ? 1 : 2;
-                    const pieceMesh = new THREE.Mesh(pieceGeo, player === 1 ? redMat : blueMat);
-                    pieceMesh.castShadow = true;
-                    pieceMesh.position.set((col - 3.5) * SCALE, 0.2 * SCALE, (row - 3.5) * SCALE);
-                    pieceMesh.userData = { row, col, type: 'piece', isKing };
-                    piecesGroup.add(pieceMesh);
-                    if (isKing) {
-                        const ring = new THREE.Mesh(new THREE.RingGeometry(0.45*SCALE, 0.55*SCALE, 32), new THREE.MeshBasicMaterial({color: 0xFFD700, side: THREE.DoubleSide}));
-                        ring.rotation.x = -Math.PI / 2; ring.position.y = 0.01;
-                        pieceMesh.add(ring); pieceMesh.userData.kingRing = ring;
+                for (let row = 0; row < 8; row++) {
+                    for (let col = 0; col < 8; col++) {
+                        const pieceType = onlineState.board[row][col];
+                        if (pieceType !== 0) {
+                            const isKing = pieceType > 2;
+                            const player = (pieceType === 1 || pieceType === 3) ? 1 : 2;
+                            const pieceMesh = new THREE.Mesh(pieceGeo, player === 1 ? redMat : blueMat);
+                            pieceMesh.castShadow = true;
+                            pieceMesh.position.set((col - 3.5) * SCALE, 0.2 * SCALE, (row - 3.5) * SCALE);
+                            pieceMesh.userData = { row, col, type: 'piece', isKing };
+                            piecesGroup.add(pieceMesh);
+                            if (isKing) {
+                                const kingRingGeo = new THREE.RingGeometry(0.45 * SCALE, 0.55 * SCALE, 32);
+                                const kingRingMat = new THREE.MeshBasicMaterial({ color: 0xFFD700, side: THREE.DoubleSide });
+                                const kingRing = new THREE.Mesh(kingRingGeo, kingRingMat);
+                                kingRing.rotation.x = -Math.PI / 2;
+                                kingRing.position.y = 0.01;
+                                pieceMesh.add(kingRing);
+                                pieceMesh.userData.kingRing = kingRing;
+                            }
+                        }
                     }
-                } }
+                }
             }
             
             function updateTurnIndicator() {
@@ -328,20 +338,35 @@
 
             function onBoardClick(event) {
                 if (winnerScreen.style.display === 'flex' || onlineState.currentTurn !== onlineState.myTurnNumber) return;
+
                 mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
                 mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
                 raycaster.setFromCamera(mouse, camera);
-                const intersects = raycaster.intersectObjects(piecesGroup.children, true);
-                if (intersects.length === 0) {
-                     const boardIntersects = raycaster.intersectObjects(boardGroup.children);
-                     if (boardIntersects.length > 0) handleSquareClick(boardIntersects[0].object);
-                } else {
-                    handlePieceClick(intersects[0].object);
+
+                const objectsToIntersect = [...boardGroup.children, ...piecesGroup.children];
+                const intersects = raycaster.intersectObjects(objectsToIntersect, true);
+
+                if (intersects.length > 0) {
+                    let clickedObject = intersects[0].object;
+                    
+                    if (clickedObject.parent !== piecesGroup && clickedObject.parent !== boardGroup) {
+                         clickedObject = clickedObject.parent;
+                    }
+                    if (clickedObject.parent !== piecesGroup && clickedObject.parent !== boardGroup) {
+                         clickedObject = clickedObject.parent;
+                    }
+
+                    const { row, col, type } = clickedObject.userData;
+
+                    if (type === 'piece') {
+                        handlePieceClick(clickedObject);
+                    } else if (type === 'square') {
+                        handleSquareClick(clickedObject);
+                    }
                 }
             }
 
             function handlePieceClick(clickedObject) {
-                 while (clickedObject.parent !== piecesGroup) { clickedObject = clickedObject.parent; }
                  const { row, col } = clickedObject.userData;
                  const pieceType = onlineState.board[row][col];
                  const pieceOwner = (pieceType === 1 || pieceType === 3) ? 1 : 2;
@@ -357,11 +382,10 @@
                 const pieceType = onlineState.board[onlineState.selectedPiece.row][onlineState.selectedPiece.col];
                 const isKing = pieceType > 2;
                 
-                // << RECURSO ADICIONADO >> - Lógica de Captura Obrigatória
                 const availableCaptures = [];
                 for(let r=0; r<8; r++){ for(let c=0; c<8; c++){
                     const piece = onlineState.board[r][c];
-                    if(piece !== 0 && (piece % 2 === onlineState.myTurnNumber % 2) && LocalGameLogic.canPieceCapture(onlineState.board, r, c)) {
+                    if(piece !== 0 && ((piece === 1 || piece === 3) ? 1 : 2) === onlineState.myTurnNumber && LocalGameLogic.canPieceCapture(onlineState.board, r, c)) {
                         availableCaptures.push({r,c});
                     }
                 }}
@@ -375,9 +399,10 @@
                 }
 
                 if (moveInfo.valid) {
-                    let piece = onlineState.board[onlineState.selectedPiece.row][onlineState.selectedPiece.col];
-                    if (piece === 1 && row === 0) piece = 3; if (piece === 2 && row === 7) piece = 4;
-                    onlineState.board[row][col] = piece;
+                    let currentPiece = onlineState.board[onlineState.selectedPiece.row][onlineState.selectedPiece.col];
+                    if (currentPiece === 1 && row === 0) currentPiece = 3;
+                    if (currentPiece === 2 && row === 7) currentPiece = 4;
+                    onlineState.board[row][col] = currentPiece;
                     onlineState.board[onlineState.selectedPiece.row][onlineState.selectedPiece.col] = 0;
                     if (moveInfo.type === 'capture') {
                         onlineState.board[moveInfo.captured.row][moveInfo.captured.col] = 0;
@@ -393,22 +418,19 @@
                     } else {
                         highlightPiece(null, false);
                         onlineState.selectedPiece = null;
-                        syncSceneWithState();
                         
-                        // << CORREÇÃO DE BUG E NOVO RECURSO >> - Lógica de Vitória (Peças e Bloqueio)
                         const nextPlayer = onlineState.myTurnNumber === 1 ? 2 : 1;
                         const p1pieces = onlineState.board.flat().filter(p => p===1 || p===3).length;
                         const p2pieces = onlineState.board.flat().filter(p => p===2 || p===4).length;
                         let winner = null;
-                        if(p2pieces === 0) {
-                            winner = 'p1'; // Se Azul (p2) não tem peças, Vermelho (p1) ganha.
-                        } else if (p1pieces === 0) {
-                            winner = 'p2'; // Se Vermelho (p1) não tem peças, Azul (p2) ganha.
-                        } else if (!LocalGameLogic.hasAnyValidMoves(onlineState.board, nextPlayer)) {
-                            // Se o próximo jogador está bloqueado, o jogador atual ganha.
+
+                        if(p2pieces === 0) { winner = 'p1'; } 
+                        else if (p1pieces === 0) { winner = 'p2'; } 
+                        else if (!LocalGameLogic.hasAnyValidMoves(onlineState.board, nextPlayer)) {
                             winner = onlineState.playerColor;
                         }
-
+                        
+                        syncSceneWithState();
                         sendMoveToServer(onlineState.board, nextPlayer, winner);
                     }
                 } else {
