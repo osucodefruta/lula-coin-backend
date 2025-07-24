@@ -510,6 +510,7 @@
         const API_BASE_URL = 'https://lula-coin-backend.onrender.com';
         const LCO_PER_THS_PER_MINUTE = 0.1;
         const NUM_RACK_PLACEMENT_SLOTS = 4;
+        const ENERGY_CONSUMPTION_RATE = 100 / 600; // 100% em 10 minutos (600 segundos)
         const MINERS = [
             { id: 'miner001', name: 'GPU Básica', power: 1, price: 10, color: '#00e0ff' },
             { id: 'miner002', name: 'ASIC Médio', power: 5, price: 30, color: '#ff00e0' },
@@ -577,7 +578,8 @@
         const playDamasBtn = document.getElementById('play-damas-btn');
         const damasMatchmakingStatus = document.getElementById('damas-matchmaking-status');
 
-        // --- FUNÇÕES DE API ---
+
+        // --- FUNÇÕES DE API (COM CORREÇÃO DE LOGOUT) ---
         const apiRequest = async (endpoint, method = 'GET', body = null) => {
             const token = localStorage.getItem('token');
             if (!token && !endpoint.startsWith('/api/auth')) { 
@@ -590,39 +592,45 @@
             if (body) { options.body = JSON.stringify(body); }
             try {
                 const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+                
                 if (response.status === 401) { 
                     handleLogout(true);
                     showAuthMessage('Sessão inválida. Faça login novamente.'); 
                     return null; 
                 }
+
                 if (response.status === 204 || response.headers.get("content-length") === "0") { return { success: true, message: "Operação bem-sucedida." }; }
-                if (response.status >= 400) {
+                
+                if (response.status === 400 || response.status === 429) {
                     const errorData = await response.json();
-                    const errorMessage = errorData.message || (errorData.errors && errorData.errors[0].msg) || `Erro ${response.status}.`;
+                    const errorMessage = errorData.message || (errorData.errors && errorData.errors[0].msg) || 'Erro de validação.';
+                    // Para o lobby, não queremos mostrar no terminal principal
                     if (!endpoint.includes('/api/damas')) {
                         displayTerminalMessage(errorMessage, 'red');
                     }
                     throw new Error(errorMessage);
                 }
-                return await response.json();
+
+                const data = await response.json();
+                if (!response.ok) { throw new Error(data.message || 'Ocorreu um erro.'); }
+                return data;
             } catch (error) {
-                if (!(error.message.includes('mensagens muito rápido') || error.message.includes('A mensagem'))) {
+                if (! (error.message.includes('mensagens muito rápido') || error.message.includes('A mensagem'))) {
                     const messageArea = appContainer.style.display === 'flex' ? terminalTextElement : authMessage;
                     if (error instanceof SyntaxError) {
                         messageArea.textContent = `Erro: Resposta inesperada do servidor.`;
-                    } else if (!endpoint.includes('/api/damas')) {
+                    } else if (!endpoint.includes('/api/damas')) { // Não poluir o terminal com erros do lobby
                         messageArea.textContent = `Erro: ${error.message}`;
                     }
                     messageArea.style.color = 'var(--red-alert)'; 
                 }
-                return { message: error.message }; 
+                return { message: error.message }; // Retorna o erro para o lobby tratar
             }
         };
 
         // --- LÓGICA DO RANKING ---
         async function fetchGlobalRanking() {
             const rankingList = document.getElementById('ranking-list');
-            if(!rankingList) return;
             rankingList.innerHTML = '<li>Carregando...</li>';
             try {
                 const players = await apiRequest('/api/ranking/top5/balance');
@@ -686,7 +694,7 @@
             chatSendBtn.disabled = true;
             const result = await apiRequest('/api/chat/send', 'POST', { message });
             chatSendBtn.disabled = false;
-            if (result && result._id) {
+            if (result) {
                 chatInput.value = '';
                 displaySecureMessage(result);
                 chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight;
@@ -703,29 +711,35 @@
             if (chatUpdateInterval) clearInterval(chatUpdateInterval);
         }
 
-        // --- FUNÇÕES DE AUTENTICAÇÃO ---
+        // --- FUNÇÕES DE AUTENTICAÇÃO (COM CORREÇÃO DE LOGOUT) ---
         const handleLogin = async () => {
             const username = document.getElementById('login-username').value;
             const password = document.getElementById('login-password').value;
-            if (!username || !password) { return showAuthMessage('Preencha todos os campos.'); }
+            if (!username || !password) {
+                return showAuthMessage('Preencha todos os campos.');
+            }
             const data = await apiRequest('/api/auth/login', 'POST', { username, password });
             if (data && data.token) { 
                 localStorage.setItem('token', data.token); 
                 await initializeGame(); 
             }
         };
+
         const handleRegister = async () => {
             const username = document.getElementById('register-username').value;
             const password = document.getElementById('register-password').value;
-            if (!username || !password) { return showAuthMessage('Preencha todos os campos.'); }
+            if (!username || !password) {
+                return showAuthMessage('Preencha todos os campos.');
+            }
             const data = await apiRequest('/api/auth/register', 'POST', { username, password });
             if (data) {
                 showAuthMessage(data.message, 'lime'); 
                 toggleForms(); 
             }
         };
+        
         const handleLogout = (force = false) => {
-            if (gameState && !force) { saveGame(); }
+            // *** CORREÇÃO: Removido o saveGame() daqui para não zerar o relógio offline ***
             if (autoSaveInterval) clearInterval(autoSaveInterval);
             localStorage.removeItem('token'); 
             authContainer.style.display = 'flex'; 
@@ -736,15 +750,48 @@
             if(chatUpdateInterval) clearInterval(chatUpdateInterval);
             if(matchmakingInterval) clearInterval(matchmakingInterval);
         };
+
         const showAuthMessage = (msg, color = 'var(--red-alert)') => { authMessage.textContent = msg; authMessage.style.color = color; };
+        
         const toggleForms = () => {
             const loginDisplay = window.getComputedStyle(loginForm).display;
             loginForm.style.display = loginDisplay === 'none' ? 'block' : 'none';
             registerForm.style.display = loginDisplay === 'none' ? 'none' : 'block';
             authMessage.textContent = '';
         };
+
+        // --- FUNÇÕES DE GERENCIAMENTO DO JOGO ---
+        const initializeGame = async () => {
+            const data = await apiRequest('/api/game/state');
+            if (data && data.gameState) {
+                gameState = data.gameState; currentRoomIndex = data.currentRoomIndex || 0;
+                
+                if (typeof gameState.energy === 'undefined') {
+                    gameState.energy = 100;
+                }
+
+                if (!gameState.placedRacksPerRoom || gameState.placedRacksPerRoom.length === 0) {
+                    gameState.placedRacksPerRoom = [Array(NUM_RACK_PLACEMENT_SLOTS).fill(null)]; currentRoomIndex = 0;
+                }
+                
+                // *** CORREÇÃO: Chamada para salvar o progresso offline recebido ***
+                await saveGame();
+
+                authContainer.style.display = 'none'; appContainer.style.display = 'flex';
+                userAvatar.textContent = (data.username ? data.username.charAt(0).toUpperCase() : 'L');
+                updateUI(); 
+                startLoops();
+            } else { 
+                handleLogout(true); 
+            }
+        };
+        const saveGame = async () => {
+            if (!gameState) return;
+            // *** CORREÇÃO: Removida a atualização do timestamp daqui ***
+            await apiRequest('/api/game/update', 'POST', { gameState, currentRoomIndex });
+        };
         
-        // --- FUNÇÕES DE EFEITOS E ANIMAÇÕES ---
+        // --- FUNÇÕES DE EFEITOS E ANIMAÇÕES (RESTAURADAS) ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
         function playTone({ frequency = 440, duration = 100, volume = 0.5, type = 'sine' }) {
@@ -769,89 +816,6 @@
             }
         }
 
-        // --- FUNÇÕES DE GERENCIAMENTO DO JOGO (COM ARQUITETURA CORRIGIDA) ---
-        const initializeGame = async () => {
-            // 1. Busca o estado do jogo. O backend calcula o progresso offline e retorna o resultado.
-            const data = await apiRequest('/api/game/state');
-            
-            if (data && data.gameState) {
-                // 2. O estado do jogo no cliente é atualizado com os ganhos offline.
-                gameState = data.gameState; 
-                currentRoomIndex = data.currentRoomIndex || 0;
-                
-                // Validações para garantir que o estado do jogo não esteja corrompido
-                if (typeof gameState.energy === 'undefined') gameState.energy = 100;
-                if (!gameState.placedRacksPerRoom || gameState.placedRacksPerRoom.length === 0) {
-                    gameState.placedRacksPerRoom = [Array(NUM_RACK_PLACEMENT_SLOTS).fill(null)]; 
-                    currentRoomIndex = 0;
-                }
-
-                // 3. O cliente AGORA salva este novo estado (com os ganhos) no banco de dados.
-                // Isso "confirma" o progresso offline e atualiza o timestamp para o próximo cálculo.
-                await saveGame(); 
-
-                // 4. Continua com a inicialização normal do jogo.
-                authContainer.style.display = 'none'; 
-                appContainer.style.display = 'flex';
-                userAvatar.textContent = (data.username ? data.username.charAt(0).toUpperCase() : 'L');
-                
-                updateUI(); 
-                startLoops();
-            } else { 
-                // Se não conseguir carregar o estado, força o logout.
-                handleLogout(true); 
-            }
-        };
-
-        const saveGame = async () => {
-            if (!gameState) return;
-            // A rota /update é a única responsável por salvar o estado e atualizar o timestamp no backend.
-            await apiRequest('/api/game/update', 'POST', { gameState, currentRoomIndex });
-        };
-        
-        let autoSaveInterval = null;
-        let gameLoopInterval, terminalLoopInterval;
-        function startLoops() {
-            if (gameLoopInterval) clearInterval(gameLoopInterval);
-            if (terminalLoopInterval) clearInterval(terminalLoopInterval);
-            if (autoSaveInterval) clearInterval(autoSaveInterval);
-            let lastUpdateTime = Date.now();
-            gameLoopInterval = setInterval(() => {
-                if (!gameState || !gameState.totalPower) return;
-                const now = Date.now();
-                const deltaTime = (now - lastUpdateTime) / 1000;
-                lastUpdateTime = now;
-                if (gameState.energy > 0) {
-                    const powerDraw = gameState.totalPower;
-                    // Ajuste na fórmula de consumo de energia para ser mais escalável
-                    const baseConsumption = 0.05; // Consumo base por segundo
-                    const consumptionPerPower = 0.002; // Consumo adicional por cada TH/s
-                    const totalConsumption = (baseConsumption + (powerDraw * consumptionPerPower));
-                    
-                    gameState.energy -= totalConsumption * deltaTime;
-                    
-                    if (gameState.energy < 0) {
-                        gameState.energy = 0;
-                        updateTotalPower(); // Recalcula a potência para zero se a energia acabar
-                    }
-                    gameState.balance += (gameState.totalPower * (LCO_PER_THS_PER_MINUTE / 60)) * deltaTime;
-                }
-                updateBalance();
-                updateEnergyUI();
-            }, 1000);
-            
-            const terminalMessages = ["Conectando ao núcleo...", "Minerando blocos...", "Sincronizando...", "Verificando integridade...", "Aguardando transações..."];
-            let terminalMessageIndex = 0;
-            const updateTerminal = () => {
-                if(!placingItem) {
-                    displayTerminalMessage(terminalMessages[terminalMessageIndex]);
-                    terminalMessageIndex = (terminalMessageIndex + 1) % terminalMessages.length;
-                }
-            };
-            updateTerminal(); 
-            terminalLoopInterval = setInterval(updateTerminal, 4000);
-            autoSaveInterval = setInterval(() => { if(gameState) { saveGame(); } }, 10000); // Salva a cada 30 segundos
-        }
 
         // --- FUNÇÕES DE UI E RENDERIZAÇÃO ---
         function createGpuSprite(miner) {
@@ -872,11 +836,12 @@
             rackSprite.innerHTML = `<div class="rack-top" style="background-color: ${rack.color};"></div><div class="rack-side" style="background-color: ${rack.color}; filter: brightness(0.6);"></div><div class="rack-front" style="border-color: ${rack.color};"><div class="rack-label">${rack.name}</div><div class="slots-container">${slotsHtml}</div><div class="rack-leg front-left"></div><div class="rack-leg front-right"></div></div>`;
             return rackSprite;
         }
+        
         function updateUI() { if (!gameState) return; updateBalance(); updateTotalPower(); renderRoomControls(); renderRackPlacementArea(); updateAddRoomButtonState(); updateEnergyUI(); }
         function updateBalance() { balanceElement.textContent = gameState.balance.toFixed(2); }
         function updateTotalPower() {
             let totalPower = 0;
-            if (gameState.energy > 0) { // A potência é zero se não houver energia
+            if (gameState.energy > 0) {
                 gameState.placedRacksPerRoom.forEach(room => {
                     if(room) room.forEach(rackSlot => {
                         if (rackSlot && rackSlot.placedMiners) {
@@ -919,7 +884,9 @@
             if (gameState.balance >= roomCost) {
                 const data = await apiRequest('/api/game/buy-room', 'POST', { cost: roomCost });
                 if (data && data.gameState) {
+                    const currentEnergy = gameState.energy;
                     gameState = data.gameState;
+                    gameState.energy = currentEnergy; 
                     currentRoomIndex = gameState.placedRacksPerRoom.length - 1;
                     displayTerminalMessage(`Sala ${currentRoomIndex + 1} comprada!`, "lime");
                     updateUI(); 
@@ -937,332 +904,3 @@
         function renderRackPlacementArea() {
             rackPlacementArea.innerHTML = '';
             const currentRoomData = gameState.placedRacksPerRoom[currentRoomIndex];
-            if(!currentRoomData) return;
-            for (let i = 0; i < NUM_RACK_PLACEMENT_SLOTS; i++) {
-                const rackData = currentRoomData[i];
-                const slotDiv = document.createElement('div');
-                slotDiv.className = 'rack-placement-slot';
-                slotDiv.dataset.slotIndex = i;
-                if (rackData) {
-                    slotDiv.classList.add('occupied');
-                    const rackConfig = RACKS.find(r => r.id === rackData.id);
-                    if(!rackConfig) continue;
-                    const rackElement = document.createElement('div');
-                    rackElement.className = 'rack-2-5d';
-                    rackElement.style.height = `${rackConfig.slots * 60 + 60}px`;
-                    if (rackData.isNew) { rackElement.classList.add('item-placed'); delete rackData.isNew; }
-
-                    const rackTop = document.createElement('div'); rackTop.className = 'rack-top'; rackTop.style.backgroundColor = rackConfig.color;
-                    const rackSide = document.createElement('div'); rackSide.className = 'rack-side'; rackSide.style.backgroundColor = rackConfig.color; rackSide.style.filter = 'brightness(0.6)';
-                    const rackFront = document.createElement('div'); rackFront.className = 'rack-front'; rackFront.style.borderColor = rackConfig.color;
-                    const rackLabel = document.createElement('div'); rackLabel.className = 'rack-label'; rackLabel.textContent = rackConfig.name; rackLabel.dataset.rackSlotIndex = i;
-                    rackLabel.addEventListener('click', handleWorldClick);
-                    const slotsContainer = document.createElement('div');
-                    slotsContainer.className = 'slots-container';
-                    for (let j = 0; j < rackConfig.slots; j++) {
-                        const miner = rackData.placedMiners[j];
-                        const minerSlotDiv = document.createElement('div');
-                        minerSlotDiv.className = 'slot';
-                        if (miner) {
-                            minerSlotDiv.classList.add('occupied');
-                            const minerConfig = MINERS.find(m => m.id === miner.id);
-                            if(minerConfig) {
-                                const gpuSprite = createGpuSprite(minerConfig);
-                                if (miner.isNew) { gpuSprite.classList.add('item-placed'); delete miner.isNew; }
-                                minerSlotDiv.appendChild(gpuSprite);
-                            }
-                        } else {
-                            minerSlotDiv.classList.add('empty');
-                        }
-                        minerSlotDiv.dataset.rackSlotIndex = i; minerSlotDiv.dataset.minerSlotIndex = j;
-                        minerSlotDiv.addEventListener('click', handleWorldClick);
-                        slotsContainer.appendChild(minerSlotDiv);
-                    }
-                    const legLeft = document.createElement('div'); legLeft.className = 'rack-leg front-left';
-                    const legRight = document.createElement('div'); legRight.className = 'rack-leg front-right';
-                    rackFront.append(rackLabel, slotsContainer, legLeft, legRight);
-                    rackElement.append(rackTop, rackSide, rackFront);
-                    slotDiv.appendChild(rackElement);
-                } else {
-                    slotDiv.classList.add('available');
-                    slotDiv.addEventListener('click', handleWorldClick);
-                }
-                rackPlacementArea.appendChild(slotDiv);
-            }
-        }
-        
-        async function buyItem(itemId, category) {
-            if (isTransactionInProgress) return;
-            isTransactionInProgress = true;
-            try {
-                displayTerminalMessage('Processando compra...', 'yellow');
-                const itemData = (category === 'miners' ? MINERS : RACKS).find(i => i.id === itemId);
-                if (gameState.balance < itemData.price) { displayTerminalMessage('Saldo insuficiente!', 'red'); return; }
-                const data = await apiRequest('/api/game/buy-item', 'POST', { itemId, category });
-                if (data && data.gameState) {
-                    gameState = data.gameState;
-                    displayTerminalMessage(data.message, 'lime');
-                    updateUI(); 
-                    renderShop(category); 
-                    renderInventory(category);
-                }
-            } finally {
-                isTransactionInProgress = false;
-            }
-        }
-
-        async function sellItem(event) {
-            const button = event.currentTarget;
-            const itemId = button.dataset.id;
-            const category = button.dataset.category;
-            const itemConfig = (category === 'miners' ? MINERS : RACKS).find(i => i.id === itemId);
-            if (!itemConfig) return;
-            const sellPrice = itemConfig.price / 2;
-            const inventoryCategory = category === 'miners' ? 'miners' : 'racks';
-            let invItem = gameState.inventory[inventoryCategory].find(i => i.id === itemId);
-            if (invItem && invItem.quantity > 0) {
-                invItem.quantity--;
-                gameState.balance += sellPrice;
-                if (invItem.quantity <= 0) {
-                    gameState.inventory[inventoryCategory] = gameState.inventory[inventoryCategory].filter(i => i.id !== itemId);
-                }
-                playSound('sell-sound');
-                displayTerminalMessage(`${itemConfig.name} vendido por ◎${sellPrice.toFixed(2)}!`, 'lime');
-                updateUI();
-                renderInventory(category);
-                await saveGame();
-            }
-        }
-        
-        function renderShop(category) {
-            minersShopContent.style.display = 'none'; racksShopContent.style.display = 'none'; const contentArea = category === 'miners' ? minersShopContent : racksShopContent; const itemsToRender = category === 'miners' ? MINERS : RACKS; contentArea.style.display = 'grid'; contentArea.innerHTML = ''; itemsToRender.forEach(item => { const itemDiv = document.createElement('div'); itemDiv.className = 'shop-item'; itemDiv.innerHTML = `<div class="item-icon">${category === 'miners' ? createGpuSprite(item).outerHTML : createRackSprite(item).outerHTML}</div><div class="item-name">${item.name}</div><div class="item-stats">${item.power ? `Poder: ${item.power} TH/s` : `Slots: ${item.slots}`}</div><div class="item-price">◎ ${item.price.toFixed(2)}</div><button class="buy-btn" data-id="${item.id}" data-category="${category}" ${gameState.balance < item.price ? 'disabled' : ''}>Comprar</button>`; contentArea.appendChild(itemDiv); }); contentArea.querySelectorAll('.buy-btn').forEach(btn => { btn.addEventListener('click', (e) => buyItem(e.currentTarget.dataset.id, e.currentTarget.dataset.category)); });
-        }
-        
-        function renderInventory(category) {
-            minersInventoryContent.style.display = 'none'; racksInventoryContent.style.display = 'none'; 
-            const contentArea = category === 'miners' ? minersInventoryContent : racksInventoryContent; 
-            const inventorySource = category === 'miners' ? gameState.inventory.miners : gameState.inventory.racks;
-            contentArea.style.display = 'grid'; 
-            contentArea.innerHTML = ''; 
-            if (!inventorySource || inventorySource.length === 0) { 
-                contentArea.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; margin-top: 20px;">Inventário Vazio</p>'; 
-                return; 
-            } 
-            inventorySource.forEach(invItem => { 
-                const itemConfig = (category === 'miners' ? MINERS : RACKS).find(i => i.id === invItem.id); 
-                if (!itemConfig) return; 
-                const sellPrice = itemConfig.price / 2;
-                const itemDiv = document.createElement('div'); 
-                itemDiv.className = 'inventory-item'; 
-                itemDiv.innerHTML = `
-                    <div class="item-icon">${category === 'miners' ? createGpuSprite(itemConfig).outerHTML : createRackSprite(itemConfig).outerHTML}</div>
-                    <div class="item-name">${itemConfig.name} (x${invItem.quantity})</div>
-                    <div class="item-sell-price">Venda: ◎ ${sellPrice.toFixed(2)}</div>
-                    <div class="item-actions">
-                        <button class="use-item-btn" data-id="${itemConfig.id}" data-category="${category}" ${invItem.quantity === 0 ? 'disabled' : ''}>Usar</button>
-                        <button class="sell-item-btn" data-id="${itemConfig.id}" data-category="${category}" ${invItem.quantity === 0 ? 'disabled' : ''}>Vender</button>
-                    </div>
-                `; 
-                contentArea.appendChild(itemDiv); 
-            }); 
-            contentArea.querySelectorAll('.use-item-btn').forEach(btn => btn.addEventListener('click', startPlacement));
-            contentArea.querySelectorAll('.sell-item-btn').forEach(btn => btn.addEventListener('click', sellItem));
-        }
-
-        function openShop() { shopModal.style.display = 'flex'; renderShop('miners'); cancelPlacement(); }
-        function closeShop() { shopModal.style.display = 'none'; }
-        function openInventory() { inventoryModal.style.display = 'flex'; renderInventory('miners'); cancelPlacement();}
-        function closeInventory() { inventoryModal.style.display = 'none'; }
-        
-        function startPlacement(event) { const button = event.currentTarget; const itemId = button.dataset.id; const category = button.dataset.category; const itemConfig = category === 'miners' ? MINERS.find(i=>i.id === itemId) : RACKS.find(i=>i.id === itemId); placingItem = { item: itemConfig, type: category === 'miners' ? 'miner' : 'rack' }; miningRoom.classList.add('placing-item'); displayTerminalMessage(`Modo de Colocação: Selecione um local para ${itemConfig.name}.`, 'yellow'); closeInventory(); }
-        function cancelPlacement() { if (placingItem) { placingItem = null; miningRoom.classList.remove('placing-item'); displayTerminalMessage('Modo de Colocação cancelado.', 'orange'); } }
-        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { cancelPlacement(); } });
-
-        function handlePlacement(target) {
-            if (!placingItem) return;
-            let itemUsed = false;
-            if (placingItem.type === 'rack' && target.classList.contains('available')) {
-                const slotIndex = parseInt(target.dataset.slotIndex);
-                const invItem = gameState.inventory.racks.find(r => r.id === placingItem.item.id);
-                if (invItem && invItem.quantity > 0) {
-                    invItem.quantity--;
-                    if (invItem.quantity <= 0) gameState.inventory.racks = gameState.inventory.racks.filter(r => r.id !== invItem.id);
-                    const newRackData = { id: placingItem.item.id, placedMiners: Array(placingItem.item.slots).fill(null), isNew: true };
-                    gameState.placedRacksPerRoom[currentRoomIndex][slotIndex] = newRackData;
-                    displayTerminalMessage(`Rack ${placingItem.item.name} colocado!`, 'lime');
-                    playTone({ frequency: 220, duration: 150, type: 'square', volume: 0.2 });
-                    itemUsed = true;
-                }
-            }
-            else if (placingItem.type === 'miner' && target.classList.contains('empty')) {
-                const rackSlotIndex = parseInt(target.dataset.rackSlotIndex);
-                const minerSlotIndex = parseInt(target.dataset.minerSlotIndex);
-                const invItem = gameState.inventory.miners.find(m => m.id === placingItem.item.id);
-                if (invItem && invItem.quantity > 0) {
-                    invItem.quantity--;
-                    if (invItem.quantity <= 0) gameState.inventory.miners = gameState.inventory.miners.filter(m => m.id !== invItem.id);
-                    gameState.placedRacksPerRoom[currentRoomIndex][rackSlotIndex].placedMiners[minerSlotIndex] = { id: placingItem.item.id, isNew: true };
-                    displayTerminalMessage(`GPU ${placingItem.item.name} instalada!`, 'lime');
-                    playTone({ frequency: 880, duration: 100, type: 'sine', volume: 0.3 });
-                    itemUsed = true;
-                }
-            } else { displayTerminalMessage(`Local inválido para ${placingItem.item.name}!`, 'red'); }
-            
-            if (itemUsed) { cancelPlacement(); updateUI(); saveGame(); }
-        }
-        
-        function returnItemToInventory(itemId, category) { 
-            const inventoryCategory = category === 'miner' ? gameState.inventory.miners : gameState.inventory.racks;
-            let invItem = inventoryCategory.find(i => i.id === itemId);
-            if (invItem) { invItem.quantity++; } else { inventoryCategory.push({ id: itemId, quantity: 1 }); }
-        }
-
-        async function handleWorldClick(event) {
-            const target = event.currentTarget;
-            if (placingItem) { handlePlacement(target); return; }
-            if (target.classList.contains('slot') && target.classList.contains('occupied')) {
-                const rackSlotIndex = parseInt(target.dataset.rackSlotIndex);
-                const minerSlotIndex = parseInt(target.dataset.minerSlotIndex);
-                const minerData = gameState.placedRacksPerRoom[currentRoomIndex][rackSlotIndex].placedMiners[minerSlotIndex];
-                if (window.confirm("Deseja guardar esta GPU no inventário?")) {
-                    target.querySelector('.miner-gpu').classList.add('item-removed');
-                    playTone({ frequency: 660, duration: 100, type: 'sine', volume: 0.2 });
-                    setTimeout(() => {
-                        returnItemToInventory(minerData.id, 'miner');
-                        gameState.placedRacksPerRoom[currentRoomIndex][rackSlotIndex].placedMiners[minerSlotIndex] = null;
-                        displayTerminalMessage('GPU guardada no inventário!', 'lime');
-                        updateUI(); saveGame();
-                    }, 300);
-                }
-            }
-            else if (target.classList.contains('rack-label')) {
-                const rackSlotIndex = parseInt(target.dataset.rackSlotIndex);
-                const rackData = gameState.placedRacksPerRoom[currentRoomIndex][rackSlotIndex];
-                const isOccupied = rackData.placedMiners.some(miner => miner !== null);
-                if (isOccupied) { displayTerminalMessage("Esvazie o rack antes de guardá-lo.", "red"); return; }
-                if (window.confirm("Deseja guardar este Rack no inventário?")) {
-                    playTone({ frequency: 180, duration: 150, type: 'square', volume: 0.15 });
-                    returnItemToInventory(rackData.id, 'rack');
-                    gameState.placedRacksPerRoom[currentRoomIndex][rackSlotIndex] = null;
-                    displayTerminalMessage('Rack guardado no inventário!', 'lime');
-                    updateUI(); saveGame();
-                }
-            }
-        }
-
-        function updateEnergyUI() {
-            if (!gameState) return;
-            const energyPercent = gameState.energy;
-            energyBar.style.width = `${energyPercent}%`;
-            if (energyPercent <= 0) {
-                energyBar.style.backgroundColor = 'var(--energy-empty)';
-                energyBtn.style.borderColor = 'var(--energy-empty)';
-                energyBtn.classList.add('rechargeable');
-                energyText.innerHTML = `Recarregar (<span class="energy-value">1 LCO</span>)`;
-                energyBtn.disabled = gameState.balance < 1;
-                miningRoom.classList.add('no-energy');
-            } else if (energyPercent <= 20) {
-                energyBar.style.backgroundColor = 'var(--energy-low)';
-                energyBtn.style.borderColor = 'var(--energy-low)';
-                energyBtn.classList.add('rechargeable');
-                energyText.innerHTML = `<span class="energy-label">Recarregar Grátis</span>`;
-                energyBtn.disabled = false;
-                miningRoom.classList.remove('no-energy');
-            } else {
-                energyBar.style.backgroundColor = 'var(--energy-full)';
-                energyBtn.style.borderColor = 'var(--energy-full)';
-                energyBtn.classList.remove('rechargeable');
-                energyText.innerHTML = `<span class="energy-icon">⚡</span> <span class="energy-label">Energia:</span> <span class="energy-value">${energyPercent.toFixed(0)}%</span>`;
-                energyBtn.disabled = true;
-                miningRoom.classList.remove('no-energy');
-            }
-        }
-        function handleEnergyRecharge() {
-            let recharged = false;
-            if (gameState.energy <= 0) { // Custo de 1 LCO
-                if (gameState.balance >= 1) {
-                    gameState.balance -= 1;
-                    gameState.energy = 100;
-                    recharged = true;
-                    displayTerminalMessage("Energia restaurada!", "lime");
-                } else {
-                    displayTerminalMessage("LCO insuficiente para recarregar!", "red");
-                }
-            } else if (gameState.energy <= 20) { // Recarga grátis
-                gameState.energy = 100;
-                recharged = true;
-                displayTerminalMessage("Energia restaurada gratuitamente!", "lime");
-            }
-            if(recharged) {
-                updateUI();
-                saveGame();
-            }
-        }
-
-        let matchmakingInterval = null; 
-        function openGames() { gamesModal.style.display = 'flex'; }
-        function closeGames() {
-            gamesModal.style.display = 'none';
-            if (matchmakingInterval) { clearInterval(matchmakingInterval); }
-            damasMatchmakingStatus.textContent = '';
-            playDamasBtn.disabled = false;
-        }
-        async function joinDamasMatchmaking() {
-            playDamasBtn.disabled = true;
-            damasMatchmakingStatus.textContent = 'Entrando na fila...';
-            const joinResponse = await apiRequest('/api/damas/matchmaking/join', 'POST');
-            if (joinResponse && joinResponse.message) {
-                damasMatchmakingStatus.textContent = joinResponse.message;
-                if (joinResponse.message === "Procurando partida..." || joinResponse.message === "Você já está na fila.") {
-                    if (matchmakingInterval) clearInterval(matchmakingInterval); 
-                    matchmakingInterval = setInterval(checkMatchmakingStatus, 3000); 
-                } else {
-                    playDamasBtn.disabled = false;
-                }
-            } else {
-                const errorMsg = (joinResponse && joinResponse.message) ? joinResponse.message : 'Erro ao entrar na fila.';
-                damasMatchmakingStatus.textContent = errorMsg;
-                playDamasBtn.disabled = false;
-            }
-        }
-        async function checkMatchmakingStatus() {
-            const statusResponse = await apiRequest('/api/damas/matchmaking/status');
-            if (statusResponse && statusResponse.matchFound) {
-                clearInterval(matchmakingInterval);
-                damasMatchmakingStatus.textContent = 'Partida encontrada! Redirecionando...';
-                window.location.href = `jogodedamas.html?gameId=${statusResponse.gameId}`;
-            }
-        }
-
-        // --- INICIALIZAÇÃO E EVENT LISTENERS ---
-        loginBtn.addEventListener('click', handleLogin);
-        registerBtn.addEventListener('click', handleRegister);
-        showRegisterLink.addEventListener('click', toggleForms);
-        showLoginLink.addEventListener('click', toggleForms);
-        logoutBtn.addEventListener('click', () => handleLogout(false));
-        openShopBtn.addEventListener('click', openShop);
-        closeShopBtn.addEventListener('click', closeShop);
-        openInventoryBtn.addEventListener('click', openInventory);
-        closeInventoryBtn.addEventListener('click', closeInventory);
-        energyBtn.addEventListener('click', handleEnergyRecharge);
-        shopCategoryBtns.forEach(btn => btn.addEventListener('click', () => { shopCategoryBtns.forEach(b => b.classList.remove('active')); btn.classList.add('active'); renderShop(btn.dataset.category); }));
-        inventoryCategoryBtns.forEach(btn => btn.addEventListener('click', () => { inventoryCategoryBtns.forEach(b => b.classList.remove('active')); btn.classList.add('active'); renderInventory(btn.dataset.category); }));
-        openChatBtn.addEventListener('click', openChat);
-        closeChatBtn.addEventListener('click', closeChat);
-        chatSendBtn.addEventListener('click', postMessage);
-        chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') postMessage(); });
-        rankingHeader.addEventListener('click', handleRankingClick);
-        openGamesBtn.addEventListener('click', openGames);
-        closeGamesBtn.addEventListener('click', closeGames);
-        playDamasBtn.addEventListener('click', joinDamasMatchmaking);
-        window.addEventListener('beforeunload', () => { if (gameState) saveGame(); });
-
-        if (localStorage.getItem('token')) {
-            initializeGame();
-        } else {
-            authContainer.style.display = 'flex';
-        }
-    });
-    </script>
-</body>
-</html>
