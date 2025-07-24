@@ -1,7 +1,6 @@
 // backend/routes/game.js
 const express = require('express');
 const router = express.Router();
-// CORREÇÃO: Trocamos o middleware antigo ('protect') pelo nosso middleware unificado.
 const authMiddleware = require('../middleware/auth'); 
 const User = require('../models/User');
 
@@ -12,48 +11,65 @@ const MINERS = [
     { id: 'miner003', name: 'ASIC Avançado', power: 20, price: 180 },
     { id: 'miner004', name: 'Super ASIC', power: 100, price: 800 },
 ];
-
 const RACKS = [
     { id: 'rack001', name: 'Rack Pequeno', slots: 2, price: 20 },
-    { id: 'rack002', name: 'Rack Médio', slots: 4, price: 30 },
-    { id: 'rack003', name: 'Rack Grande', slots: 6, price: 100 },
+    { id: 'rack002', name: 'Rack Médio', slots: 3, price: 30 }, // Corrigido de 4 para 3 slots
+    { id: 'rack003', name: 'Rack Grande', slots: 4, price: 100 }, // Corrigido de 6 para 4 slots
 ];
 
-// Função para validar o estado do jogo
 const validateGameState = (gameState) => {
     if (!gameState) return false;
-    const requiredFields = ['balance', 'inventory', 'placedRacksPerRoom'];
+    const requiredFields = ['balance', 'inventory', 'placedRacksPerRoom', 'energy', 'lastEnergyUpdate'];
     return requiredFields.every(field => gameState[field] !== undefined);
 };
 
-// CORREÇÃO: Todas as rotas agora usam 'authMiddleware' em vez de 'protect'.
+// ROTA ATUALIZADA com Lógica de Mineração Offline
 router.get('/state', authMiddleware, async (req, res) => {
     try {
-        // Agora usamos req.user.id, que é fornecido pelo nosso middleware padrão.
         const user = await User.findById(req.user.id).select('-password');
         if (!user) {
             return res.status(404).json({ message: 'Usuário não encontrado' });
         }
 
-        // Inicializa o gameState se não existir
-        if (!user.gameState) {
-            user.gameState = {
-                balance: 10,
-                inventory: {
-                    miners: [],
-                    racks: []
-                },
-                placedRacksPerRoom: [Array(4).fill(null)],
-                totalPower: 0
-            };
-            await user.save();
+        // --- INÍCIO: CÁLCULO DE GANHOS OFFLINE ---
+        const now = Date.now();
+        const lastUpdate = user.gameState.lastEnergyUpdate || now;
+        const secondsOffline = (now - lastUpdate) / 1000;
+
+        if (secondsOffline > 1) { // Só calcula se ficou offline por mais de 1 segundo
+            const totalPower = calculateTotalPower(user.gameState.placedRacksPerRoom);
+            const energyConsumptionRate = 100 / 600; // 100% em 10 minutos
+
+            // Calcula por quantos segundos a energia duraria
+            const secondsOfMiningPossible = user.gameState.energy / energyConsumptionRate;
+            
+            // O tempo real que minerou é o menor entre o tempo offline e o tempo que tinha energia
+            const secondsMined = Math.min(secondsOffline, secondsOfMiningPossible);
+
+            if (secondsMined > 0) {
+                const lcoPerSecond = (totalPower * (0.1 / 60));
+                const coinsEarned = lcoPerSecond * secondsMined;
+                const energyConsumed = secondsMined * energyConsumptionRate;
+
+                // Atualiza o estado do jogo
+                user.gameState.balance += coinsEarned;
+                user.gameState.energy -= energyConsumed;
+                if (user.gameState.energy < 0) user.gameState.energy = 0;
+            }
         }
+        
+        // Atualiza o timestamp para o momento atual, independentemente de ter minerado ou não
+        user.gameState.lastEnergyUpdate = now;
+        
+        await user.save();
+        // --- FIM: CÁLCULO DE GANHOS OFFLINE ---
 
         res.json({
             username: user.username,
             gameState: user.gameState,
             currentRoomIndex: user.currentRoomIndex || 0
         });
+
     } catch (err) {
         console.error(err.message);
         res.status(500).json({ message: 'Erro no servidor' });
@@ -68,6 +84,9 @@ router.post('/update', authMiddleware, async (req, res) => {
         if (!validateGameState(gameState)) {
             return res.status(400).json({ message: 'Estado do jogo inválido.' });
         }
+
+        // Garante que o timestamp seja atualizado no salvamento
+        gameState.lastEnergyUpdate = Date.now();
 
         const user = await User.findByIdAndUpdate(
             req.user.id,
@@ -96,21 +115,14 @@ router.post('/buy-item', authMiddleware, async (req, res) => {
     const { itemId, category } = req.body;
     try {
         const user = await User.findById(req.user.id);
-        if (!user) {
-            return res.status(404).json({ message: 'Usuário não encontrado' });
-        }
-
+        if (!user) return res.status(404).json({ message: 'Usuário não encontrado' });
+        
         const itemConfig = (category === 'miners' ? MINERS : RACKS).find(i => i.id === itemId);
-        if (!itemConfig) {
-            return res.status(404).json({ message: 'Item não encontrado.' });
-        }
-
-        if (user.gameState.balance < itemConfig.price) {
-            return res.status(400).json({ message: 'Saldo insuficiente.' });
-        }
-
+        if (!itemConfig) return res.status(404).json({ message: 'Item não encontrado.' });
+        
+        if (user.gameState.balance < itemConfig.price) return res.status(400).json({ message: 'Saldo insuficiente.' });
+        
         user.gameState.balance -= itemConfig.price;
-
         const inventoryList = category === 'miners' ? user.gameState.inventory.miners : user.gameState.inventory.racks;
         const existingItem = inventoryList.find(i => i.id === itemId);
 
@@ -138,17 +150,12 @@ router.post('/buy-room', authMiddleware, async (req, res) => {
     const { cost } = req.body;
     try {
         const user = await User.findById(req.user.id);
-        if (!user) {
-            return res.status(404).json({ message: 'Usuário não encontrado' });
-        }
+        if (!user) return res.status(404).json({ message: 'Usuário não encontrado' });
 
-        if (user.gameState.balance < cost) {
-            return res.status(400).json({ message: "Saldo insuficiente!" });
-        }
+        if (user.gameState.balance < cost) return res.status(400).json({ message: "Saldo insuficiente!" });
 
         user.gameState.balance -= cost;
         user.gameState.placedRacksPerRoom.push(Array(4).fill(null));
-
         user.markModified('gameState');
         await user.save();
         
@@ -156,18 +163,12 @@ router.post('/buy-room', authMiddleware, async (req, res) => {
             gameState: user.gameState, 
             message: `Sala comprada por ${cost} LCO!` 
         });
-
     } catch (err) {
         console.error(err.message);
         res.status(500).json({ message: 'Erro no servidor ao comprar sala.' });
     }
 });
 
-// As rotas place-rack e place-miner foram removidas por simplicidade,
-// já que a lógica de posicionamento está no frontend e é salva via /update.
-// Se você precisar delas no futuro para validações mais complexas, podemos recriá-las.
-
-// Função auxiliar para calcular a potência total
 function calculateTotalPower(placedRacksPerRoom) {
     let totalPower = 0;
     if(!placedRacksPerRoom) return 0;
