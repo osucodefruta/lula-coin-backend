@@ -8,6 +8,7 @@ const authRoutes = require('./routes/auth');
 const gameRoutes = require('./routes/game');
 const rankingRoutes = require('./routes/ranking');
 const chatRoutes = require('./routes/chat');
+const damasRoutes = require('./routes/damas'); // << LINHA ADICIONADA
 
 const app = express();
 
@@ -59,6 +60,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/game', gameRoutes);
 app.use('/api/ranking', rankingRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/damas', damasRoutes); // << LINHA ADICIONADA
 
 // --- Health Check ---
 app.get('/api/health', (req, res) => {
@@ -75,4 +77,3 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
 });
-
