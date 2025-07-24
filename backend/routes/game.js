@@ -4,32 +4,46 @@ const router = express.Router();
 const authMiddleware = require('../middleware/auth'); 
 const User = require('../models/User');
 
-// --- Definições do Jogo (para validação no backend) ---
+// --- Definições do Jogo (Constantes) ---
 const MINERS = [
     { id: 'miner001', name: 'GPU Básica', power: 1, price: 10 },
     { id: 'miner002', name: 'ASIC Médio', power: 5, price: 30 },
     { id: 'miner003', name: 'ASIC Avançado', power: 20, price: 180 },
     { id: 'miner004', name: 'Super ASIC', power: 100, price: 800 },
 ];
-// ... (resto das definições de RACKS, etc.)
+const RACKS = [
+    { id: 'rack001', name: 'Rack Pequeno', slots: 2, price: 20 },
+    { id: 'rack002', name: 'Rack Médio', slots: 3, price: 30 },
+    { id: 'rack003', name: 'Rack Grande', slots: 4, price: 100 },
+];
 
-const validateGameState = (gameState) => {
-    if (!gameState) return false;
-    const requiredFields = ['balance', 'inventory', 'placedRacksPerRoom', 'energy', 'lastEnergyUpdate'];
-    return requiredFields.every(field => gameState[field] !== undefined);
-};
+function calculateTotalPower(placedRacksPerRoom) {
+    let totalPower = 0;
+    if (!placedRacksPerRoom || !Array.isArray(placedRacksPerRoom)) return 0;
+    placedRacksPerRoom.forEach(room => {
+        if (room && Array.isArray(room)) {
+            room.forEach(rack => {
+                if (rack && rack.placedMiners && Array.isArray(rack.placedMiners)) {
+                    rack.placedMiners.forEach(miner => {
+                        if (miner) {
+                            const minerConfig = MINERS.find(m => m.id === miner.id);
+                            if (minerConfig) totalPower += minerConfig.power;
+                        }
+                    });
+                }
+            });
+        }
+    });
+    return totalPower;
+}
 
-// ROTA /state com LOGS DE DEPURAÇÃO ADICIONADOS
+// ROTA /state com LÓGICA CORRIGIDA e LOGS DE DEPURAÇÃO
 router.get('/state', authMiddleware, async (req, res) => {
     try {
         const user = await User.findById(req.user.id).select('-password');
-        if (!user) {
-            return res.status(404).json({ message: 'Usuário não encontrado' });
-        }
+        if (!user) return res.status(404).json({ message: 'Usuário não encontrado' });
 
-        // --- INÍCIO DOS LOGS DE DEPURAÇÃO ---
         console.log("--- [DEBUG] INICIANDO ROTA /STATE ---");
-        
         const now = Date.now();
         const lastUpdate = user.gameState.lastEnergyUpdate || now;
         const secondsOffline = (now - lastUpdate) / 1000;
@@ -48,16 +62,13 @@ router.get('/state', authMiddleware, async (req, res) => {
                 const energyConsumptionRate = totalPower * BASE_ENERGY_PER_POWER_SECOND;
                 const secondsOfMiningPossible = user.gameState.energy / energyConsumptionRate;
                 const secondsMined = Math.min(secondsOffline, secondsOfMiningPossible);
-
                 console.log(`[DEBUG] Segundos Reais de Mineração Possível: ${secondsMined.toFixed(2)}s`);
 
                 if (secondsMined > 0) {
                     const coinsEarned = totalPower * secondsMined;
                     const energyConsumed = secondsMined * energyConsumptionRate;
-
                     console.log(`[DEBUG] Moedas a serem adicionadas: ${coinsEarned.toFixed(2)}`);
                     console.log(`[DEBUG] Energia a ser consumida: ${energyConsumed.toFixed(2)}`);
-
                     user.gameState.balance += coinsEarned;
                     user.gameState.energy -= energyConsumed;
                     if (user.gameState.energy < 0) user.gameState.energy = 0;
@@ -88,6 +99,8 @@ router.get('/state', authMiddleware, async (req, res) => {
     }
 });
 
-// ... (resto do seu arquivo game.js sem alterações) ...
-// (As funções /update, /buy-item, /buy-room e calculateTotalPower continuam iguais ao código anterior)
-// ... (Copie o resto do arquivo da sua versão anterior) ...
+
+// ... (O resto das rotas como /update, /buy-item, etc. podem ser adicionadas aqui se você as tiver no seu arquivo original) ...
+
+
+module.exports = router;
