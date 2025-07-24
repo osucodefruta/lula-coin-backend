@@ -163,7 +163,8 @@
                 if (body) { options.body = JSON.stringify(body); }
                 try {
                     const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
-                    if (!response.ok) throw new Error('Erro de rede');
+                    if (response.status === 204) return { success: true };
+                    if (!response.ok) throw new Error(`Erro de rede: ${response.statusText}`);
                     return response.json();
                 } catch (error) { console.error("Erro de API:", error); return null; }
             };
@@ -174,10 +175,10 @@
             const boardGroup = new THREE.Group();
             const piecesGroup = new THREE.Group();
             
-            // Texturas Procedurais (do seu arquivo de gráficos)
             function createPieceTexture(pieceColor, letterColor) { const c = document.createElement('canvas'); c.width=256; c.height=256; const ctx = c.getContext('2d'); ctx.fillStyle=pieceColor; ctx.fillRect(0,0,256,256); ctx.fillStyle=letterColor; ctx.font='bold 180px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('L',128,128); return new THREE.CanvasTexture(c); }
             function generateWoodTexture() { const c = document.createElement('canvas'); c.width = 128; c.height = 128; const ctx = c.getContext('2d'); ctx.fillStyle = '#966F33'; ctx.fillRect(0, 0, 128, 128); for (let i = 0; i < 128; i += Math.random() * 10 + 5) { ctx.fillStyle = `rgba(0,0,0,${Math.random() * 0.1 + 0.05})`; ctx.fillRect(i, 0, Math.random() * 3 + 1, 128); } const t = new THREE.CanvasTexture(c); t.wrapS = THREE.RepeatWrapping; t.wrapT = THREE.RepeatWrapping; return t; }
-            function generateBrickTexture() { const c = document.createElement('canvas'); const bw = 64, bh = 24, g = 4; c.width = (bw + g) * 2; c.height = (bh + g) * 4; const ctx = c.getContext('2d'); ctx.fillStyle = '#444444'; ctx.fillRect(0, 0, c.width, c.height); for (let row = 0; row < 4; row++) { for (let col = 0; col < 2; col++) { const x = col * (bw + g); const y = row * (bh + g); const ox = (row % 2 === 0) ? 0 : (bw + g) / 2; const r = 160 + Math.random() * 40; const g = 70 + Math.random() * 20; const b = 40 + Math.random() * 10; ctx.fillStyle = `rgb(${r},${g},${b})`; ctx.fillRect(x - ox, y, bw, bh); ctx.fillRect(x - ox + (bw + g), y, bw, bh); } } const t = new THREE.CanvasTexture(c); t.wrapS = THREE.RepeatWrapping; t.wrapT = THREE.RepeatWrapping; return t; }
+            // << CÓDIGO CORRIGIDO >>
+            function generateBrickTexture() { const c = document.createElement('canvas'); const bw = 64, bh = 24, gap = 4; c.width = (bw + gap) * 2; c.height = (bh + gap) * 4; const ctx = c.getContext('2d'); ctx.fillStyle = '#444444'; ctx.fillRect(0, 0, c.width, c.height); for (let row = 0; row < 4; row++) { for (let col = 0; col < 2; col++) { const x = col * (bw + gap); const y = row * (bh + gap); const ox = (row % 2 === 0) ? 0 : (bw + gap) / 2; const r = 160 + Math.random() * 40; const g = 70 + Math.random() * 20; const b = 40 + Math.random() * 10; ctx.fillStyle = `rgb(${r},${g},${b})`; ctx.fillRect(x - ox, y, bw, bh); ctx.fillRect(x - ox + (bw + gap), y, bw, bh); } } const t = new THREE.CanvasTexture(c); t.wrapS = THREE.RepeatWrapping; t.wrapT = THREE.RepeatWrapping; return t; }
             function generateBannerTexture(text) { const c = document.createElement('canvas'); c.width = 1024; c.height = 256; const ctx = c.getContext('2d'); ctx.font = 'bold 120px Impact, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = 'black'; ctx.fillText(text, c.width / 2 + 5, c.height / 2 + 5); ctx.strokeStyle = 'black'; ctx.lineWidth = 15; ctx.strokeText(text, c.width / 2, c.height / 2); ctx.fillStyle = '#FFD700'; ctx.fillText(text, c.width / 2, c.height / 2); return new THREE.CanvasTexture(c); }
 
             const redMat = new THREE.MeshStandardMaterial({ map: createPieceTexture('#c0392b', '#ecf0f1') });
@@ -335,7 +336,12 @@
                 const intersects = raycaster.intersectObjects([...boardGroup.children, ...piecesGroup.children], true);
 
                 if (intersects.length > 0) {
-                    const clickedObject = intersects[0].object;
+                    let clickedObject = intersects[0].object;
+                    // << CÓDIGO CORRIGIDO >> - Garante que estamos selecionando o grupo da peça, não uma parte dela
+                    if (clickedObject.parent !== piecesGroup && clickedObject.parent !== scene) {
+                        clickedObject = clickedObject.parent;
+                    }
+                    
                     const { row, col, type } = clickedObject.userData;
 
                     if (onlineState.selectedPiece) {
