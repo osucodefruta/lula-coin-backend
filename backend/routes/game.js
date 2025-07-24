@@ -1,4 +1,4 @@
-// backend/routes/game.js
+// backend/routes/game.js (VERSÃO FINAL COM ARQUITETURA CORRIGIDA)
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../middleware/auth'); 
@@ -37,59 +37,48 @@ function calculateTotalPower(placedRacksPerRoom) {
     return totalPower;
 }
 
-// ROTA /state com LÓGICA CORRIGIDA e LOGS DE DEPURAÇÃO
+const validateGameState = (gameState) => {
+    if (!gameState) return false;
+    const requiredFields = ['balance', 'inventory', 'placedRacksPerRoom', 'energy', 'lastEnergyUpdate'];
+    return requiredFields.every(field => gameState[field] !== undefined);
+};
+
+// ROTA /state - AGORA APENAS CALCULA E RETORNA, NÃO SALVA MAIS NADA
 router.get('/state', authMiddleware, async (req, res) => {
     try {
         const user = await User.findById(req.user.id).select('-password');
         if (!user) return res.status(404).json({ message: 'Usuário não encontrado' });
 
-        console.log("--- [DEBUG] INICIANDO ROTA /STATE ---");
         const now = Date.now();
         const lastUpdate = user.gameState.lastEnergyUpdate || now;
         const secondsOffline = (now - lastUpdate) / 1000;
 
-        console.log(`[DEBUG] Timestamp Atual (now): ${now}`);
-        console.log(`[DEBUG] Último Update Salvo do DB (lastUpdate): ${lastUpdate}`);
-        console.log(`[DEBUG] Segundos Offline Calculado: ${secondsOffline.toFixed(2)}s`);
+        let updatedGameState = JSON.parse(JSON.stringify(user.gameState)); // Cria uma cópia para modificar
 
         if (secondsOffline > 1) {
             const totalPower = calculateTotalPower(user.gameState.placedRacksPerRoom);
-            console.log(`[DEBUG] Poder Total (totalPower) calculado: ${totalPower}`);
-            console.log(`[DEBUG] Energia Antes do Cálculo: ${user.gameState.energy}`);
-
             if (totalPower > 0 && user.gameState.energy > 0) {
                 const BASE_ENERGY_PER_POWER_SECOND = 0.015;
                 const energyConsumptionRate = totalPower * BASE_ENERGY_PER_POWER_SECOND;
                 const secondsOfMiningPossible = user.gameState.energy / energyConsumptionRate;
                 const secondsMined = Math.min(secondsOffline, secondsOfMiningPossible);
-                console.log(`[DEBUG] Segundos Reais de Mineração Possível: ${secondsMined.toFixed(2)}s`);
 
                 if (secondsMined > 0) {
                     const coinsEarned = totalPower * secondsMined;
                     const energyConsumed = secondsMined * energyConsumptionRate;
-                    console.log(`[DEBUG] Moedas a serem adicionadas: ${coinsEarned.toFixed(2)}`);
-                    console.log(`[DEBUG] Energia a ser consumida: ${energyConsumed.toFixed(2)}`);
-                    user.gameState.balance += coinsEarned;
-                    user.gameState.energy -= energyConsumed;
-                    if (user.gameState.energy < 0) user.gameState.energy = 0;
+                    
+                    updatedGameState.balance += coinsEarned;
+                    updatedGameState.energy -= energyConsumed;
+                    if (updatedGameState.energy < 0) updatedGameState.energy = 0;
                 }
-            } else {
-                console.log("[DEBUG] Cálculo de ganhos PULADO: Sem poder de mineração ou sem energia.");
             }
-        } else {
-            console.log("[DEBUG] Cálculo de ganhos PULADO: Tempo offline menor que 1 segundo.");
         }
         
-        user.gameState.lastEnergyUpdate = now;
-        user.markModified('gameState');
-        await user.save();
-        
-        console.log("[DEBUG] Estado do jogo SALVO no banco de dados.");
-        console.log("--- [DEBUG] FIM DA ROTA /STATE ---");
-
+        // AVISO: As linhas de save() foram REMOVIDAS daqui propositalmente.
+        // A rota agora apenas retorna o estado calculado.
         res.json({
             username: user.username,
-            gameState: user.gameState,
+            gameState: updatedGameState, // Retorna o estado atualizado
             currentRoomIndex: user.currentRoomIndex || 0
         });
 
@@ -99,8 +88,61 @@ router.get('/state', authMiddleware, async (req, res) => {
     }
 });
 
+// --- ROTAS DE UPDATE E COMPRA (sem alterações) ---
+router.post('/update', authMiddleware, async (req, res) => {
+    try {
+        const { gameState, currentRoomIndex } = req.body;
+        if (!validateGameState(gameState)) return res.status(400).json({ message: 'Estado do jogo inválido.' });
+        gameState.lastEnergyUpdate = Date.now();
+        const user = await User.findByIdAndUpdate(
+            req.user.id,
+            { $set: { gameState: gameState, currentRoomIndex: currentRoomIndex || 0 } },
+            { new: true }
+        ).select('-password');
+        res.json({ message: 'Jogo salvo com sucesso!', gameState: user.gameState });
+    } catch (err) {
+        res.status(500).json({ message: 'Erro no servidor' });
+    }
+});
 
-// ... (O resto das rotas como /update, /buy-item, etc. podem ser adicionadas aqui se você as tiver no seu arquivo original) ...
+router.post('/buy-item', authMiddleware, async (req, res) => {
+    const { itemId, category } = req.body;
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ message: 'Usuário não encontrado' });
+        const itemConfig = (category === 'miners' ? MINERS : RACKS).find(i => i.id === itemId);
+        if (!itemConfig) return res.status(404).json({ message: 'Item não encontrado.' });
+        if (user.gameState.balance < itemConfig.price) return res.status(400).json({ message: 'Saldo insuficiente.' });
+        user.gameState.balance -= itemConfig.price;
+        const inventoryList = category === 'miners' ? user.gameState.inventory.miners : user.gameState.inventory.racks;
+        const existingItem = inventoryList.find(i => i.id === itemId);
+        if (existingItem) {
+            existingItem.quantity++;
+        } else {
+            inventoryList.push({ id: itemId, quantity: 1 });
+        }
+        user.markModified('gameState');
+        await user.save();
+        res.json({ message: `${itemConfig.name} comprado!`, gameState: user.gameState });
+    } catch (err) {
+        res.status(500).json({ message: 'Erro no servidor ao comprar item' });
+    }
+});
 
+router.post('/buy-room', authMiddleware, async (req, res) => {
+    const { cost } = req.body;
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ message: 'Usuário não encontrado' });
+        if (user.gameState.balance < cost) return res.status(400).json({ message: "Saldo insuficiente!" });
+        user.gameState.balance -= cost;
+        user.gameState.placedRacksPerRoom.push(Array(4).fill(null));
+        user.markModified('gameState');
+        await user.save();
+        res.json({ gameState: user.gameState, message: `Sala comprada por ${cost} LCO!` });
+    } catch (err) {
+        res.status(500).json({ message: 'Erro no servidor ao comprar sala.' });
+    }
+});
 
 module.exports = router;

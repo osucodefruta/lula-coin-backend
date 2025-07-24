@@ -339,145 +339,6 @@
             cursor: pointer;
         }
     </style>
-</head>
-<body>
-    <div id="auth-container">
-        <div id="falling-coins-container">
-            <div class="coin-fall">L</div><div class="coin-fall">L</div><div class="coin-fall">L</div>
-            <div class="coin-fall">L</div><div class="coin-fall">L</div><div class="coin-fall">L</div>
-            <div class="coin-fall">L</div><div class="coin-fall">L</div><div class="coin-fall">L</div>
-            <div class="coin-fall">L</div>
-        </div>
-        <div class="auth-box">
-            <div id="login-form">
-                <h2>Login</h2>
-                <input type="text" id="login-username" placeholder="Usuário" required>
-                <input type="password" id="login-password" placeholder="Senha" required>
-                <button id="login-btn">Entrar</button>
-                <p class="auth-toggle">Não tem uma conta? <a id="show-register-link">Cadastre-se</a></p>
-            </div>
-            <div id="register-form">
-                <h2>Registrar</h2>
-                <input type="text" id="register-username" placeholder="Usuário" required>
-                <input type="password" id="register-password" placeholder="Senha" required>
-                <button id="register-btn">Registrar</button>
-                <p class="auth-toggle">Já tem uma conta? <a id="show-login-link">Faça Login</a></p>
-            </div>
-            <div id="auth-message"></div>
-        </div>
-    </div>
-
-    <div id="app">
-        <header>
-            <div class="logo"><h1>Lula Coin Miner</h1></div>
-            <div class="user-profile">
-                <div class="user-avatar" id="user-avatar">L</div>
-                <div class="user-stats">
-                    <div class="stat-item">
-                        <span class="stat-label">Saldo LCO</span>
-                        <span class="stat-value"><span class="icon">$</span><span id="balance">0.00</span></span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Potência Total</span>
-                        <span class="stat-value"><span class="icon">⚡</span><span id="total-power">0 TH/s</span></span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">LCO por Hora</span>
-                        <span class="stat-value"><span class="icon">💰</span><span id="lco-per-hour">0.00</span></span>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <div id="room-controls" style="position: absolute; top: 80px; left: 50%; transform: translateX(-50%); z-index: 20; display: flex; gap: 10px; align-items: center;"></div>
-
-        <main class="main-content">
-            <div class="mining-room" id="mining-room">
-                <div id="global-ranking-board">
-                    <div id="ranking-header">
-                        <h2>🏆 Ranking Global (Top 5)</h2>
-                    </div>
-                    <div id="ranking-body" style="display: none;">
-                        <ol id="ranking-list"></ol>
-                    </div>
-                </div>
-
-                <div class="computer-setup">
-                    <div class="desk"></div>
-                    <div class="monitor">
-                        <div class="monitor-screen">
-                            <div class="scanline-effect"></div>
-                            <pre class="monitor-text" id="terminal-text"></pre>
-                        </div>
-                    </div>
-                    <div class="keyboard"></div>
-                    <div class="mouse"></div>
-                    <div class="cpu-box">
-                        <div class="cpu-led-light"></div>
-                    </div>
-                </div>
-                <div id="rack-placement-area"></div>
-            </div>
-        </main>
-
-        <div class="stats-bar">
-            <button class="action-btn" id="open-shop-btn">Loja</button>
-            <button class="action-btn" id="open-inventory-btn">Inventário</button>
-            <button class="action-btn" id="open-chat-btn">Chat</button>
-            <button class="action-btn" id="open-games-btn">Jogos</button> 
-            <button class="action-btn" id="logout-btn">Sair</button>
-            <button class="action-btn" id="energy-btn" disabled>
-                <div id="energy-bar"></div>
-                <span id="energy-text"></span>
-            </button>
-        </div>
-
-        <div class="shop-modal" id="shop-modal">
-            <div class="shop-content">
-                <div class="shop-header">
-                    <h2 class="shop-title">Loja do Minerador</h2>
-                    <button class="close-shop-btn" id="close-shop-btn">&times;</button>
-                </div>
-                <div class="shop-categories">
-                    <button class="shop-category-btn active" data-category="miners">Mineradoras</button>
-                    <button class="shop-category-btn" data-category="racks">Racks</button>
-                </div>
-                <div class="shop-content-area" id="miners-shop-content"></div>
-                <div class="shop-content-area" id="racks-shop-content" style="display: none;"></div>
-            </div>
-        </div>
-
-        <div class="inventory-modal" id="inventory-modal">
-            <div class="inventory-content">
-                <div class="inventory-header">
-                    <h2 class="inventory-title">Meus Itens</h2>
-                    <button class="close-inventory-btn" id="close-inventory-btn">&times;</button>
-                </div>
-                <div class="inventory-categories">
-                    <button class="inventory-category-btn active" data-category="miners">Mineradoras</button>
-                    <button class="inventory-category-btn" data-category="racks">Racks</button>
-                </div>
-                <div class="inventory-content-area" id="miners-inventory-content"></div>
-                <div class="inventory-content-area" id="racks-inventory-content" style="display: none;"></div>
-            </div>
-        </div>
-        
-        <div class="chat-modal" id="chat-modal">
-            <div class="chat-content">
-                <div class="chat-header">
-                    <h2 class="chat-title">Chat Global</h2>
-                    <button class="close-chat-btn" id="close-chat-btn">&times;</button>
-                </div>
-                <div class="chat-messages-area" id="chat-messages-area">
-                    </div>
-                <div class="chat-input-area">
-                    <input type="text" id="chat-input" placeholder="Digite sua mensagem..." maxlength="200">
-                    <button id="chat-send-btn">Enviar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
     <div class="games-modal" id="games-modal" style="display: none;">
         <div class="games-content">
             <div class="games-header">
@@ -807,6 +668,7 @@
         let autoSaveInterval = null;
         
         const handleLogout = (force = false) => {
+            // A chamada saveGame() no logout é importante para salvar o último estado online.
             if (gameState && !force) {
                 saveGame();
             }
@@ -818,7 +680,7 @@
             if (gameLoopInterval) clearInterval(gameLoopInterval); 
             if (terminalLoopInterval) clearInterval(terminalLoopInterval);
             if(chatUpdateInterval) clearInterval(chatUpdateInterval);
-            if(matchmakingInterval) clearInterval(matchmakingInterval); // << CÓDIGO ADICIONADO >> Parar matchmaking no logout
+            if(matchmakingInterval) clearInterval(matchmakingInterval);
         };
 
         const showAuthMessage = (msg, color = 'var(--red-alert)') => { authMessage.textContent = msg; authMessage.style.color = color; };
@@ -830,31 +692,46 @@
             authMessage.textContent = '';
         };
 
-        // --- FUNÇÕES DE GERENCIAMENTO DO JOGO ---
+        // --- FUNÇÕES DE GERENCIAMENTO DO JOGO (COM A ARQUITETURA CORRIGIDA) ---
         const initializeGame = async () => {
+            // 1. Busca o estado do jogo. O backend calcula o progresso offline e retorna o resultado.
             const data = await apiRequest('/api/game/state');
+            
             if (data && data.gameState) {
-                gameState = data.gameState; currentRoomIndex = data.currentRoomIndex || 0;
+                // 2. O estado do jogo no cliente é atualizado com os ganhos offline.
+                gameState = data.gameState; 
+                currentRoomIndex = data.currentRoomIndex || 0;
                 
+                // Validações para garantir que o estado do jogo não esteja corrompido
                 if (typeof gameState.energy === 'undefined') {
                     gameState.energy = 100;
-                    gameState.lastEnergyUpdate = Date.now();
+                }
+                if (!gameState.placedRacksPerRoom || gameState.placedRacksPerRoom.length === 0) {
+                    gameState.placedRacksPerRoom = [Array(NUM_RACK_PLACEMENT_SLOTS).fill(null)]; 
+                    currentRoomIndex = 0;
                 }
 
-                if (!gameState.placedRacksPerRoom || gameState.placedRacksPerRoom.length === 0) {
-                    gameState.placedRacksPerRoom = [Array(NUM_RACK_PLACEMENT_SLOTS).fill(null)]; currentRoomIndex = 0;
-                }
-                authContainer.style.display = 'none'; appContainer.style.display = 'flex';
+                // 3. O cliente AGORA salva este novo estado (com os ganhos) no banco de dados.
+                // Isso "confirma" o progresso offline e atualiza o timestamp para o próximo cálculo.
+                await saveGame(); 
+
+                // 4. Continua com a inicialização normal do jogo.
+                authContainer.style.display = 'none'; 
+                appContainer.style.display = 'flex';
                 userAvatar.textContent = (data.username ? data.username.charAt(0).toUpperCase() : 'L');
+                
                 updateUI(); 
                 startLoops();
             } else { 
+                // Se não conseguir carregar o estado, força o logout.
                 handleLogout(true); 
             }
         };
+
         const saveGame = async () => {
             if (!gameState) return;
-            gameState.lastEnergyUpdate = Date.now();
+            // A rota /update é a única responsável por salvar o estado e atualizar o timestamp no backend.
+            // Não precisamos mais definir `gameState.lastEnergyUpdate = Date.now();` aqui.
             await apiRequest('/api/game/update', 'POST', { gameState, currentRoomIndex });
         };
 
@@ -1213,17 +1090,15 @@
                 if (gameState.balance >= 1) {
                     gameState.balance -= 1;
                     gameState.energy = 100;
-                    gameState.lastEnergyUpdate = Date.now();
-                    displayTerminalMessage("Energia restaurada!", "lime");
                     updateUI();
+                    saveGame(); // Salva o estado após recarregar
                 } else {
                     displayTerminalMessage("LCO insuficiente para recarregar!", "red");
                 }
             } else if (gameState.energy <= 20) { // Recarga grátis
                 gameState.energy = 100;
-                gameState.lastEnergyUpdate = Date.now();
-                displayTerminalMessage("Energia restaurada gratuitamente!", "lime");
                 updateUI();
+                saveGame(); // Salva o estado após recarregar
             }
         }
 
@@ -1290,11 +1165,10 @@
                 lastUpdateTime = now;
 
                 if (gameState.energy > 0) {
-                    // ATUALIZAÇÃO: A energia agora diminui a uma taxa fixa, durando exatamente 10 minutos.
                     gameState.energy -= ENERGY_CONSUMPTION_RATE * deltaTime;
                     if (gameState.energy < 0) {
                         gameState.energy = 0;
-                        updateTotalPower(); // Chama para pausar a mineração e atualizar a UI
+                        updateTotalPower();
                     }
                 }
                 
@@ -1345,7 +1219,6 @@
         });
         rankingHeader.addEventListener('click', handleRankingClick);
 
-        // << CÓDIGO ADICIONADO >>: Event Listeners do Lobby de Jogos
         openGamesBtn.addEventListener('click', openGames);
         closeGamesBtn.addEventListener('click', closeGames);
         playDamasBtn.addEventListener('click', joinDamasMatchmaking);
