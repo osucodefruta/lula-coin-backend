@@ -5,6 +5,7 @@ const authMiddleware = require('../middleware/auth');
 const User = require('../models/User');
 
 // --- Definições do Jogo (Constantes) ---
+// Certifique-se de que estas listas são as mesmas que você tem no seu frontend
 const MINERS = [
     { id: 'miner001', name: 'GPU Básica', power: 1, price: 10 },
     { id: 'miner002', name: 'ASIC Médio', power: 5, price: 30 },
@@ -53,21 +54,19 @@ router.get('/state', authMiddleware, async (req, res) => {
         const lastUpdate = user.gameState.lastEnergyUpdate || now;
         const secondsOffline = (now - lastUpdate) / 1000;
 
-        let updatedGameState = JSON.parse(JSON.stringify(user.gameState));
+        // Cria uma cópia profunda para evitar modificar o objeto original do Mongoose
+        let updatedGameState = JSON.parse(JSON.stringify(user.gameState)); 
 
         if (secondsOffline > 1) {
             const totalPower = calculateTotalPower(user.gameState.placedRacksPerRoom);
             if (totalPower > 0 && user.gameState.energy > 0) {
                 // Usando as mesmas taxas do seu frontend para consistência
                 const LCO_PER_THS_PER_MINUTE = 0.1;
-                const ENERGY_CONSUMPTION_RATE = 100 / 600; // 100% em 10 minutos
-
-                // Calcula o consumo de energia dinâmico baseado no seu loop online
                 const baseConsumption = 0.05;
                 const consumptionPerPower = 0.002;
-                const totalEnergyConsumptionPerSecond = (baseConsumption + (totalPower * consumptionPerPower));
-                
+
                 const lcoPerSecond = totalPower * (LCO_PER_THS_PER_MINUTE / 60);
+                const totalEnergyConsumptionPerSecond = (baseConsumption + (totalPower * consumptionPerPower));
 
                 const secondsOfMiningPossible = user.gameState.energy / totalEnergyConsumptionPerSecond;
                 const secondsMined = Math.min(secondsOffline, secondsOfMiningPossible);
@@ -83,6 +82,8 @@ router.get('/state', authMiddleware, async (req, res) => {
             }
         }
         
+        // AVISO: As linhas de save() foram REMOVIDAS daqui propositalmente.
+        // A rota agora apenas retorna o estado calculado para o cliente.
         res.json({
             username: user.username,
             gameState: updatedGameState,
@@ -99,10 +100,14 @@ router.get('/state', authMiddleware, async (req, res) => {
 router.post('/update', authMiddleware, async (req, res) => {
     try {
         const { gameState, currentRoomIndex } = req.body;
+        
+        // Atualiza o timestamp para o momento exato do salvamento
         gameState.lastEnergyUpdate = Date.now();
+
         if (!validateGameState(gameState)) {
             return res.status(400).json({ message: 'Estado do jogo inválido.' });
         }
+
         const user = await User.findByIdAndUpdate(
             req.user.id,
             { $set: { 
@@ -111,6 +116,7 @@ router.post('/update', authMiddleware, async (req, res) => {
             }},
             { new: true }
         ).select('-password');
+
         res.json({ message: 'Jogo salvo com sucesso!', gameState: user.gameState });
     } catch (err) {
         console.error("Erro na rota /update:", err.message);
@@ -118,7 +124,7 @@ router.post('/update', authMiddleware, async (req, res) => {
     }
 });
 
-// ROTA: POST /api/game/buy-item
+// --- ROTAS DE COMPRA E SALA ---
 router.post('/buy-item', authMiddleware, async (req, res) => {
     const { itemId, category } = req.body;
     try {
@@ -143,7 +149,6 @@ router.post('/buy-item', authMiddleware, async (req, res) => {
     }
 });
 
-// ROTA: POST /api/game/buy-room
 router.post('/buy-room', authMiddleware, async (req, res) => {
     const { cost } = req.body;
     try {
