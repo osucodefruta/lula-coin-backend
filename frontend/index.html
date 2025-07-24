@@ -782,7 +782,6 @@
         const saveGame = async () => {
             if (!gameState) return;
             // A rota /update é a única responsável por salvar o estado e atualizar o timestamp no backend.
-            // Não precisamos mais definir `gameState.lastEnergyUpdate = Date.now();` aqui.
             await apiRequest('/api/game/update', 'POST', { gameState, currentRoomIndex });
         };
         
