@@ -8,7 +8,7 @@ const authRoutes = require('./routes/auth');
 const gameRoutes = require('./routes/game');
 const rankingRoutes = require('./routes/ranking');
 const chatRoutes = require('./routes/chat');
-const damasRoutes = require('./routes/damas'); // << LINHA ADICIONADA
+// const damasRoutes = require('./routes/damas'); // << LINHA TEMPORARIAMENTE COMENTADA PARA CORRIGIR O CRASH
 
 const app = express();
 
@@ -16,9 +16,8 @@ const app = express();
 app.set('trust proxy', 1);
 
 // --- CORS PERSONALIZADO ---
-// Substitua pela URL real do seu frontend do Netlify
 const allowedOrigins = [
-  'https://sweet-praline-ee4bd7.netlify.app', // EXEMPLO: 'https://lula-coin.netlify.app'
+  'https://sweet-praline-ee4bd7.netlify.app',
   'http://localhost:3000'
 ];
 
@@ -60,7 +59,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/game', gameRoutes);
 app.use('/api/ranking', rankingRoutes);
 app.use('/api/chat', chatRoutes);
-app.use('/api/damas', damasRoutes); // << LINHA ADICIONADA
+// app.use('/api/damas', damasRoutes); // << LINHA TEMPORARIAMENTE COMENTADA PARA CORRIGIR O CRASH
 
 // --- Health Check ---
 app.get('/api/health', (req, res) => {
