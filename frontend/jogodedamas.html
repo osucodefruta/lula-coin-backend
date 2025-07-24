@@ -159,6 +159,9 @@
             const SCALE = 2.5;
             let onlineState = { gameId: null, gameStateInterval: null, playerColor: null, myTurnNumber: null, board: [], currentTurn: null, selectedPiece: null, lastEmojiTimestamp: null, myUsername: null };
 
+            // << LINHA CORRIGIDA >> - A declaração desta variável estava faltando
+            const gameContainer = document.getElementById('game-container');
+            
             const uiContainer = document.getElementById('ui-container');
             const turnIndicator = document.getElementById('turn-indicator');
             const winnerScreen = document.getElementById('winner-screen');
@@ -172,7 +175,7 @@
             const renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.shadowMap.enabled = true;
-            document.getElementById('game-container').appendChild(renderer.domElement);
+            gameContainer.appendChild(renderer.domElement);
             const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
             camera.position.set(0, 25, 35);
             camera.lookAt(0, 5, 0);
@@ -326,13 +329,12 @@
                         }
                     }
 
-                    // << LÓGICA VENCEDOR/PERDEDOR ATUALIZADA >>
                     if(state.winner) {
                         clearInterval(onlineState.gameStateInterval);
                         if (state.winner === onlineState.myUsername) {
                             winnerPlayer.textContent = `${state.winner} Venceu!`;
                             winnerScreen.style.display = 'flex';
-                        } else if (state.winner !== 'none') { // 'none' seria para jogo abandonado
+                        } else if (state.winner !== 'none') {
                             loserScreen.style.display = 'flex';
                         }
                         updateTurnIndicator();
