@@ -1,13 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const auth = require('../middleware/auth'); // Este caminho está CORRETO para sua estrutura
+const auth = require('../middleware/auth');
 const User = require('../models/User');
 const DamasGame = require('../models/DamasGame');
 
-// Fila de espera simples para matchmaking (em memória do servidor)
 let matchmakingQueue = [];
 
-// Rota para entrar na fila
 router.post('/matchmaking/join', auth, async (req, res) => {
     try {
         const user = await User.findById(req.user.id);
@@ -15,6 +13,14 @@ router.post('/matchmaking/join', auth, async (req, res) => {
         if (user.gameState.balance < 25) {
             return res.status(400).json({ message: "Você precisa de 25 LCO para jogar." });
         }
+
+        // << LÓGICA ANTI-BUG ADICIONADA >>
+        // Abandona qualquer jogo antigo que este usuário tenha deixado ativo.
+        // Isso garante que ele sempre entrará em um jogo novo.
+        await DamasGame.updateMany(
+            { 'players.userId': req.user.id, status: 'active' },
+            { $set: { status: 'abandoned' } }
+        );
         
         if (matchmakingQueue.find(p => p.userId.toString() === req.user.id)) {
             return res.status(200).json({ message: "Você já está na fila." });
@@ -65,7 +71,6 @@ router.post('/matchmaking/join', auth, async (req, res) => {
     }
 });
 
-// Rota para verificar o status do matchmaking
 router.get('/matchmaking/status', auth, async (req, res) => {
     try {
         const game = await DamasGame.findOne({ 'players.userId': req.user.id, status: 'active' });
@@ -79,7 +84,6 @@ router.get('/matchmaking/status', auth, async (req, res) => {
     }
 });
 
-// Rota para obter o estado de uma partida
 router.get('/game/state/:id', auth, async (req, res) => {
     try {
         const game = await DamasGame.findById(req.params.id);
@@ -90,7 +94,6 @@ router.get('/game/state/:id', auth, async (req, res) => {
     }
 });
 
-// Rota para fazer uma jogada
 router.post('/game/move/:id', auth, async (req, res) => {
     try {
         const { boardState, nextTurn, winner } = req.body;
@@ -120,8 +123,6 @@ router.post('/game/move/:id', auth, async (req, res) => {
     }
 });
 
-// << ROTA ADICIONADA >>
-// Rota para enviar um emoji
 router.post('/game/emoji/:id', auth, async (req, res) => {
     try {
         const { emoji, playerColor } = req.body;
