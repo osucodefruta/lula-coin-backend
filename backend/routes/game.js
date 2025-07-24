@@ -19,7 +19,6 @@ const RACKS = [
 
 const validateGameState = (gameState) => {
     if (!gameState) return false;
-    // Adicionado energy e lastEnergyUpdate à validação
     const requiredFields = ['balance', 'inventory', 'placedRacksPerRoom', 'energy', 'lastEnergyUpdate'];
     return requiredFields.every(field => gameState[field] !== undefined);
 };
@@ -34,33 +33,31 @@ router.get('/state', authMiddleware, async (req, res) => {
         
         // --- INÍCIO: CÁLCULO DE GANHOS E CONSUMO OFFLINE ---
         const now = Date.now();
-        // Usa o lastEnergyUpdate para saber a última vez que o jogador esteve ativo
         const lastUpdate = user.gameState.lastEnergyUpdate || now;
         const secondsOffline = (now - lastUpdate) / 1000;
 
-        // Só executa o cálculo se o jogador ficou offline por mais de um segundo
         if (secondsOffline > 1) {
             const totalPower = calculateTotalPower(user.gameState.placedRacksPerRoom);
             
-            // A energia só é consumida se houver poder de mineração
             if (totalPower > 0 && user.gameState.energy > 0) {
-                const energyConsumptionRate = 100 / 600; // 100% em 10 minutos (600 segundos)
-
-                // Calcula por quantos segundos a energia restante duraria
-                const secondsOfMiningPossible = user.gameState.energy / energyConsumptionRate;
                 
-                // O tempo real que minerou é o menor valor entre o tempo offline e o tempo que tinha energia
+                // --- ALTERAÇÃO 1: Consumo de energia agora é dinâmico ---
+                // O consumo escala com o poder total, tornando o jogo mais estratégico.
+                // Você pode ajustar o valor 0.015 para balancear a dificuldade.
+                const BASE_ENERGY_PER_POWER_SECOND = 0.015;
+                const energyConsumptionRate = totalPower * BASE_ENERGY_PER_POWER_SECOND;
+
+                const secondsOfMiningPossible = user.gameState.energy / energyConsumptionRate;
                 const secondsMined = Math.min(secondsOffline, secondsOfMiningPossible);
 
                 if (secondsMined > 0) {
-                    // Calcula as moedas ganhas nesse período
-                    const lcoPerSecond = (totalPower * (0.1 / 60)); // 0.1 LCO/TH/minuto -> convertido para segundos
-                    const coinsEarned = lcoPerSecond * secondsMined;
                     
-                    // Calcula a energia consumida nesse período
+                    // --- ALTERAÇÃO 2: Cálculo de ganhos correto e simplificado ---
+                    // O ganho agora é o poder total por segundo, sem multiplicadores confusos.
+                    const coinsEarned = totalPower * secondsMined;
+                    
                     const energyConsumed = secondsMined * energyConsumptionRate;
 
-                    // Atualiza o estado do jogo
                     user.gameState.balance += coinsEarned;
                     user.gameState.energy -= energyConsumed;
                     if (user.gameState.energy < 0) user.gameState.energy = 0;
@@ -68,10 +65,11 @@ router.get('/state', authMiddleware, async (req, res) => {
             }
         }
         
-        // Atualiza o timestamp para o momento atual, para o próximo cálculo offline
         user.gameState.lastEnergyUpdate = now;
         
-        // Salva as alterações no banco de dados ANTES de enviar para o jogador
+        // --- ALTERAÇÃO 3: Linha crítica para garantir o salvamento no MongoDB ---
+        user.markModified('gameState');
+        
         await user.save();
 
         // --- FIM: CÁLCULO DE GANHOS E CONSUMO OFFLINE ---
@@ -98,7 +96,6 @@ router.post('/update', authMiddleware, async (req, res) => {
             return res.status(400).json({ message: 'Estado do jogo inválido.' });
         }
 
-        // Garante que o timestamp seja atualizado em qualquer salvamento
         gameState.lastEnergyUpdate = Date.now();
 
         const user = await User.findByIdAndUpdate(
@@ -182,23 +179,26 @@ router.post('/buy-room', authMiddleware, async (req, res) => {
     }
 });
 
+// Função ligeiramente otimizada para mais segurança
 function calculateTotalPower(placedRacksPerRoom) {
     let totalPower = 0;
-    if(!placedRacksPerRoom) return 0;
+    if (!placedRacksPerRoom || !Array.isArray(placedRacksPerRoom)) return 0;
+
     placedRacksPerRoom.forEach(room => {
-        if(!room) return;
-        room.forEach(rack => {
-            if (rack && rack.placedMiners) {
-                rack.placedMiners.forEach(miner => {
-                    if (miner) {
-                        const minerConfig = MINERS.find(m => m.id === miner.id);
-                        if (minerConfig) {
-                            totalPower += minerConfig.power;
+        if (room && Array.isArray(room)) {
+            room.forEach(rack => {
+                if (rack && rack.placedMiners && Array.isArray(rack.placedMiners)) {
+                    rack.placedMiners.forEach(miner => {
+                        if (miner) {
+                            const minerConfig = MINERS.find(m => m.id === miner.id);
+                            if (minerConfig) {
+                                totalPower += minerConfig.power;
+                            }
                         }
-                    }
-                });
-            }
-        });
+                    });
+                }
+            });
+        }
     });
     return totalPower;
 }
