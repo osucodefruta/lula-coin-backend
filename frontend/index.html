@@ -744,6 +744,31 @@
             registerForm.style.display = loginDisplay === 'none' ? 'none' : 'block';
             authMessage.textContent = '';
         };
+        
+        // --- FUNÇÕES DE EFEITOS E ANIMAÇÕES ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playTone({ frequency = 440, duration = 100, volume = 0.5, type = 'sine' }) {
+            if (!audioCtx) return;
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.type = type;
+            oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+            gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration / 1000);
+            oscillator.start(audioCtx.currentTime);
+            oscillator.stop(audioCtx.currentTime + duration / 1000);
+        }
+
+        function playSound(soundId) {
+            const sound = document.getElementById(soundId);
+            if(sound) {
+                sound.currentTime = 0;
+                sound.play().catch(e => console.error("Erro ao tocar som:", e));
+            }
+        }
 
         // --- FUNÇÕES DE GERENCIAMENTO DO JOGO (COM ARQUITETURA CORRIGIDA) ---
         const initializeGame = async () => {
@@ -1002,8 +1027,7 @@
                 if (invItem.quantity <= 0) {
                     gameState.inventory[inventoryCategory] = gameState.inventory[inventoryCategory].filter(i => i.id !== itemId);
                 }
-                const audio = new Audio("https://cdn.pixabay.com/download/audio/2022/03/10/audio_c394c55a5b.mp3");
-                audio.play();
+                playSound('sell-sound');
                 displayTerminalMessage(`${itemConfig.name} vendido por ◎${sellPrice.toFixed(2)}!`, 'lime');
                 updateUI();
                 renderInventory(category);
