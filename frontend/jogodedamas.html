@@ -21,11 +21,17 @@
             75% { transform: translate(-50%, -60%) scale(1); opacity: 1; }
             100% { transform: translate(-50%, -70%) scale(0.5); opacity: 0; }
         }
-        #winner-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; flex-direction: column; text-align: center; font-size: 2em; pointer-events: auto; z-index: 200; }
-        #winner-screen h2 { font-size: 2em; color: #FFD700; margin-bottom: 10px; }
-        #winner-screen p { font-size: 0.8em; color: #fff; margin: 0; } /* Estilo para o novo texto */
-        #winner-screen p span { color: limegreen; font-weight: bold; } /* Estilo para o valor do prêmio */
-        #back-to-lobby-btn { padding: 15px 30px; font-size: 0.8em; cursor: pointer; border-radius: 5px; border: none; background-color: #00ff7f; color: #1a1a1a; font-weight: bold; margin-top: 30px; }
+        .end-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; flex-direction: column; text-align: center; font-size: 2em; pointer-events: auto; z-index: 200; }
+        .end-screen h2 { font-size: 2em; margin-bottom: 10px; }
+        .end-screen p { font-size: 0.8em; color: #fff; margin: 0; }
+        .end-screen button { padding: 15px 30px; font-size: 0.8em; cursor: pointer; border-radius: 5px; border: none; font-weight: bold; margin-top: 30px; }
+        
+        #winner-screen h2 { color: #FFD700; }
+        #winner-screen p span { color: limegreen; font-weight: bold; }
+        #winner-screen button { background-color: #00ff7f; color: #1a1a1a; }
+        
+        #loser-screen h2 { color: #ff3b3b; }
+        #loser-screen button { background-color: #555; color: #fff; }
     </style>
 </head>
 <body>
@@ -41,10 +47,17 @@
             <span class="emoji-button" data-emoji="👋">👋</span>
             <span class="emoji-button" data-emoji="❤️">❤️</span>
         </div>
-        <div id="winner-screen">
+        
+        <div id="winner-screen" class="end-screen">
             <h2 id="winner-player"></h2>
             <p>Ganhou <span>50 LCO</span>! 🏆</p>
-            <button id="back-to-lobby-btn">Voltar para a Sala de Mineração</button>
+            <button id="back-to-lobby-btn-winner">Voltar para a Sala de Mineração</button>
+        </div>
+
+        <div id="loser-screen" class="end-screen">
+            <h2>Você Perdeu!</h2>
+            <p>Vai minerar!</p>
+            <button id="back-to-lobby-btn-loser">Voltar para a Sala de Mineração</button>
         </div>
     </div>
 
@@ -144,23 +157,22 @@
         document.addEventListener('DOMContentLoaded', () => {
             const API_BASE_URL = 'https://lula-coin-backend.onrender.com';
             const SCALE = 2.5;
-            let onlineState = { gameId: null, gameStateInterval: null, playerColor: null, myTurnNumber: null, board: [], currentTurn: null, selectedPiece: null, lastEmojiTimestamp: null };
+            let onlineState = { gameId: null, gameStateInterval: null, playerColor: null, myTurnNumber: null, board: [], currentTurn: null, selectedPiece: null, lastEmojiTimestamp: null, myUsername: null };
 
             const uiContainer = document.getElementById('ui-container');
             const turnIndicator = document.getElementById('turn-indicator');
-            const scorePlayer1Label = document.getElementById('score-player1');
-            const scorePlayer2Label = document.getElementById('score-player2');
             const winnerScreen = document.getElementById('winner-screen');
             const winnerPlayer = document.getElementById('winner-player');
-            const backToLobbyBtn = document.getElementById('back-to-lobby-btn');
-
-            const gameContainer = document.getElementById('game-container');
+            const backToLobbyBtnWinner = document.getElementById('back-to-lobby-btn-winner');
+            const loserScreen = document.getElementById('loser-screen');
+            const backToLobbyBtnLoser = document.getElementById('back-to-lobby-btn-loser');
+            
             const scene = new THREE.Scene();
             scene.background = new THREE.Color(0x101010);
             const renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.shadowMap.enabled = true;
-            gameContainer.appendChild(renderer.domElement);
+            document.getElementById('game-container').appendChild(renderer.domElement);
             const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
             camera.position.set(0, 25, 35);
             camera.lookAt(0, 5, 0);
@@ -261,7 +273,7 @@
             }
             
             function updateTurnIndicator() {
-                if(winnerScreen.style.display === 'flex') { turnIndicator.style.display = 'none'; return; }
+                if(winnerScreen.style.display === 'flex' || loserScreen.style.display === 'flex') { turnIndicator.style.display = 'none'; return; }
                 if (onlineState.currentTurn === onlineState.myTurnNumber) {
                     turnIndicator.textContent = "É a sua vez!";
                     turnIndicator.style.backgroundColor = 'rgba(0, 255, 127, 0.7)';
@@ -274,6 +286,7 @@
             function updateScoreboards(players) {
                 const p1Data = players.find(p => p.color === 'p1');
                 const p2Data = players.find(p => p.color === 'p2');
+                if(!p1Data || !p2Data) return;
                 let p1PiecesLeft = 0; let p2PiecesLeft = 0;
                 onlineState.board.forEach(row => row.forEach(cell => {
                     if (cell === 1 || cell === 3) p1PiecesLeft++;
@@ -281,8 +294,8 @@
                 }));
                 const p1Score = 12 - p2PiecesLeft;
                 const p2Score = 12 - p1PiecesLeft;
-                scorePlayer1Label.innerHTML = `${p1Data.username} (Vermelho): <span id="p1-score">${p1Score}</span>`;
-                scorePlayer2Label.innerHTML = `${p2Data.username} (Azul): <span id="p2-score">${p2Score}</span>`;
+                document.getElementById('score-player1').innerHTML = `${p1Data.username} (Vermelho): <span id="p1-score">${p1Score}</span>`;
+                document.getElementById('score-player2').innerHTML = `${p2Data.username} (Azul): <span id="p2-score">${p2Score}</span>`;
             }
 
             function showFloatingEmoji(emoji) { const e = document.createElement('div'); e.className = 'floating-emoji'; e.textContent = emoji; uiContainer.appendChild(e); setTimeout(() => e.remove(), 2000); }
@@ -298,6 +311,7 @@
                         const myUserId = parseJwt(localStorage.getItem('token')).user.id;
                         const myPlayerData = state.players.find(p => p.userId === myUserId);
                         onlineState.playerColor = myPlayerData.color;
+                        onlineState.myUsername = myPlayerData.username;
                         onlineState.myTurnNumber = onlineState.playerColor === 'p1' ? 1 : 2;
                         if(onlineState.myTurnNumber === 1) camera.position.set(0, 25, 35); else camera.position.set(0, 25, -35);
                         controls.update();
@@ -311,11 +325,16 @@
                             showFloatingEmoji(state.lastEmoji.emoji);
                         }
                     }
+
+                    // << LÓGICA VENCEDOR/PERDEDOR ATUALIZADA >>
                     if(state.winner) {
                         clearInterval(onlineState.gameStateInterval);
-                        const winnerUsername = state.players.find(p => p.color === state.winner).username;
-                        winnerPlayer.textContent = `${winnerUsername} Venceu!`;
-                        winnerScreen.style.display = 'flex';
+                        if (state.winner === onlineState.myUsername) {
+                            winnerPlayer.textContent = `${state.winner} Venceu!`;
+                            winnerScreen.style.display = 'flex';
+                        } else if (state.winner !== 'none') { // 'none' seria para jogo abandonado
+                            loserScreen.style.display = 'flex';
+                        }
                         updateTurnIndicator();
                     }
                 }
@@ -340,7 +359,7 @@
             const mouse = new THREE.Vector2();
 
             function onBoardClick(event) {
-                if (winnerScreen.style.display === 'flex' || onlineState.currentTurn !== onlineState.myTurnNumber) return;
+                if (winnerScreen.style.display === 'flex' || loserScreen.style.display === 'flex' || onlineState.currentTurn !== onlineState.myTurnNumber) return;
                 mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
                 mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
                 raycaster.setFromCamera(mouse, camera);
@@ -459,7 +478,10 @@
                 turnIndicator.textContent = "ERRO: ID da partida não encontrado!";
             } else {
                 createEnvironment();
-                backToLobbyBtn.addEventListener('click', () => { window.location.href = 'index.html'; });
+                const returnToLobby = () => { window.location.href = 'index.html'; };
+                backToLobbyBtnWinner.addEventListener('click', returnToLobby);
+                backToLobbyBtnLoser.addEventListener('click', returnToLobby);
+
                 document.querySelectorAll('.emoji-button').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         e.stopPropagation();
