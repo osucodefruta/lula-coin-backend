@@ -1,4 +1,4 @@
-// backend/routes/game.js (VERSÃO FINAL COM ARQUITETURA CORRIGIDA)
+// backend/routes/game.js (VERSÃO FINAL COM ARQUITETURA E CÁLCULOS CORRIGIDOS)
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../middleware/auth'); 
@@ -43,7 +43,7 @@ const validateGameState = (gameState) => {
     return requiredFields.every(field => gameState[field] !== undefined);
 };
 
-// ROTA /state - AGORA APENAS CALCULA E RETORNA, NÃO SALVA MAIS NADA
+// ROTA /state - APENAS CALCULA E RETORNA, NÃO SALVA
 router.get('/state', authMiddleware, async (req, res) => {
     try {
         const user = await User.findById(req.user.id).select('-password');
@@ -53,19 +53,28 @@ router.get('/state', authMiddleware, async (req, res) => {
         const lastUpdate = user.gameState.lastEnergyUpdate || now;
         const secondsOffline = (now - lastUpdate) / 1000;
 
-        let updatedGameState = JSON.parse(JSON.stringify(user.gameState)); // Cria uma cópia para modificar
+        let updatedGameState = JSON.parse(JSON.stringify(user.gameState));
 
         if (secondsOffline > 1) {
             const totalPower = calculateTotalPower(user.gameState.placedRacksPerRoom);
             if (totalPower > 0 && user.gameState.energy > 0) {
-                const BASE_ENERGY_PER_POWER_SECOND = 0.015;
-                const energyConsumptionRate = totalPower * BASE_ENERGY_PER_POWER_SECOND;
-                const secondsOfMiningPossible = user.gameState.energy / energyConsumptionRate;
+                // Usando as mesmas taxas do seu frontend para consistência
+                const LCO_PER_THS_PER_MINUTE = 0.1;
+                const ENERGY_CONSUMPTION_RATE = 100 / 600; // 100% em 10 minutos
+
+                // Calcula o consumo de energia dinâmico baseado no seu loop online
+                const baseConsumption = 0.05;
+                const consumptionPerPower = 0.002;
+                const totalEnergyConsumptionPerSecond = (baseConsumption + (totalPower * consumptionPerPower));
+                
+                const lcoPerSecond = totalPower * (LCO_PER_THS_PER_MINUTE / 60);
+
+                const secondsOfMiningPossible = user.gameState.energy / totalEnergyConsumptionPerSecond;
                 const secondsMined = Math.min(secondsOffline, secondsOfMiningPossible);
 
                 if (secondsMined > 0) {
-                    const coinsEarned = totalPower * secondsMined;
-                    const energyConsumed = secondsMined * energyConsumptionRate;
+                    const coinsEarned = lcoPerSecond * secondsMined;
+                    const energyConsumed = totalEnergyConsumptionPerSecond * secondsMined;
                     
                     updatedGameState.balance += coinsEarned;
                     updatedGameState.energy -= energyConsumed;
@@ -74,11 +83,9 @@ router.get('/state', authMiddleware, async (req, res) => {
             }
         }
         
-        // AVISO: As linhas de save() foram REMOVIDAS daqui propositalmente.
-        // A rota agora apenas retorna o estado calculado.
         res.json({
             username: user.username,
-            gameState: updatedGameState, // Retorna o estado atualizado
+            gameState: updatedGameState,
             currentRoomIndex: user.currentRoomIndex || 0
         });
 
@@ -88,23 +95,30 @@ router.get('/state', authMiddleware, async (req, res) => {
     }
 });
 
-// --- ROTAS DE UPDATE E COMPRA (sem alterações) ---
+// ROTA /update - ÚNICA RESPONSÁVEL POR SALVAR E ATUALIZAR O TIMESTAMP
 router.post('/update', authMiddleware, async (req, res) => {
     try {
         const { gameState, currentRoomIndex } = req.body;
-        if (!validateGameState(gameState)) return res.status(400).json({ message: 'Estado do jogo inválido.' });
         gameState.lastEnergyUpdate = Date.now();
+        if (!validateGameState(gameState)) {
+            return res.status(400).json({ message: 'Estado do jogo inválido.' });
+        }
         const user = await User.findByIdAndUpdate(
             req.user.id,
-            { $set: { gameState: gameState, currentRoomIndex: currentRoomIndex || 0 } },
+            { $set: { 
+                gameState: gameState, 
+                currentRoomIndex: currentRoomIndex || 0 
+            }},
             { new: true }
         ).select('-password');
         res.json({ message: 'Jogo salvo com sucesso!', gameState: user.gameState });
     } catch (err) {
+        console.error("Erro na rota /update:", err.message);
         res.status(500).json({ message: 'Erro no servidor' });
     }
 });
 
+// ROTA: POST /api/game/buy-item
 router.post('/buy-item', authMiddleware, async (req, res) => {
     const { itemId, category } = req.body;
     try {
@@ -129,6 +143,7 @@ router.post('/buy-item', authMiddleware, async (req, res) => {
     }
 });
 
+// ROTA: POST /api/game/buy-room
 router.post('/buy-room', authMiddleware, async (req, res) => {
     const { cost } = req.body;
     try {
