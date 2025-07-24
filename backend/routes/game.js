@@ -13,56 +13,68 @@ const MINERS = [
 ];
 const RACKS = [
     { id: 'rack001', name: 'Rack Pequeno', slots: 2, price: 20 },
-    { id: 'rack002', name: 'Rack Médio', slots: 3, price: 30 }, // Corrigido de 4 para 3 slots
-    { id: 'rack003', name: 'Rack Grande', slots: 4, price: 100 }, // Corrigido de 6 para 4 slots
+    { id: 'rack002', name: 'Rack Médio', slots: 3, price: 30 },
+    { id: 'rack003', name: 'Rack Grande', slots: 4, price: 100 },
 ];
 
 const validateGameState = (gameState) => {
     if (!gameState) return false;
+    // Adicionado energy e lastEnergyUpdate à validação
     const requiredFields = ['balance', 'inventory', 'placedRacksPerRoom', 'energy', 'lastEnergyUpdate'];
     return requiredFields.every(field => gameState[field] !== undefined);
 };
 
-// ROTA ATUALIZADA com Lógica de Mineração Offline
+// ROTA ATUALIZADA com Lógica de Mineração e Energia Offline
 router.get('/state', authMiddleware, async (req, res) => {
     try {
         const user = await User.findById(req.user.id).select('-password');
         if (!user) {
             return res.status(404).json({ message: 'Usuário não encontrado' });
         }
-
-        // --- INÍCIO: CÁLCULO DE GANHOS OFFLINE ---
+        
+        // --- INÍCIO: CÁLCULO DE GANHOS E CONSUMO OFFLINE ---
         const now = Date.now();
+        // Usa o lastEnergyUpdate para saber a última vez que o jogador esteve ativo
         const lastUpdate = user.gameState.lastEnergyUpdate || now;
         const secondsOffline = (now - lastUpdate) / 1000;
 
-        if (secondsOffline > 1) { // Só calcula se ficou offline por mais de 1 segundo
+        // Só executa o cálculo se o jogador ficou offline por mais de um segundo
+        if (secondsOffline > 1) {
             const totalPower = calculateTotalPower(user.gameState.placedRacksPerRoom);
-            const energyConsumptionRate = 100 / 600; // 100% em 10 minutos
-
-            // Calcula por quantos segundos a energia duraria
-            const secondsOfMiningPossible = user.gameState.energy / energyConsumptionRate;
             
-            // O tempo real que minerou é o menor entre o tempo offline e o tempo que tinha energia
-            const secondsMined = Math.min(secondsOffline, secondsOfMiningPossible);
+            // A energia só é consumida se houver poder de mineração
+            if (totalPower > 0 && user.gameState.energy > 0) {
+                const energyConsumptionRate = 100 / 600; // 100% em 10 minutos (600 segundos)
 
-            if (secondsMined > 0) {
-                const lcoPerSecond = (totalPower * (0.1 / 60));
-                const coinsEarned = lcoPerSecond * secondsMined;
-                const energyConsumed = secondsMined * energyConsumptionRate;
+                // Calcula por quantos segundos a energia restante duraria
+                const secondsOfMiningPossible = user.gameState.energy / energyConsumptionRate;
+                
+                // O tempo real que minerou é o menor valor entre o tempo offline e o tempo que tinha energia
+                const secondsMined = Math.min(secondsOffline, secondsOfMiningPossible);
 
-                // Atualiza o estado do jogo
-                user.gameState.balance += coinsEarned;
-                user.gameState.energy -= energyConsumed;
-                if (user.gameState.energy < 0) user.gameState.energy = 0;
+                if (secondsMined > 0) {
+                    // Calcula as moedas ganhas nesse período
+                    const lcoPerSecond = (totalPower * (0.1 / 60)); // 0.1 LCO/TH/minuto -> convertido para segundos
+                    const coinsEarned = lcoPerSecond * secondsMined;
+                    
+                    // Calcula a energia consumida nesse período
+                    const energyConsumed = secondsMined * energyConsumptionRate;
+
+                    // Atualiza o estado do jogo
+                    user.gameState.balance += coinsEarned;
+                    user.gameState.energy -= energyConsumed;
+                    if (user.gameState.energy < 0) user.gameState.energy = 0;
+                }
             }
         }
         
-        // Atualiza o timestamp para o momento atual, independentemente de ter minerado ou não
+        // Atualiza o timestamp para o momento atual, para o próximo cálculo offline
         user.gameState.lastEnergyUpdate = now;
         
+        // Salva as alterações no banco de dados ANTES de enviar para o jogador
         await user.save();
-        // --- FIM: CÁLCULO DE GANHOS OFFLINE ---
+
+        // --- FIM: CÁLCULO DE GANHOS E CONSUMO OFFLINE ---
 
         res.json({
             username: user.username,
@@ -76,6 +88,7 @@ router.get('/state', authMiddleware, async (req, res) => {
     }
 });
 
+
 // ROTA: POST /api/game/update
 router.post('/update', authMiddleware, async (req, res) => {
     try {
@@ -85,7 +98,7 @@ router.post('/update', authMiddleware, async (req, res) => {
             return res.status(400).json({ message: 'Estado do jogo inválido.' });
         }
 
-        // Garante que o timestamp seja atualizado no salvamento
+        // Garante que o timestamp seja atualizado em qualquer salvamento
         gameState.lastEnergyUpdate = Date.now();
 
         const user = await User.findByIdAndUpdate(
