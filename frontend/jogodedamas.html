@@ -7,7 +7,7 @@
         body { margin: 0; overflow: hidden; font-family: sans-serif; }
         #game-container { width: 100vw; height: 100vh; }
         #ui-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; color: white; text-shadow: 0 0 5px black; }
-        #turn-indicator { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); padding: 10px 20px; background-color: rgba(0, 0, 0, 0.5); border-radius: 10px; font-size: 1.2em; font-weight: bold; }
+        #turn-indicator { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); padding: 10px 20px; background-color: rgba(0, 0, 0, 0.5); border-radius: 10px; font-size: 1.2em; font-weight: bold; transition: background-color 0.5s; }
         .scoreboard { position: absolute; top: 20px; padding: 10px 15px; background-color: rgba(0, 0, 0, 0.5); border-radius: 8px; font-size: 1.5em; font-weight: bold; }
         #score-player1 { left: 20px; }
         #score-player2 { right: 20px; }
@@ -49,7 +49,7 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
     
     <script>
-        // Lógica de Jogo Local com captura para trás
+        // << LÓGICA DE JOGO ATUALIZADA >> - Inclui verificação de movimentos válidos
         const LocalGameLogic = {
             isValidMove: function(board, from, to, player, isKing) {
                 if (board[to.row][to.col] !== 0) return { valid: false };
@@ -88,7 +88,6 @@
                 const pieceType = board[fromRow][fromCol]; if (pieceType === 0) return false;
                 const isKing = pieceType > 2; const player = (pieceType === 1 || pieceType === 3) ? 1 : 2;
                 const directions = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
-
                 if (!isKing) {
                     for (const [dr, dc] of directions) {
                         const opponentRow = fromRow + dr; const opponentCol = fromCol + dc;
@@ -108,8 +107,30 @@
                                 if (pieceOnPath % 2 !== player % 2) {
                                     const destRow = r + dr; const destCol = c + dc;
                                     if (destRow >= 0 && destRow < 8 && destCol >= 0 && destCol < 8 && board[destRow][destCol] === 0) return true;
+                                } break;
+                            }
+                        }
+                    }
+                }
+                return false;
+            },
+            // << NOVO RECURSO >> - Verifica se um jogador tem algum movimento válido (captura ou normal)
+            hasAnyValidMoves: function(board, player) {
+                for(let r = 0; r < 8; r++) {
+                    for(let c = 0; c < 8; c++) {
+                        const piece = board[r][c];
+                        if (piece !== 0 && (piece % 2 === player % 2)) {
+                            const isKing = piece > 2;
+                            // Verifica todas as 4 direções diagonais para qualquer movimento
+                            const directions = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
+                            for(const [dr, dc] of directions) {
+                                if(this.isValidMove(board, {row:r, col:c}, {row: r+dr, col: c+dc}, player, isKing).valid) return true;
+                                if(this.isValidMove(board, {row:r, col:c}, {row: r+dr*2, col: c+dc*2}, player, isKing).valid) return true;
+                                if(isKing) { // Damas podem se mover mais longe
+                                    for(let i=3; i<8; i++) {
+                                        if(this.isValidMove(board, {row:r, col:c}, {row: r+dr*i, col: c+dc*i}, player, isKing).valid) return true;
+                                    }
                                 }
-                                break;
                             }
                         }
                     }
@@ -121,14 +142,10 @@
     
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // --- 1. CONFIGURAÇÃO GERAL E DE CENA ---
             const API_BASE_URL = 'https://lula-coin-backend.onrender.com';
             const SCALE = 2.5;
-
-            // --- ESTADO DO JOGO ONLINE ---
             let onlineState = { gameId: null, gameStateInterval: null, playerColor: null, myTurnNumber: null, board: [], currentTurn: null, selectedPiece: null, lastEmojiTimestamp: null };
 
-            // --- ELEMENTOS DA UI ---
             const uiContainer = document.getElementById('ui-container');
             const turnIndicator = document.getElementById('turn-indicator');
             const scorePlayer1Label = document.getElementById('score-player1');
@@ -137,7 +154,6 @@
             const winnerPlayer = document.getElementById('winner-player');
             const backToLobbyBtn = document.getElementById('back-to-lobby-btn');
 
-            // --- SETUP DA CENA 3D ---
             const gameContainer = document.getElementById('game-container');
             const scene = new THREE.Scene();
             scene.background = new THREE.Color(0x101010);
@@ -155,7 +171,6 @@
             directionalLight.position.set(20, 30, 10); directionalLight.castShadow = true; directionalLight.shadow.mapSize.width = 2048; directionalLight.shadow.mapSize.height = 2048;
             scene.add(directionalLight);
             
-            // --- FUNÇÕES AUXILIARES DE API E LÓGICA ---
             const apiRequest = async (endpoint, method = 'GET', body = null) => {
                 const token = localStorage.getItem('token');
                 if (!token) { window.location.href = 'index.html'; return; }
@@ -170,14 +185,12 @@
             };
             function parseJwt(token) { try { return JSON.parse(atob(token.split('.')[1])); } catch (e) { return null; } }
 
-            // --- CRIAÇÃO DOS ELEMENTOS 3D (COMBINAÇÃO DOS DOIS ARQUIVOS) ---
             const pieceGeo = new THREE.CylinderGeometry(0.4 * SCALE, 0.4 * SCALE, 0.15 * SCALE, 32);
             const boardGroup = new THREE.Group();
             const piecesGroup = new THREE.Group();
             
             function createPieceTexture(pieceColor, letterColor) { const c = document.createElement('canvas'); c.width=256; c.height=256; const ctx = c.getContext('2d'); ctx.fillStyle=pieceColor; ctx.fillRect(0,0,256,256); ctx.fillStyle=letterColor; ctx.font='bold 180px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('L',128,128); return new THREE.CanvasTexture(c); }
             function generateWoodTexture() { const c = document.createElement('canvas'); c.width = 128; c.height = 128; const ctx = c.getContext('2d'); ctx.fillStyle = '#966F33'; ctx.fillRect(0, 0, 128, 128); for (let i = 0; i < 128; i += Math.random() * 10 + 5) { ctx.fillStyle = `rgba(0,0,0,${Math.random() * 0.1 + 0.05})`; ctx.fillRect(i, 0, Math.random() * 3 + 1, 128); } const t = new THREE.CanvasTexture(c); t.wrapS = THREE.RepeatWrapping; t.wrapT = THREE.RepeatWrapping; return t; }
-            // << CÓDIGO CORRIGIDO >>
             function generateBrickTexture() { const c = document.createElement('canvas'); const bw = 64, bh = 24, gap = 4; c.width = (bw + gap) * 2; c.height = (bh + gap) * 4; const ctx = c.getContext('2d'); ctx.fillStyle = '#444444'; ctx.fillRect(0, 0, c.width, c.height); for (let row = 0; row < 4; row++) { for (let col = 0; col < 2; col++) { const x = col * (bw + gap); const y = row * (bh + gap); const ox = (row % 2 === 0) ? 0 : (bw + gap) / 2; const r = 160 + Math.random() * 40; const g = 70 + Math.random() * 20; const b = 40 + Math.random() * 10; ctx.fillStyle = `rgb(${r},${g},${b})`; ctx.fillRect(x - ox, y, bw, bh); ctx.fillRect(x - ox + (bw + gap), y, bw, bh); } } const t = new THREE.CanvasTexture(c); t.wrapS = THREE.RepeatWrapping; t.wrapT = THREE.RepeatWrapping; return t; }
             function generateBannerTexture(text) { const c = document.createElement('canvas'); c.width = 1024; c.height = 256; const ctx = c.getContext('2d'); ctx.font = 'bold 120px Impact, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = 'black'; ctx.fillText(text, c.width / 2 + 5, c.height / 2 + 5); ctx.strokeStyle = 'black'; ctx.lineWidth = 15; ctx.strokeText(text, c.width / 2, c.height / 2); ctx.fillStyle = '#FFD700'; ctx.fillText(text, c.width / 2, c.height / 2); return new THREE.CanvasTexture(c); }
 
@@ -188,27 +201,21 @@
                 const tableHeight = 6;
                 const woodTexture = generateWoodTexture();
                 const woodMaterial = new THREE.MeshStandardMaterial({ map: woodTexture });
-                
                 const tableTop = new THREE.Mesh(new THREE.BoxGeometry(12 * SCALE, 0.5 * SCALE, 12 * SCALE), woodMaterial);
                 tableTop.position.y = tableHeight; tableTop.castShadow = true; tableTop.receiveShadow = true;
                 scene.add(tableTop);
-                
                 const legGeo = new THREE.BoxGeometry(0.5 * SCALE, tableHeight, 0.5 * SCALE);
                 const legPositions = [{x: 5 * SCALE, z: 5 * SCALE}, {x: -5 * SCALE, z: 5 * SCALE}, {x: 5 * SCALE, z: -5 * SCALE}, {x: -5 * SCALE, z: -5 * SCALE}];
                 legPositions.forEach(pos => { const leg = new THREE.Mesh(legGeo, woodMaterial); leg.position.set(pos.x, tableHeight / 2, pos.z); leg.castShadow = true; scene.add(leg); });
-                
                 boardGroup.position.y = tableHeight + (0.25 * SCALE);
                 piecesGroup.position.y = boardGroup.position.y;
                 scene.add(boardGroup, piecesGroup);
-
                 for (let r = 0; r < 8; r++) { for (let c = 0; c < 8; c++) { const sqMat = new THREE.MeshStandardMaterial({ color: (r + c) % 2 === 0 ? 0xffffff : 0x000000 }); const sq = new THREE.Mesh(new THREE.BoxGeometry(SCALE, 0.2*SCALE, SCALE), sqMat); sq.position.set((c - 3.5)*SCALE, 0, (r - 3.5)*SCALE); sq.receiveShadow = true; sq.userData = { row: r, col: c, type: 'square' }; boardGroup.add(sq); } }
-
                 const floorTexture = generateWoodTexture(); floorTexture.repeat.set(10, 10);
                 const floorMaterial = new THREE.MeshStandardMaterial({ map: floorTexture, color: 0x6F4E37 });
                 const floor = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), floorMaterial);
                 floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true;
                 scene.add(floor);
-
                 const brickTexture = generateBrickTexture(); brickTexture.repeat.set(20, 10);
                 const brickMaterial = new THREE.MeshStandardMaterial({ map: brickTexture });
                 const wallHeight = 100; const wallDistance = 100;
@@ -219,7 +226,6 @@
                 const bannerBack = new THREE.Mesh(bannerGeo, bannerMaterial); bannerBack.position.set(0, 25, -wallDistance + 0.1); scene.add(bannerBack);
             }
 
-            // --- FUNÇÕES DE SINCRONIZAÇÃO E UI ---
             function syncSceneWithState() {
                 while(piecesGroup.children.length) { piecesGroup.remove(piecesGroup.children[0]); }
                 if (!onlineState.board || onlineState.board.length === 0) return;
@@ -255,19 +261,19 @@
             function updateScoreboards(players) {
                 const p1Data = players.find(p => p.color === 'p1');
                 const p2Data = players.find(p => p.color === 'p2');
-                let p1Score = 0; let p2Score = 0;
+                let p1PiecesLeft = 0; let p2PiecesLeft = 0;
                 onlineState.board.forEach(row => row.forEach(cell => {
-                    if (cell === 2 || cell === 4) p1Score++;
-                    if (cell === 1 || cell === 3) p2Score++;
+                    if (cell === 1 || cell === 3) p1PiecesLeft++;
+                    if (cell === 2 || cell === 4) p2PiecesLeft++;
                 }));
-                p1Score = 12 - p1Score; p2Score = 12 - p2Score;
+                const p1Score = 12 - p2PiecesLeft;
+                const p2Score = 12 - p1PiecesLeft;
                 scorePlayer1Label.innerHTML = `${p1Data.username} (Vermelho): <span id="p1-score">${p1Score}</span>`;
                 scorePlayer2Label.innerHTML = `${p2Data.username} (Azul): <span id="p2-score">${p2Score}</span>`;
             }
 
             function showFloatingEmoji(emoji) { const e = document.createElement('div'); e.className = 'floating-emoji'; e.textContent = emoji; uiContainer.appendChild(e); setTimeout(() => e.remove(), 2000); }
 
-            // --- LÓGICA PRINCIPAL DO JOGO ONLINE ---
             async function getGameState() {
                 if (!onlineState.gameId) return;
                 const state = await apiRequest(`/api/damas/game/state/${onlineState.gameId}`);
@@ -275,7 +281,6 @@
                     let boardChanged = JSON.stringify(onlineState.board) !== JSON.stringify(state.boardState);
                     onlineState.board = state.boardState;
                     onlineState.currentTurn = state.currentTurn;
-                    
                     if (!onlineState.playerColor) {
                         const myUserId = parseJwt(localStorage.getItem('token')).user.id;
                         const myPlayerData = state.players.find(p => p.userId === myUserId);
@@ -284,18 +289,15 @@
                         if(onlineState.myTurnNumber === 1) camera.position.set(0, 25, 35); else camera.position.set(0, 25, -35);
                         controls.update();
                     }
-
                     if (boardChanged) syncSceneWithState();
                     updateTurnIndicator();
                     updateScoreboards(state.players);
-
                     if (state.lastEmoji && state.lastEmoji.timestamp !== onlineState.lastEmojiTimestamp) {
                         onlineState.lastEmojiTimestamp = state.lastEmoji.timestamp;
                         if (state.lastEmoji.sender !== onlineState.playerColor) {
                             showFloatingEmoji(state.lastEmoji.emoji);
                         }
                     }
-
                     if(state.winner) {
                         clearInterval(onlineState.gameStateInterval);
                         const winnerUsername = state.players.find(p => p.color === state.winner).username;
@@ -312,11 +314,8 @@
                 getGameState();
             }
 
-            async function sendEmojiToServer(emoji) {
-                await apiRequest(`/api/damas/game/emoji/${onlineState.gameId}`, 'POST', { emoji, playerColor: onlineState.playerColor });
-            }
+            async function sendEmojiToServer(emoji) { await apiRequest(`/api/damas/game/emoji/${onlineState.gameId}`, 'POST', { emoji, playerColor: onlineState.playerColor }); }
 
-            // --- INTERAÇÃO ---
             let selectedPieceMesh = null;
             function highlightPiece(pieceMesh, selected) {
                 if(selectedPieceMesh) { selectedPieceMesh.scale.set(1, 1, 1); }
@@ -329,72 +328,94 @@
 
             function onBoardClick(event) {
                 if (winnerScreen.style.display === 'flex' || onlineState.currentTurn !== onlineState.myTurnNumber) return;
-
                 mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
                 mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
                 raycaster.setFromCamera(mouse, camera);
-                const intersects = raycaster.intersectObjects([...boardGroup.children, ...piecesGroup.children], true);
-
-                if (intersects.length > 0) {
-                    let clickedObject = intersects[0].object;
-                    // << CÓDIGO CORRIGIDO >> - Garante que estamos selecionando o grupo da peça, não uma parte dela
-                    if (clickedObject.parent !== piecesGroup && clickedObject.parent !== scene) {
-                        clickedObject = clickedObject.parent;
-                    }
-                    
-                    const { row, col, type } = clickedObject.userData;
-
-                    if (onlineState.selectedPiece) {
-                        if (type === 'square') {
-                            const pieceType = onlineState.board[onlineState.selectedPiece.row][onlineState.selectedPiece.col];
-                            const isKing = pieceType > 2;
-                            const moveInfo = LocalGameLogic.isValidMove(onlineState.board, onlineState.selectedPiece, {row, col}, onlineState.myTurnNumber, isKing);
-                            
-                            if (moveInfo.valid) {
-                                let piece = onlineState.board[onlineState.selectedPiece.row][onlineState.selectedPiece.col];
-                                if (piece === 1 && row === 0) piece = 3; if (piece === 2 && row === 7) piece = 4;
-                                onlineState.board[row][col] = piece;
-                                onlineState.board[onlineState.selectedPiece.row][onlineState.selectedPiece.col] = 0;
-                                if (moveInfo.type === 'capture') {
-                                    onlineState.board[moveInfo.captured.row][moveInfo.captured.col] = 0;
-                                }
-                                
-                                const canCaptureAgain = moveInfo.type === 'capture' && LocalGameLogic.canPieceCapture(onlineState.board, row, col);
-
-                                if (canCaptureAgain) {
-                                    onlineState.selectedPiece = { row, col };
-                                    syncSceneWithState();
-                                    const newPieceMesh = piecesGroup.children.find(p => p.userData.row === row && p.userData.col === col);
-                                    highlightPiece(newPieceMesh, true);
-                                } else {
-                                    highlightPiece(null, false);
-                                    onlineState.selectedPiece = null;
-                                    syncSceneWithState();
-                                    const p1pieces = onlineState.board.flat().filter(p => p===2 || p===4).length;
-                                    const p2pieces = onlineState.board.flat().filter(p => p===1 || p===3).length;
-                                    let winner = null;
-                                    if(p2pieces === 0) winner = 'p1';
-                                    if(p1pieces === 0) winner = 'p2';
-                                    sendMoveToServer(onlineState.board, onlineState.myTurnNumber === 1 ? 2 : 1, winner);
-                                }
-                            } else {
-                                onlineState.selectedPiece = null; highlightPiece(null, false);
-                            }
-                        } else {
-                            onlineState.selectedPiece = null; highlightPiece(null, false);
-                        }
-                    } else if (type === 'piece') {
-                        const pieceType = onlineState.board[row][col];
-                        const pieceOwner = (pieceType === 1 || pieceType === 3) ? 1 : 2;
-                        if (pieceOwner === onlineState.myTurnNumber) {
-                            onlineState.selectedPiece = { row, col };
-                            highlightPiece(clickedObject, true);
-                        }
-                    }
+                const intersects = raycaster.intersectObjects(piecesGroup.children, true);
+                if (intersects.length === 0) {
+                     const boardIntersects = raycaster.intersectObjects(boardGroup.children);
+                     if (boardIntersects.length > 0) handleSquareClick(boardIntersects[0].object);
+                } else {
+                    handlePieceClick(intersects[0].object);
                 }
             }
 
-            // --- LOOP DE ANIMAÇÃO E INICIALIZAÇÃO ---
+            function handlePieceClick(clickedObject) {
+                 while (clickedObject.parent !== piecesGroup) { clickedObject = clickedObject.parent; }
+                 const { row, col } = clickedObject.userData;
+                 const pieceType = onlineState.board[row][col];
+                 const pieceOwner = (pieceType === 1 || pieceType === 3) ? 1 : 2;
+                 if (pieceOwner === onlineState.myTurnNumber) {
+                     onlineState.selectedPiece = { row, col };
+                     highlightPiece(clickedObject, true);
+                 }
+            }
+            
+            function handleSquareClick(clickedObject) {
+                if (!onlineState.selectedPiece) return;
+                const { row, col } = clickedObject.userData;
+                const pieceType = onlineState.board[onlineState.selectedPiece.row][onlineState.selectedPiece.col];
+                const isKing = pieceType > 2;
+                
+                // << RECURSO ADICIONADO >> - Lógica de Captura Obrigatória
+                const availableCaptures = [];
+                for(let r=0; r<8; r++){ for(let c=0; c<8; c++){
+                    const piece = onlineState.board[r][c];
+                    if(piece !== 0 && (piece % 2 === onlineState.myTurnNumber % 2) && LocalGameLogic.canPieceCapture(onlineState.board, r, c)) {
+                        availableCaptures.push({r,c});
+                    }
+                }}
+
+                const moveInfo = LocalGameLogic.isValidMove(onlineState.board, onlineState.selectedPiece, {row, col}, onlineState.myTurnNumber, isKing);
+
+                if (availableCaptures.length > 0 && moveInfo.type !== 'capture') {
+                    turnIndicator.textContent = "Captura obrigatória!";
+                    setTimeout(() => updateTurnIndicator(), 2000);
+                    return;
+                }
+
+                if (moveInfo.valid) {
+                    let piece = onlineState.board[onlineState.selectedPiece.row][onlineState.selectedPiece.col];
+                    if (piece === 1 && row === 0) piece = 3; if (piece === 2 && row === 7) piece = 4;
+                    onlineState.board[row][col] = piece;
+                    onlineState.board[onlineState.selectedPiece.row][onlineState.selectedPiece.col] = 0;
+                    if (moveInfo.type === 'capture') {
+                        onlineState.board[moveInfo.captured.row][moveInfo.captured.col] = 0;
+                    }
+                    
+                    const canCaptureAgain = moveInfo.type === 'capture' && LocalGameLogic.canPieceCapture(onlineState.board, row, col);
+
+                    if (canCaptureAgain && availableCaptures.length > 0) {
+                        onlineState.selectedPiece = { row, col };
+                        syncSceneWithState();
+                        const newPieceMesh = piecesGroup.children.find(p => p.userData.row === row && p.userData.col === col);
+                        highlightPiece(newPieceMesh, true);
+                    } else {
+                        highlightPiece(null, false);
+                        onlineState.selectedPiece = null;
+                        syncSceneWithState();
+                        
+                        // << CORREÇÃO DE BUG E NOVO RECURSO >> - Lógica de Vitória (Peças e Bloqueio)
+                        const nextPlayer = onlineState.myTurnNumber === 1 ? 2 : 1;
+                        const p1pieces = onlineState.board.flat().filter(p => p===1 || p===3).length;
+                        const p2pieces = onlineState.board.flat().filter(p => p===2 || p===4).length;
+                        let winner = null;
+                        if(p2pieces === 0) {
+                            winner = 'p1'; // Se Azul (p2) não tem peças, Vermelho (p1) ganha.
+                        } else if (p1pieces === 0) {
+                            winner = 'p2'; // Se Vermelho (p1) não tem peças, Azul (p2) ganha.
+                        } else if (!LocalGameLogic.hasAnyValidMoves(onlineState.board, nextPlayer)) {
+                            // Se o próximo jogador está bloqueado, o jogador atual ganha.
+                            winner = onlineState.playerColor;
+                        }
+
+                        sendMoveToServer(onlineState.board, nextPlayer, winner);
+                    }
+                } else {
+                    onlineState.selectedPiece = null; highlightPiece(null, false);
+                }
+            }
+
             const clock = new THREE.Clock();
             function animate() {
                 requestAnimationFrame(animate);
@@ -409,7 +430,6 @@
                 renderer.render(scene, camera);
             }
 
-            // --- INICIALIZAÇÃO DO JOGO ONLINE ---
             const urlParams = new URLSearchParams(window.location.search);
             onlineState.gameId = urlParams.get('gameId');
 
