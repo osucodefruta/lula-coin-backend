@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lula Coin Miner 4.7 (Realism Update)</title>
+    <title>Lula Coin Miner 4.8 (Expanded)</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
@@ -128,8 +128,51 @@
         #global-ranking-board li { display: flex; justify-content: space-between; padding: 4px 0; font-size: 0.9em; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
         #global-ranking-board li:last-child { border-bottom: none; }
         #global-ranking-board li span:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 110px; }
-        #rack-placement-area { position: absolute; bottom: 30px; width: calc(100% - 300px); left: 280px; height: calc(80% - 60px); display: flex; justify-content: space-around; align-items: flex-end; padding-bottom: 80px; z-index: 1; }
-        .rack-placement-slot { width: 180px; height: 100%; border: 2px dashed rgba(255, 59, 59, 0.4); border-radius: 8px; display: flex; justify-content: center; align-items: flex-end; padding: 10px; position: relative; transition: border-color 0.3s ease, background-color 0.3s ease; cursor: pointer; z-index: 2; }
+        
+        #rack-placement-area { 
+            position: absolute; 
+            bottom: 30px; 
+            width: calc(100% - 300px); 
+            left: 280px; 
+            height: calc(80% - 60px); 
+            display: flex; 
+            align-items: flex-end; 
+            padding-bottom: 80px; 
+            z-index: 1; 
+            justify-content: flex-start;
+            overflow-x: auto; 
+            gap: 20px; 
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+        #rack-placement-area::-webkit-scrollbar {
+            height: 12px;
+        }
+        #rack-placement-area::-webkit-scrollbar-track {
+            background: var(--tertiary-color);
+            border-radius: 10px;
+        }
+        #rack-placement-area::-webkit-scrollbar-thumb {
+            background-color: var(--primary-color);
+            border-radius: 10px;
+            border: 3px solid var(--tertiary-color);
+        }
+
+        .rack-placement-slot { 
+            width: 180px; 
+            height: 100%; 
+            border: 2px dashed rgba(255, 59, 59, 0.4); 
+            border-radius: 8px; 
+            display: flex; 
+            justify-content: center; 
+            align-items: flex-end; 
+            padding: 10px; 
+            position: relative; 
+            transition: border-color 0.3s ease, background-color 0.3s ease; 
+            cursor: pointer; 
+            z-index: 2;
+            flex-shrink: 0; 
+        }
         .rack-placement-slot.occupied { border: none; background-color: transparent; cursor: default; }
         .rack-placement-slot.available:not(.placing-item .rack-placement-slot.available):hover { border-color: var(--primary-color); background-color: rgba(255, 59, 59, 0.1); }
         .rack-placement-slot.available::after { content: 'ESPAÇO PARA RACK'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 0.9em; color: rgba(255, 59, 59, 0.6); white-space: nowrap; opacity: 0; transition: opacity 0.3s ease; }
@@ -379,7 +422,7 @@
             border-radius: 5px; 
             position: absolute; 
             bottom: 95px; 
-            left: 30px; /* Movido para a esquerda */
+            left: 30px; 
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); 
         }
         .monitor::before {
@@ -413,18 +456,20 @@
             top: 4px;
             left: 4px;
             right: 4px;
-            bottom: 8px; /* Ajustado para preencher a tela dentro da borda */
+            bottom: 8px; 
             background-color: #0d3a54; 
             animation: screen-glow 2.5s alternate infinite ease-in-out;
-            overflow: hidden; /* Garante que o texto não saia da tela */
+            overflow: hidden; 
             display: flex;
-            align-items: flex-end; /* Alinha o texto na parte de baixo */
+            align-items: flex-end; 
             padding: 4px;
         }
         .monitor-text {
             font-size: 0.75em; 
             width: 100%;
-            margin: 0; /* Remove margens padrão */
+            margin: 0; 
+            white-space: pre-wrap;
+            word-break: break-all;
         }
         .scanline-effect { position: absolute; width: 100%; height: 100%; top: 0; left: 0; background-size: 100% 3px; opacity: 0.1; }
 
@@ -434,7 +479,7 @@
             background-color: #333; 
             position: absolute; 
             bottom: 70px; 
-            left: 40px; /* Movido para a esquerda */
+            left: 40px; 
             transform: perspective(200px) rotateX(40deg); 
             border-radius: 3px; 
             box-shadow: 0 2px 5px rgba(0,0,0,0.4);
@@ -450,7 +495,7 @@
             background-color: #2d2d2d; 
             position: absolute; 
             bottom: 72px; 
-            left: 158px; /* Movido para a esquerda */
+            left: 158px; 
             border-radius: 10px 10px 4px 4px;
             border: 1px solid #1a1a1a;
         }
@@ -941,7 +986,7 @@
         // --- CONFIGURAÇÕES E CONSTANTES ---
         const API_BASE_URL = 'https://lula-coin-backend.onrender.com';
         const LCO_PER_THS_PER_MINUTE = 0.1;
-        const NUM_RACK_PLACEMENT_SLOTS = 5; 
+        const NUM_RACK_PLACEMENT_SLOTS = 10; 
         const MAX_ROOMS = 10;
         const ENERGY_CONSUMPTION_RATE = 100 / 600; 
         const MINERS = [
@@ -1787,4 +1832,3 @@
     </script>
 </body>
 </html>
-como eu faço para ter mais espaço para mineradoras , eu quero ter 10 salas e 10 racks em cada sala me de o codigo completo atualizado
