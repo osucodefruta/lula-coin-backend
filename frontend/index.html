@@ -129,15 +129,15 @@
         #global-ranking-board li { display: flex; justify-content: space-between; padding: 4px 0; font-size: 0.9em; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
         #global-ranking-board li:last-child { border-bottom: none; }
         #global-ranking-board li span:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 110px; }
-        #rack-placement-area { position: absolute; bottom: 30px; width: calc(100% - 350px); left: 280px; height: calc(80% - 60px); display: flex; justify-content: space-around; align-items: flex-end; padding-bottom: 80px; z-index: 1; }
-        .rack-placement-slot { width: 220px; height: 100%; border: 2px dashed rgba(255, 59, 59, 0.4); border-radius: 8px; display: flex; justify-content: center; align-items: flex-end; padding: 10px; position: relative; transition: border-color 0.3s ease, background-color 0.3s ease; cursor: pointer; z-index: 2; }
+        #rack-placement-area { position: absolute; bottom: 30px; width: calc(100% - 300px); left: 280px; height: calc(80% - 60px); display: flex; justify-content: space-around; align-items: flex-end; padding-bottom: 80px; z-index: 1; }
+        .rack-placement-slot { width: 180px; height: 100%; border: 2px dashed rgba(255, 59, 59, 0.4); border-radius: 8px; display: flex; justify-content: center; align-items: flex-end; padding: 10px; position: relative; transition: border-color 0.3s ease, background-color 0.3s ease; cursor: pointer; z-index: 2; }
         .rack-placement-slot.occupied { border: none; background-color: transparent; cursor: default; }
         .rack-placement-slot.available:not(.placing-item .rack-placement-slot.available):hover { border-color: var(--primary-color); background-color: rgba(255, 59, 59, 0.1); }
         .rack-placement-slot.available::after { content: 'ESPAÇO PARA RACK'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 0.9em; color: rgba(255, 59, 59, 0.6); white-space: nowrap; opacity: 0; transition: opacity 0.3s ease; }
         .rack-placement-slot.available:hover::after { opacity: 1; }
         .placing-item .rack-placement-slot.available::after { content: 'CLIQUE PARA COLOCAR'; opacity: 1; color: var(--primary-color); }
         .placing-item .slot.empty::after { content: 'CLIQUE'; position: absolute; font-size: 0.8em; color: var(--primary-color); opacity: 1;}
-        .rack-2-5d { width: 200px; position: relative; transform-style: preserve-3d; z-index: 1; }
+        .rack-2-5d { width: 160px; position: relative; transform-style: preserve-3d; z-index: 1; }
         .rack-front { width: 100%; height: 100%; background-color: var(--medium-gray); border: 2px solid var(--border-color); border-radius: 8px; padding: 15px; padding-bottom: 25px; display: flex; flex-direction: column; gap: 10px; position: relative; transform: translateZ(10px); }
         .rack-side, .rack-top { position: absolute; background-color: var(--rack-side-color); border-radius: 2px; }
         .rack-side { width: 20px; height: 100%; left: -1px; bottom: 0; transform: rotateY(-90deg) translateX(-10px); transform-origin: left; }
@@ -574,7 +574,8 @@
         // --- CONFIGURAÇÕES E CONSTANTES ---
         const API_BASE_URL = 'https://lula-coin-backend.onrender.com';
         const LCO_PER_THS_PER_MINUTE = 0.1;
-        const NUM_RACK_PLACEMENT_SLOTS = 4;
+        const NUM_RACK_PLACEMENT_SLOTS = 5; // ATUALIZADO: Aumentado para 5 racks
+        const MAX_ROOMS = 10; // ATUALIZADO: Definido o máximo de salas
         const ENERGY_CONSUMPTION_RATE = 100 / 600; // 100% em 10 minutos (600 segundos)
         const MINERS = [
             { id: 'miner001', name: 'GPU Básica', power: 1, price: 10, color: '#00e0ff' },
@@ -945,6 +946,11 @@
         }
         function switchRoom(index) { if (index === currentRoomIndex) return; currentRoomIndex = index; renderRackPlacementArea(); renderRoomControls(); }
         async function buyRoom() {
+            // ATUALIZADO: Checagem de limite de salas
+            if (gameState.placedRacksPerRoom.length >= MAX_ROOMS) {
+                displayTerminalMessage("Número máximo de salas atingido.", "red");
+                return;
+            }
             const nextRoomIndex = gameState.placedRacksPerRoom.length;
             const roomCost = nextRoomIndex * 50; 
             if (gameState.balance >= roomCost) {
@@ -960,11 +966,18 @@
                 }
             } else { displayTerminalMessage(`LCO insuficiente! Necessário ${roomCost} LCO.`, "red"); }
         }
+        // ATUALIZADO: Esconde o botão de comprar sala se o limite for atingido
         function updateAddRoomButtonState() {
             const addRoomButton = document.getElementById('add-room');
             if (!addRoomButton) return;
-            const nextRoomPrice = gameState.placedRacksPerRoom.length * 50;
-            addRoomButton.textContent = `+ Sala (${nextRoomPrice} LCO)`;
+
+            if (gameState.placedRacksPerRoom.length >= MAX_ROOMS) {
+                addRoomButton.style.display = 'none';
+            } else {
+                addRoomButton.style.display = 'inline-block';
+                const nextRoomPrice = gameState.placedRacksPerRoom.length * 50;
+                addRoomButton.textContent = `+ Sala (${nextRoomPrice} LCO)`;
+            }
         }
         
         function renderRackPlacementArea() {
@@ -1289,12 +1302,12 @@
                 const deltaTime = (now - lastUpdateTime) / 1000;
                 lastUpdateTime = now;
 
-                if (gameState.energy > 0) {
-                    const powerDraw = gameState.totalPower;
-                    gameState.energy -= (ENERGY_CONSUMPTION_RATE * (powerDraw / 10 + 1) / 5) * deltaTime;
+                if (gameState.energy > 0 && gameState.totalPower > 0) { // ATUALIZADO: Consome energia apenas se houver poder total
+                    // ATUALIZADO: Consumo de energia fixo em 10 minutos, independente do poder.
+                    gameState.energy -= ENERGY_CONSUMPTION_RATE * deltaTime;
                     if (gameState.energy < 0) {
                         gameState.energy = 0;
-                        updateTotalPower();
+                        updateTotalPower(); // Re-calcula poder para 0 se energia acabar
                     }
                 }
                 
