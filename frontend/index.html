@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lula Coin Miner 4.5 (Graphics Overhaul)</title>
+    <title>Lula Coin Miner 4.6 (Fine Graphics)</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
@@ -139,7 +139,7 @@
         
         /* ATUALIZAÇÃO GRÁFICA: Rack e Sombra */
         .rack-2-5d {
-            width: 160px;
+            width: 150px; /* Tamanho do rack diminuído */
             position: relative;
             transform-style: preserve-3d;
             z-index: 1;
@@ -154,13 +154,12 @@
             border-left: 1px solid #555;
             border-radius: 8px;
             padding: 15px;
-            padding-bottom: 35px; /* Aumenta espaço para os pés */
+            padding-bottom: 45px; /* Aumenta espaço para os pés ficarem mais visíveis */
             display: flex;
             flex-direction: column;
             gap: 10px;
             position: relative;
-            transform: translateZ(20px); /* Aumenta profundidade */
-            /* Textura de metal escovado */
+            transform: translateZ(20px);
             background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.05) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 255, 255, 0.05) 75%, transparent 75%, transparent),
                               linear-gradient(to top, rgba(0,0,0,0.2), rgba(255,255,255,0.05));
             background-size: 20px 20px, 100% 100%;
@@ -192,12 +191,12 @@
         }
         .rack-leg {
             position: absolute;
-            bottom: -5px; /* Ajustado para ficar abaixo do rack */
+            bottom: 5px; /* Ajustado para ficar na base */
             width: 12px;
             height: 20px;
             background-image: linear-gradient(to top, #1a1a1a, #3e2723);
             border-radius: 2px;
-            transform: translateZ(20px); /* Alinha com a frente */
+            transform: translateZ(20px);
         }
         .rack-leg.front-left { left: 10px; }
         .rack-leg.front-right { right: 10px; }
@@ -238,12 +237,12 @@
         
         /* ATUALIZAÇÃO GRÁFICA: GPU e Animações */
         @keyframes led-blink {
-            0%, 100% { opacity: 0.7; }
-            50% { opacity: 1; box-shadow: 0 0 5px 2px var(--glow-color); }
+            0%, 100% { opacity: 0.6; box-shadow: none; }
+            50% { opacity: 1; box-shadow: 0 0 4px 1px var(--glow-color); }
         }
 
         .miner-gpu {
-            width: 92%; /* Tamanho diminuido */
+            width: 92%;
             height: 92%;
             display: flex;
             justify-content: center;
@@ -268,18 +267,14 @@
             gap: 4px;
             padding: 0 3px 3px 3px;
         }
-        .gpu-led {
+        .gpu-led.blinking {
             height: 4px;
             flex-grow: 1;
             border-radius: 1px;
-            background-color: #333;
-        }
-        .gpu-led.active-color {
             background-color: var(--led-color);
             --glow-color: var(--led-color);
-            animation: led-blink 1.8s infinite ease-in-out;
+            animation: led-blink 1.5s infinite ease-in-out;
         }
-        .gpu-led.static-light { background-color: #00aaff; opacity: 0.8; }
         
         .gpu-fans-container {
             display: flex;
@@ -288,10 +283,12 @@
             width: 100%;
             flex-grow: 1;
             padding: 2px 0;
+            gap: 4px;
         }
         .gpu-fan {
-            width: 45%;
-            aspect-ratio: 1 / 1;
+            width: 36px; /* Tamanho da fan diminuído */
+            height: 36px;
+            flex-shrink: 0;
             border-radius: 50%;
             background: radial-gradient(circle, #111 40%, #222 70%, #181818 100%);
             display: flex;
@@ -1070,34 +1067,52 @@
         function createGpuSprite(miner) {
             const gpu = document.createElement('div');
             gpu.className = 'miner-gpu';
+
+            let fanCount = 0;
+            switch(miner.id) {
+                case 'miner001': fanCount = 1; break;
+                case 'miner002': fanCount = 2; break;
+                case 'miner003': fanCount = 3; break;
+                case 'miner004': fanCount = 3; break;
+                default: fanCount = 2;
+            }
+
+            let fansHtml = '';
+            for (let i = 0; i < fanCount; i++) {
+                fansHtml += `
+                    <div class="gpu-fan">
+                        <div class="gpu-fan-blades" style="--fan-color: ${miner.color};"></div>
+                        <div class="gpu-fan-hub"></div>
+                    </div>
+                `;
+            }
+
+            const ledsHtml = `
+                <div class="gpu-led blinking" style="--led-color: ${miner.color}; animation-delay: 0s;"></div>
+                <div class="gpu-led blinking" style="--led-color: #00aaff; animation-delay: 0.2s;"></div>
+                <div class="gpu-led blinking" style="--led-color: ${miner.color}; animation-delay: 0.4s;"></div>
+                <div class="gpu-led blinking" style="--led-color: #00aaff; animation-delay: 0.6s;"></div>
+                <div class="gpu-led blinking" style="--led-color: ${miner.color}; animation-delay: 0.8s;"></div>
+            `;
+
             gpu.innerHTML = `
                 <div class="gpu-shroud">
                     <div class="gpu-top-leds">
-                        <div class="gpu-led static-light"></div>
-                        <div class="gpu-led"></div>
-                        <div class="gpu-led active-color" style="--led-color: ${miner.color};"></div>
-                        <div class="gpu-led"></div>
-                        <div class="gpu-led static-light"></div>
+                        ${ledsHtml}
                     </div>
                     <div class="gpu-fans-container">
-                        <div class="gpu-fan">
-                            <div class="gpu-fan-blades" style="--fan-color: ${miner.color};"></div>
-                            <div class="gpu-fan-hub"></div>
-                        </div>
-                        <div class="gpu-fan">
-                            <div class="gpu-fan-blades" style="--fan-color: ${miner.color};"></div>
-                            <div class="gpu-fan-hub"></div>
-                        </div>
+                        ${fansHtml}
                     </div>
                 </div>
             `;
             return gpu;
         }
 
+
         function createRackSprite(rack) {
             const rackSprite = document.createElement('div');
             rackSprite.className = 'rack-2-5d';
-            let rackHeight = rack.slots * 60 + 80; // Aumentado para acomodar melhor os pés
+            let rackHeight = rack.slots * 60 + 80;
             rackSprite.style.height = `${rackHeight}px`;
 
             let slotsHtml = '';
@@ -1206,7 +1221,7 @@
                 if (rackData) {
                     slotDiv.classList.add('occupied');
                     const rackConfig = RACKS.find(r => r.id === rackData.id);
-                    const rackElement = createRackSprite(rackConfig); // Usa a nova função
+                    const rackElement = createRackSprite(rackConfig);
                     
                     if (rackData.isNew) { 
                         rackElement.classList.add('item-placed'); 
@@ -1214,7 +1229,7 @@
                     }
 
                     const slotsContainer = rackElement.querySelector('.slots-container');
-                    slotsContainer.innerHTML = ''; // Limpa os slots vazios
+                    slotsContainer.innerHTML = '';
                     
                     for (let j = 0; j < rackConfig.slots; j++) {
                         const miner = rackData.placedMiners[j];
@@ -1570,3 +1585,4 @@
     </script>
 </body>
 </html>
+
