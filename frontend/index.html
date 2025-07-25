@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lula Coin Miner 4.4 (Procedural Audio)</title>
+    <title>Lula Coin Miner 4.5 (Graphics Overhaul)</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
-        /* Todos os seus estilos permanecem os mesmos */
         :root {
             --primary-color: #ff3b3b; /* Vermelho Neon */
             --secondary-color: #2e008a; /* Azul Escuro */
@@ -137,30 +136,213 @@
         .rack-placement-slot.available:hover::after { opacity: 1; }
         .placing-item .rack-placement-slot.available::after { content: 'CLIQUE PARA COLOCAR'; opacity: 1; color: var(--primary-color); }
         .placing-item .slot.empty::after { content: 'CLIQUE'; position: absolute; font-size: 0.8em; color: var(--primary-color); opacity: 1;}
-        .rack-2-5d { width: 160px; position: relative; transform-style: preserve-3d; z-index: 1; }
-        .rack-front { width: 100%; height: 100%; background-color: var(--medium-gray); border: 2px solid var(--border-color); border-radius: 8px; padding: 15px; padding-bottom: 25px; display: flex; flex-direction: column; gap: 10px; position: relative; transform: translateZ(10px); }
-        .rack-side, .rack-top { position: absolute; background-color: var(--rack-side-color); border-radius: 2px; }
-        .rack-side { width: 20px; height: 100%; left: -1px; bottom: 0; transform: rotateY(-90deg) translateX(-10px); transform-origin: left; }
-        .rack-top { width: 100%; height: 20px; top: -11px; left: 0; transform: rotateX(90deg) translateY(-10px); transform-origin: top; }
-        .rack-leg { position: absolute; bottom: 5px; width: 10px; height: 20px; background-color: #3e2723; }
-        .rack-leg.front-left { left: 15px; } .rack-leg.front-right { right: 15px; }
-        .rack-label { cursor: pointer; position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background-color: var(--primary-color); color: var(--dark-gray); padding: 5px 10px; border-radius: 5px; font-size: 0.9em; font-weight: bold; white-space: nowrap; box-shadow: 0 0 8px var(--primary-color); }
+        
+        /* ATUALIZAÇÃO GRÁFICA: Rack e Sombra */
+        .rack-2-5d {
+            width: 160px;
+            position: relative;
+            transform-style: preserve-3d;
+            z-index: 1;
+            filter: drop-shadow(5px 15px 10px rgba(0,0,0,0.4));
+        }
+        .rack-front {
+            width: 100%;
+            height: 100%;
+            background-color: var(--medium-gray);
+            border: 1px solid #111;
+            border-top: 1px solid #555;
+            border-left: 1px solid #555;
+            border-radius: 8px;
+            padding: 15px;
+            padding-bottom: 35px; /* Aumenta espaço para os pés */
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            position: relative;
+            transform: translateZ(20px); /* Aumenta profundidade */
+            /* Textura de metal escovado */
+            background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.05) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 255, 255, 0.05) 75%, transparent 75%, transparent),
+                              linear-gradient(to top, rgba(0,0,0,0.2), rgba(255,255,255,0.05));
+            background-size: 20px 20px, 100% 100%;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+        }
+        .rack-side, .rack-top {
+            position: absolute;
+            background-color: var(--rack-side-color);
+            border-radius: 2px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        .rack-side {
+            width: 40px;
+            height: 100%;
+            left: -1px;
+            bottom: 0;
+            transform: rotateY(-90deg) translateX(-20px);
+            transform-origin: left;
+            background-image: linear-gradient(to right, #111, #333);
+        }
+        .rack-top {
+            width: 100%;
+            height: 40px;
+            top: -21px;
+            left: 0;
+            transform: rotateX(90deg) translateY(-20px);
+            transform-origin: top;
+            background-image: linear-gradient(to bottom, #555, #2a2a2a);
+        }
+        .rack-leg {
+            position: absolute;
+            bottom: -5px; /* Ajustado para ficar abaixo do rack */
+            width: 12px;
+            height: 20px;
+            background-image: linear-gradient(to top, #1a1a1a, #3e2723);
+            border-radius: 2px;
+            transform: translateZ(20px); /* Alinha com a frente */
+        }
+        .rack-leg.front-left { left: 10px; }
+        .rack-leg.front-right { right: 10px; }
+        .rack-label {
+            cursor: pointer;
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--primary-color);
+            color: var(--dark-gray);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            font-weight: bold;
+            white-space: nowrap;
+            box-shadow: 0 0 8px var(--primary-color);
+        }
         .rack-label:hover { filter: brightness(1.2); }
-        .slot { width: 100%; height: 60px; background-color: var(--dark-gray); border: 1px dashed var(--border-color); border-radius: 5px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: all 0.3s ease; position: relative; overflow: hidden; }
+
+        .slot {
+            width: 100%;
+            height: 60px;
+            background-color: rgba(0,0,0,0.4);
+            border: 1px dashed var(--border-color);
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.6);
+        }
         .slot.empty:not(.placing-item .slot.empty):hover { border-color: var(--primary-color); background-color: rgba(255, 59, 59, 0.1); }
         .slot.occupied:hover { background-color: rgba(255, 59, 59, 0.2); }
-        .miner-gpu { width: 95%; height: 95%; display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 5px; position: relative; cursor: pointer; }
-        .gpu-shroud { width: 100%; height: 100%; background-color: #222; border: 2px solid; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.5), inset 0 0 8px rgba(0,0,0,0.7); padding: 4px; display: flex; flex-direction: column; justify-content: space-between; }
-        .gpu-pcb { width: 100%; height: 4px; background-color: #004d40; }
-        .gpu-fans-container { display: flex; justify-content: space-around; align-items: center; width: 100%; flex-grow: 1; }
-        .gpu-fan { width: 35px; height: 35px; border-radius: 50%; background-color: #111; display: flex; justify-content: center; align-items: center; padding: 3px; animation: spin 1s linear infinite; }
+        
+        /* ATUALIZAÇÃO GRÁFICA: GPU e Animações */
+        @keyframes led-blink {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; box-shadow: 0 0 5px 2px var(--glow-color); }
+        }
+
+        .miner-gpu {
+            width: 92%; /* Tamanho diminuido */
+            height: 92%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            cursor: pointer;
+        }
+        .gpu-shroud {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, #2d2d2d, #1a1a1a);
+            border: 1px solid #111;
+            border-radius: 4px;
+            box-shadow: inset 0 1px 0px rgba(255,255,255,0.1), 0 2px 3px rgba(0,0,0,0.5);
+            padding: 4px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .gpu-top-leds {
+            display: flex;
+            gap: 4px;
+            padding: 0 3px 3px 3px;
+        }
+        .gpu-led {
+            height: 4px;
+            flex-grow: 1;
+            border-radius: 1px;
+            background-color: #333;
+        }
+        .gpu-led.active-color {
+            background-color: var(--led-color);
+            --glow-color: var(--led-color);
+            animation: led-blink 1.8s infinite ease-in-out;
+        }
+        .gpu-led.static-light { background-color: #00aaff; opacity: 0.8; }
+        
+        .gpu-fans-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            width: 100%;
+            flex-grow: 1;
+            padding: 2px 0;
+        }
+        .gpu-fan {
+            width: 45%;
+            aspect-ratio: 1 / 1;
+            border-radius: 50%;
+            background: radial-gradient(circle, #111 40%, #222 70%, #181818 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2px;
+            animation: spin 1s linear infinite;
+            position: relative;
+            box-shadow: inset 0 0 3px rgba(0,0,0,0.8);
+        }
         .no-energy .gpu-fan { animation-play-state: paused; }
-        .gpu-fan-blades { width: 100%; height: 100%; border-radius: 50%; background-color: var(--primary-color); position: relative; }
-        .gpu-fan-blade { position: absolute; width: 30%; height: 110%; background: #111; top: -5%; left: 35%; }
-        .gpu-fan-blade:nth-child(1) { transform: rotate(0deg); } .gpu-fan-blade:nth-child(2) { transform: rotate(120deg); } .gpu-fan-blade:nth-child(3) { transform: rotate(240deg); }
-        .gpu-leds-container { display: flex; justify-content: flex-end; gap: 5px; }
-        .gpu-led { width: 6px; height: 6px; border-radius: 50%; animation: pulse 1.5s ease-in-out infinite; }
-        .no-energy .gpu-led { animation: none; background-color: #333; }
+        
+        .gpu-fan-blades {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        .gpu-fan-blades::before, .gpu-fan-blades::after {
+            content: '';
+            position: absolute;
+            left: 5%;
+            top: 5%;
+            width: 90%;
+            height: 90%;
+            background-image:
+                conic-gradient(from 0deg,
+                    var(--fan-color) 0deg 25deg, transparent 25deg 60deg,
+                    var(--fan-color) 60deg 85deg, transparent 85deg 120deg,
+                    var(--fan-color) 120deg 145deg, transparent 145deg 180deg,
+                    var(--fan-color) 180deg 205deg, transparent 205deg 240deg,
+                    var(--fan-color) 240deg 265deg, transparent 265deg 300deg,
+                    var(--fan-color) 300deg 325deg, transparent 325deg 360deg
+                );
+            border-radius: 50%;
+        }
+        .gpu-fan-blades::after {
+            transform: scale(0.9) rotate(5deg);
+            filter: blur(1px);
+        }
+        .gpu-fan-hub {
+            position: absolute;
+            width: 30%;
+            height: 30%;
+            background: radial-gradient(circle, #444, #111);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 2px rgba(0,0,0,1);
+        }
+
         .computer-setup { position: absolute; left: 20px; bottom: 30px; width: 250px; height: 250px; z-index: 2; }
         .desk { width: 180px; height: 10px; background-color: #4e342e; position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%) perspective(150px) rotateX(15deg); border-radius: 2px; box-shadow: 0 15px 10px rgba(0,0,0,0.4); }
         .desk::before, .desk::after { content: ''; position: absolute; bottom: -60px; width: 10px; height: 60px; background-color: #3e2723; }
@@ -173,7 +355,7 @@
         .mouse { width: 15px; height: 22px; background-color: #333; position: absolute; bottom: 85px; left: 85%; border-radius: 8px 8px 4px 4px; }
         .cpu-box { width: 50px; height: 100px; background-color: #333; position: absolute; bottom: 0; left: 0; border-radius: 5px; box-shadow: 5px 5px 15px rgba(0,0,0,0.5); }
         .cpu-box::before { content: ''; position: absolute; top: 0; right: -10px; width: 10px; height: 100%; background-color: #222; border-radius: 0 5px 5px 0; transform: skewY(-10deg); }
-        .cpu-led-light { width: 8px; height: 8px; border-radius: 50%; position: absolute; bottom: 10px; left: 15px; animation: blink-red 2s linear infinite; }
+        .cpu-box-led-light { width: 8px; height: 8px; border-radius: 50%; position: absolute; bottom: 10px; left: 15px; animation: blink-red 2s linear infinite; }
         .stats-bar { display: flex; justify-content: center; align-items: center; gap: 15px; padding: 10px 20px; background-color: var(--tertiary-color); border-top: 1px solid var(--border-color); z-index: 10; }
         .stats-bar .action-btn { background-color: var(--primary-color); color: var(--dark-gray); border: none; border-radius: 5px; padding: 10px 15px; font-size: 0.9em; cursor: pointer; font-weight: bold; text-transform: uppercase; box-shadow: 0 0 10px var(--primary-color); transition: all 0.3s ease; }
         .stats-bar .action-btn:hover { filter: brightness(1.2); transform: scale(1.05); }
@@ -413,7 +595,7 @@
                     <div class="keyboard"></div>
                     <div class="mouse"></div>
                     <div class="cpu-box">
-                        <div class="cpu-led-light"></div>
+                        <div class="cpu-box-led-light"></div>
                     </div>
                 </div>
                 <div id="rack-placement-area"></div>
@@ -574,9 +756,9 @@
         // --- CONFIGURAÇÕES E CONSTANTES ---
         const API_BASE_URL = 'https://lula-coin-backend.onrender.com';
         const LCO_PER_THS_PER_MINUTE = 0.1;
-        const NUM_RACK_PLACEMENT_SLOTS = 5; // ATUALIZADO: Aumentado para 5 racks
-        const MAX_ROOMS = 10; // ATUALIZADO: Definido o máximo de salas
-        const ENERGY_CONSUMPTION_RATE = 100 / 600; // 100% em 10 minutos (600 segundos)
+        const NUM_RACK_PLACEMENT_SLOTS = 5; 
+        const MAX_ROOMS = 10;
+        const ENERGY_CONSUMPTION_RATE = 100 / 600; 
         const MINERS = [
             { id: 'miner001', name: 'GPU Básica', power: 1, price: 10, color: '#00e0ff' },
             { id: 'miner002', name: 'ASIC Médio', power: 5, price: 30, color: '#ff00e0' },
@@ -638,7 +820,6 @@
         const chatSendBtn = document.getElementById('chat-send-btn');
         const rankingHeader = document.getElementById('ranking-header');
         const rankingBody = document.getElementById('ranking-body');
-        // << CÓDIGO ADICIONADO >>: Constantes para os elementos do Lobby
         const openGamesBtn = document.getElementById('open-games-btn');
         const gamesModal = document.getElementById('games-modal');
         const closeGamesBtn = document.getElementById('close-games-btn');
@@ -646,7 +827,7 @@
         const damasMatchmakingStatus = document.getElementById('damas-matchmaking-status');
 
 
-        // --- FUNÇÕES DE API (COM CORREÇÃO DE LOGOUT) ---
+        // --- FUNÇÕES DE API ---
         const apiRequest = async (endpoint, method = 'GET', body = null) => {
             const token = localStorage.getItem('token');
             if (!token && !endpoint.startsWith('/api/auth')) { 
@@ -671,7 +852,6 @@
                 if (response.status === 400 || response.status === 429) {
                     const errorData = await response.json();
                     const errorMessage = errorData.message || (errorData.errors && errorData.errors[0].msg) || 'Erro de validação.';
-                    // Para o lobby, não queremos mostrar no terminal principal
                     if (!endpoint.includes('/api/damas')) {
                         displayTerminalMessage(errorMessage, 'red');
                     }
@@ -686,12 +866,12 @@
                     const messageArea = appContainer.style.display === 'flex' ? terminalTextElement : authMessage;
                     if (error instanceof SyntaxError) {
                         messageArea.textContent = `Erro: Resposta inesperada do servidor.`;
-                    } else if (!endpoint.includes('/api/damas')) { // Não poluir o terminal com erros do lobby
+                    } else if (!endpoint.includes('/api/damas')) {
                         messageArea.textContent = `Erro: ${error.message}`;
                     }
                     messageArea.style.color = 'var(--red-alert)'; 
                 }
-                return { message: error.message }; // Retorna o erro para o lobby tratar
+                return { message: error.message };
             }
         };
 
@@ -778,7 +958,7 @@
             if (chatUpdateInterval) clearInterval(chatUpdateInterval);
         }
 
-        // --- FUNÇÕES DE AUTENTICAÇÃO (COM CORREÇÃO DE LOGOUT) ---
+        // --- FUNÇÕES DE AUTENTICAÇÃO ---
         const handleLogin = async () => {
             const username = document.getElementById('login-username').value;
             const password = document.getElementById('login-password').value;
@@ -819,7 +999,7 @@
             if (gameLoopInterval) clearInterval(gameLoopInterval); 
             if (terminalLoopInterval) clearInterval(terminalLoopInterval);
             if(chatUpdateInterval) clearInterval(chatUpdateInterval);
-            if(matchmakingInterval) clearInterval(matchmakingInterval); // << CÓDIGO ADICIONADO >> Parar matchmaking no logout
+            if(matchmakingInterval) clearInterval(matchmakingInterval);
         };
 
         const showAuthMessage = (msg, color = 'var(--red-alert)') => { authMessage.textContent = msg; authMessage.style.color = color; };
@@ -885,24 +1065,60 @@
         }
 
         // --- FUNÇÕES DE UI E RENDERIZAÇÃO ---
+        
+        // ATUALIZAÇÃO GRÁFICA: Função para criar a nova GPU
         function createGpuSprite(miner) {
             const gpu = document.createElement('div');
             gpu.className = 'miner-gpu';
-            let fanCount = 1; if (miner.power >= 5 && miner.power < 20) fanCount = 2; if (miner.power >= 20) fanCount = 3;
-            let fansHtml = '';
-            for (let i = 0; i < fanCount; i++) { fansHtml += `<div class="gpu-fan"><div class="gpu-fan-blades" style="background-color: ${miner.color};"><div class="gpu-fan-blade"></div><div class="gpu-fan-blade"></div><div class="gpu-fan-blade"></div></div></div>`; }
-            gpu.innerHTML = `<div class="gpu-shroud" style="border-color: ${miner.color};"><div class="gpu-pcb"></div><div class="gpu-fans-container">${fansHtml}</div><div class="gpu-leds-container"><div class="gpu-led" style="background-color: ${miner.color}; --glow-color: ${miner.color}; animation-delay: 0s;"></div>${fanCount > 1 ? `<div class="gpu-led" style="background-color: ${miner.color}; --glow-color: ${miner.color}; animation-delay: 0.5s;"></div>` : ''}</div></div>`;
+            gpu.innerHTML = `
+                <div class="gpu-shroud">
+                    <div class="gpu-top-leds">
+                        <div class="gpu-led static-light"></div>
+                        <div class="gpu-led"></div>
+                        <div class="gpu-led active-color" style="--led-color: ${miner.color};"></div>
+                        <div class="gpu-led"></div>
+                        <div class="gpu-led static-light"></div>
+                    </div>
+                    <div class="gpu-fans-container">
+                        <div class="gpu-fan">
+                            <div class="gpu-fan-blades" style="--fan-color: ${miner.color};"></div>
+                            <div class="gpu-fan-hub"></div>
+                        </div>
+                        <div class="gpu-fan">
+                            <div class="gpu-fan-blades" style="--fan-color: ${miner.color};"></div>
+                            <div class="gpu-fan-hub"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
             return gpu;
         }
+
         function createRackSprite(rack) {
             const rackSprite = document.createElement('div');
             rackSprite.className = 'rack-2-5d';
-            let rackHeight = rack.slots * 60 + 60; rackSprite.style.height = `${rackHeight}px`;
+            let rackHeight = rack.slots * 60 + 80; // Aumentado para acomodar melhor os pés
+            rackSprite.style.height = `${rackHeight}px`;
+
             let slotsHtml = '';
-            for (let i = 0; i < rack.slots; i++) { slotsHtml += '<div class="slot empty"></div>'; }
-            rackSprite.innerHTML = `<div class="rack-top" style="background-color: ${rack.color};"></div><div class="rack-side" style="background-color: ${rack.color}; filter: brightness(0.6);"></div><div class="rack-front" style="border-color: ${rack.color};"><div class="rack-label">${rack.name}</div><div class="slots-container">${slotsHtml}</div><div class="rack-leg front-left"></div><div class="rack-leg front-right"></div></div>`;
+            for (let i = 0; i < rack.slots; i++) {
+                slotsHtml += '<div class="slot empty"></div>';
+            }
+
+            rackSprite.innerHTML = `
+                <div class="rack-top"></div>
+                <div class="rack-side"></div>
+                <div class="rack-front" style="border-color: ${rack.color};">
+                    <div class="rack-label">${rack.name}</div>
+                    <div class="slots-container" style="display: flex; flex-direction: column; gap: 10px; height: 100%;">
+                        ${slotsHtml}
+                    </div>
+                    <div class="rack-leg front-left"></div>
+                    <div class="rack-leg front-right"></div>
+                </div>`;
             return rackSprite;
         }
+
         
         function updateUI() { if (!gameState) return; updateBalance(); updateTotalPower(); renderRoomControls(); renderRackPlacementArea(); updateAddRoomButtonState(); updateEnergyUI(); }
         function updateBalance() { balanceElement.textContent = gameState.balance.toFixed(2); }
@@ -946,7 +1162,6 @@
         }
         function switchRoom(index) { if (index === currentRoomIndex) return; currentRoomIndex = index; renderRackPlacementArea(); renderRoomControls(); }
         async function buyRoom() {
-            // ATUALIZADO: Checagem de limite de salas
             if (gameState.placedRacksPerRoom.length >= MAX_ROOMS) {
                 displayTerminalMessage("Número máximo de salas atingido.", "red");
                 return;
@@ -966,7 +1181,7 @@
                 }
             } else { displayTerminalMessage(`LCO insuficiente! Necessário ${roomCost} LCO.`, "red"); }
         }
-        // ATUALIZADO: Esconde o botão de comprar sala se o limite for atingido
+
         function updateAddRoomButtonState() {
             const addRoomButton = document.getElementById('add-room');
             if (!addRoomButton) return;
@@ -991,18 +1206,16 @@
                 if (rackData) {
                     slotDiv.classList.add('occupied');
                     const rackConfig = RACKS.find(r => r.id === rackData.id);
-                    const rackElement = document.createElement('div');
-                    rackElement.className = 'rack-2-5d';
-                    rackElement.style.height = `${rackConfig.slots * 60 + 60}px`;
-                    if (rackData.isNew) { rackElement.classList.add('item-placed'); delete rackData.isNew; }
+                    const rackElement = createRackSprite(rackConfig); // Usa a nova função
+                    
+                    if (rackData.isNew) { 
+                        rackElement.classList.add('item-placed'); 
+                        delete rackData.isNew; 
+                    }
 
-                    const rackTop = document.createElement('div'); rackTop.className = 'rack-top'; rackTop.style.backgroundColor = rackConfig.color;
-                    const rackSide = document.createElement('div'); rackSide.className = 'rack-side'; rackSide.style.backgroundColor = rackConfig.color; rackSide.style.filter = 'brightness(0.6)';
-                    const rackFront = document.createElement('div'); rackFront.className = 'rack-front'; rackFront.style.borderColor = rackConfig.color;
-                    const rackLabel = document.createElement('div'); rackLabel.className = 'rack-label'; rackLabel.textContent = rackConfig.name; rackLabel.dataset.rackSlotIndex = i;
-                    rackLabel.addEventListener('click', handleWorldClick);
-                    const slotsContainer = document.createElement('div');
-                    slotsContainer.className = 'slots-container';
+                    const slotsContainer = rackElement.querySelector('.slots-container');
+                    slotsContainer.innerHTML = ''; // Limpa os slots vazios
+                    
                     for (let j = 0; j < rackConfig.slots; j++) {
                         const miner = rackData.placedMiners[j];
                         const minerSlotDiv = document.createElement('div');
@@ -1019,10 +1232,10 @@
                         minerSlotDiv.addEventListener('click', handleWorldClick);
                         slotsContainer.appendChild(minerSlotDiv);
                     }
-                    const legLeft = document.createElement('div'); legLeft.className = 'rack-leg front-left';
-                    const legRight = document.createElement('div'); legRight.className = 'rack-leg front-right';
-                    rackFront.append(rackLabel, slotsContainer, legLeft, legRight);
-                    rackElement.append(rackTop, rackSide, rackFront);
+                    
+                    rackElement.querySelector('.rack-label').addEventListener('click', handleWorldClick);
+                    rackElement.querySelector('.rack-label').dataset.rackSlotIndex = i;
+
                     slotDiv.appendChild(rackElement);
                 } else {
                     slotDiv.classList.add('available');
@@ -1222,7 +1435,7 @@
         }
 
         function handleEnergyRecharge() {
-            if (gameState.energy <= 0) { // Custo de 1 LCO
+            if (gameState.energy <= 0) {
                 if (gameState.balance >= 1) {
                     gameState.balance -= 1;
                     gameState.energy = 100;
@@ -1232,7 +1445,7 @@
                 } else {
                     displayTerminalMessage("LCO insuficiente para recarregar!", "red");
                 }
-            } else if (gameState.energy <= 20) { // Recarga grátis
+            } else if (gameState.energy <= 20) {
                 gameState.energy = 100;
                 gameState.lastEnergyUpdate = Date.now();
                 displayTerminalMessage("Energia restaurada gratuitamente!", "lime");
@@ -1240,18 +1453,12 @@
             }
         }
 
-        // << CÓDIGO ADICIONADO >>: Lógica do Lobby de Jogos
         let matchmakingInterval = null; 
 
-        function openGames() {
-            gamesModal.style.display = 'flex';
-        }
-
+        function openGames() { gamesModal.style.display = 'flex'; }
         function closeGames() {
             gamesModal.style.display = 'none';
-            if (matchmakingInterval) {
-                clearInterval(matchmakingInterval);
-            }
+            if (matchmakingInterval) { clearInterval(matchmakingInterval); }
             damasMatchmakingStatus.textContent = '';
             playDamasBtn.disabled = false;
         }
@@ -1264,7 +1471,6 @@
             
             if (joinResponse && joinResponse.message) {
                 damasMatchmakingStatus.textContent = joinResponse.message;
-
                 if (joinResponse.message === "Procurando partida..." || joinResponse.message === "Você já está na fila.") {
                     if (matchmakingInterval) clearInterval(matchmakingInterval); 
                     matchmakingInterval = setInterval(checkMatchmakingStatus, 3000); 
@@ -1280,14 +1486,12 @@
 
         async function checkMatchmakingStatus() {
             const statusResponse = await apiRequest('/api/damas/matchmaking/status');
-            
             if (statusResponse && statusResponse.matchFound) {
                 clearInterval(matchmakingInterval);
                 damasMatchmakingStatus.textContent = 'Partida encontrada! Redirecionando...';
                 window.location.href = `jogodedamas.html?gameId=${statusResponse.gameId}`;
             }
         }
-
 
         let gameLoopInterval, terminalLoopInterval;
         function startLoops() {
@@ -1302,12 +1506,11 @@
                 const deltaTime = (now - lastUpdateTime) / 1000;
                 lastUpdateTime = now;
 
-                if (gameState.energy > 0 && gameState.totalPower > 0) { // ATUALIZADO: Consome energia apenas se houver poder total
-                    // ATUALIZADO: Consumo de energia fixo em 10 minutos, independente do poder.
+                if (gameState.energy > 0 && gameState.totalPower > 0) {
                     gameState.energy -= ENERGY_CONSUMPTION_RATE * deltaTime;
                     if (gameState.energy < 0) {
                         gameState.energy = 0;
-                        updateTotalPower(); // Re-calcula poder para 0 se energia acabar
+                        updateTotalPower();
                     }
                 }
                 
@@ -1347,18 +1550,11 @@
         energyBtn.addEventListener('click', handleEnergyRecharge);
         shopCategoryBtns.forEach(btn => btn.addEventListener('click', () => { shopCategoryBtns.forEach(b => b.classList.remove('active')); btn.classList.add('active'); renderShop(btn.dataset.category); }));
         inventoryCategoryBtns.forEach(btn => btn.addEventListener('click', () => { inventoryCategoryBtns.forEach(b => b.classList.remove('active')); btn.classList.add('active'); renderInventory(btn.dataset.category); }));
-        
         openChatBtn.addEventListener('click', openChat);
         closeChatBtn.addEventListener('click', closeChat);
         chatSendBtn.addEventListener('click', postMessage);
-        chatInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                postMessage();
-            }
-        });
+        chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') { postMessage(); } });
         rankingHeader.addEventListener('click', handleRankingClick);
-
-        // << CÓDIGO ADICIONADO >>: Event Listeners do Lobby de Jogos
         openGamesBtn.addEventListener('click', openGames);
         closeGamesBtn.addEventListener('click', closeGames);
         playDamasBtn.addEventListener('click', joinDamasMatchmaking);
