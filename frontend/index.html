@@ -154,7 +154,8 @@
             border-left: 1px solid #555;
             border-radius: 8px;
             padding: 15px;
-            padding-bottom: 20px; /* ATUALIZADO: Base do rack elevada */
+            /* ATUALIZADO CONFORME SOLICITADO: Aumenta o preenchimento inferior para elevar a área dos slots, criando uma base sólida acima dos pés. */
+            padding-bottom: 20px; 
             display: flex;
             flex-direction: column;
             gap: 10px;
@@ -191,7 +192,8 @@
         }
         .rack-leg {
             position: absolute;
-            bottom: 0px; /* ATUALIZADO: Pés alinhados à base */
+            /* ATUALIZADO CONFORME SOLICITADO: Pés alinhados à base para o rack parecer sustentado por eles. */
+            bottom: 0px; 
             width: 12px;
             height: 20px;
             background-image: linear-gradient(to top, #1a1a1a, #3e2723);
@@ -1079,11 +1081,13 @@
                     break;
                 case 'miner003': 
                     fanCount = 3; 
-                    fanSize = 32; // ATUALIZADO: Tamanho menor para 3 fans
+                    // ATUALIZADO CONFORME SOLICITADO: Tamanho menor para as fans das GPUs verde (avançado) e amarela (super) para caberem melhor.
+                    fanSize = 30; 
                     break;
                 case 'miner004': 
                     fanCount = 3; 
-                    fanSize = 32; // ATUALIZADO: Tamanho menor para 3 fans
+                    // ATUALIZADO CONFORME SOLICITADO: Tamanho menor para as fans das GPUs verde (avançado) e amarela (super) para caberem melhor.
+                    fanSize = 30; 
                     break;
                 default: 
                     fanCount = 2;
@@ -1596,4 +1600,4 @@
     });
     </script>
 </body>
-</ht
+</html>
