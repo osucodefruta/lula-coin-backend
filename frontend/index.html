@@ -337,7 +337,7 @@
             position: absolute; 
             left: 20px; 
             bottom: 30px; 
-            width: 250px; /* Tamanho geral reduzido */
+            width: 250px; 
             height: 220px; 
             z-index: 2; 
             filter: drop-shadow(5px 10px 10px rgba(0,0,0,0.5));
@@ -346,8 +346,8 @@
         .desk { 
             width: 240px; 
             height: 15px; 
-            background-color: #d2b48c; /* Cor base da madeira */
-            background-image: linear-gradient(90deg, rgba(255,255,255,0.2) 50%, transparent 50%), linear-gradient(90deg, #c5a67c 0%, #e0c29e 50%, #c5a67c 100%); /* Textura de madeira */
+            background-color: #d2b48c; 
+            background-image: linear-gradient(90deg, rgba(255,255,255,0.2) 50%, transparent 50%), linear-gradient(90deg, #c5a67c 0%, #e0c29e 50%, #c5a67c 100%); 
             position: absolute; 
             bottom: 60px; 
             left: 50%; 
@@ -365,21 +365,21 @@
             transform-origin: top;
             transform: rotateX(-25deg);
         }
-        .desk .leg1 { bottom: -58px; left: 10px; } /* Perna frontal esquerda */
-        .desk .leg2 { bottom: -58px; right: 10px; } /* Perna frontal direita */
-        .desk .leg3 { bottom: -55px; left: 10px; z-index: -1; filter: brightness(0.8); } /* Perna traseira esquerda */
-        .desk .leg4 { bottom: -55px; right: 10px; z-index: -1; filter: brightness(0.8); } /* Perna traseira direita */
+        .desk .leg1 { bottom: -58px; left: 10px; } 
+        .desk .leg2 { bottom: -58px; right: 10px; } 
+        .desk .leg3 { bottom: -55px; left: 10px; z-index: -1; filter: brightness(0.8); } 
+        .desk .leg4 { bottom: -55px; right: 10px; z-index: -1; filter: brightness(0.8); } 
 
         .monitor { 
-            width: 130px; /* Monitor maior */
+            width: 130px; 
             height: 80px; 
             background-color: #2c2c2c; 
             border: 4px solid #222; 
             border-bottom-width: 8px;
             border-radius: 5px; 
             position: absolute; 
-            bottom: 95px; /* Posição ajustada */
-            left: 40px; 
+            bottom: 95px; 
+            left: 30px; /* Movido para a esquerda */
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); 
         }
         .monitor::before {
@@ -409,21 +409,32 @@
             to { box-shadow: inset 0 0 20px 4px rgba(0, 150, 255, 0.7), 0 0 15px rgba(0, 150, 255, 0.4); }
         }
         .monitor-screen { 
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            right: 4px;
+            bottom: 8px; /* Ajustado para preencher a tela dentro da borda */
             background-color: #0d3a54; 
             animation: screen-glow 2.5s alternate infinite ease-in-out;
+            overflow: hidden; /* Garante que o texto não saia da tela */
+            display: flex;
+            align-items: flex-end; /* Alinha o texto na parte de baixo */
+            padding: 4px;
         }
         .monitor-text {
-            font-size: 0.75em; /* Fonte ajustada para o novo tamanho da tela */
+            font-size: 0.75em; 
+            width: 100%;
+            margin: 0; /* Remove margens padrão */
         }
-        .scanline-effect { background-size: 100% 3px; opacity: 0.1; }
+        .scanline-effect { position: absolute; width: 100%; height: 100%; top: 0; left: 0; background-size: 100% 3px; opacity: 0.1; }
 
         .keyboard { 
             width: 110px; 
             height: 30px; 
             background-color: #333; 
             position: absolute; 
-            bottom: 70px; /* Posição ajustada */
-            left: 50px; 
+            bottom: 70px; 
+            left: 40px; /* Movido para a esquerda */
             transform: perspective(200px) rotateX(40deg); 
             border-radius: 3px; 
             box-shadow: 0 2px 5px rgba(0,0,0,0.4);
@@ -438,8 +449,8 @@
             height: 28px; 
             background-color: #2d2d2d; 
             position: absolute; 
-            bottom: 72px; /* Posição ajustada */
-            left: 168px; 
+            bottom: 72px; 
+            left: 158px; /* Movido para a esquerda */
             border-radius: 10px 10px 4px 4px;
             border: 1px solid #1a1a1a;
         }
@@ -475,7 +486,7 @@
             height: 115px; 
             background: linear-gradient(to top, #1c1c1c, #3a3a3a); 
             position: absolute; 
-            bottom: 75px; /* Posição ajustada para ficar sobre a mesa */
+            bottom: 75px; 
             left: 185px; 
             border-radius: 8px;
             border: 1px solid #111;
@@ -493,9 +504,9 @@
         }
         .cpu-box .cpu-fan-intake {
             position: absolute;
-            top: 50%; /* Centralizado verticalmente */
+            top: 50%; 
             left: 50%;
-            transform: translate(-50%, -50%); /* Centralizado */
+            transform: translate(-50%, -50%); 
             width: 35px;
             height: 35px;
             border-radius: 50%;
@@ -517,7 +528,7 @@
             width: 5px; 
             height: 5px; 
             position: absolute; 
-            top: 30px; /* Reposicionado acima do cooler */
+            top: 30px; 
             left: 50%; 
             transform: translateX(-50%);
             animation: blink-red 2s linear infinite;
@@ -1776,3 +1787,4 @@
     </script>
 </body>
 </html>
+como eu faço para ter mais espaço para mineradoras , eu quero ter 10 salas e 10 racks em cada sala me de o codigo completo atualizado
