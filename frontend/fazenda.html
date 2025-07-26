@@ -113,14 +113,12 @@
       }
   }
   
-  // ATUALIZAÇÃO PARA CORRIGIR O BUG DA PRAGA
   async function saveFarmState() {
       if (!farmState || Object.keys(farmState).length === 0) return;
       farmState = recursos;
 
       farmState.canteirosState = canteiros.map(canteiro => ({
           estado: canteiro.userData.estado,
-          // Salva o estado ANTERIOR se houver uma praga, senão, salva o estado atual
           estadoOriginal: canteiro.userData.estadoOriginal || canteiro.userData.estado, 
           tipoPlanta: canteiro.userData.tipoPlanta,
           tempoParaCrescer: canteiro.userData.tempoParaCrescer,
@@ -135,7 +133,7 @@
           isFed: animal.div.classList.contains('alimentado'),
           produzindo: animal.produzindo,
           hasRecurso: !!animal.recursoElement,
-          tempoProducaoRestante: animal.tempoProducaoRestante // Salva o tempo restante
+          tempoProducaoRestante: animal.tempoProducaoRestante
       }));
       
       if (window.saveTimeout) clearTimeout(window.saveTimeout);
@@ -151,8 +149,8 @@
   scene.background = new THREE.Color(0x87CEEB);
   const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
   
-  // Posição e ângulo da câmera ajustados para corresponder à imagem de referência
-  camera.position.set(8, 16, 33); 
+  // Posição e ângulo da câmera ajustados para corresponder à imagem de referência (mais próxima)
+  camera.position.set(6, 13, 27); 
   camera.lookAt(0, 0, 0);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -216,7 +214,6 @@
   function mostrarModalSementes() { const o = document.getElementById('opcoes-sementes'); o.innerHTML = ''; let disp = false; for (const tipo in recursos.sementes) { if (recursos.sementes[tipo] > 0) { disp = true; const p = PLANTAS[tipo.toUpperCase()]; const d = document.createElement('div'); d.className = 'opcao-semente'; d.innerHTML = `<span>${p.maduro.emoji} ${tipo.charAt(0).toUpperCase() + tipo.slice(1)}</span><span>x${recursos.sementes[tipo]}</span>`; d.onclick = () => plantarSemente(tipo); o.appendChild(d); } } if (!disp) { o.innerHTML = '<p>Você não tem sementes.</p>'; } document.getElementById('modal-sementes').style.display = 'flex'; }
   function fecharModalSementes() { document.getElementById('modal-sementes').style.display = 'none'; canteiroSelecionado = null; }
   
-  // ATUALIZAÇÃO PARA CORRIGIR O BUG DA PRAGA
   function renderizarCenarioSalvo() {
       if (!farmState) return;
       if (farmState.terrenosComprados) { for(let i = 0; i < farmState.terrenosComprados; i++) { if (canteiros[i] && canteiros[i].userData.estado === ESTADOS.BLOQUEADO) { canteiros[i].userData.estado = ESTADOS.GRAMA; canteiros[i].material = canteiroGramaMaterial; if (canteiros[i].userData.cadeadoElement) { canteiros[i].userData.cadeadoElement.remove(); canteiros[i].userData.cadeadoElement = null; } } } }
@@ -279,7 +276,6 @@
       
       const intersectsCasa = raycaster.intersectObjects(objetosClicaveis);
       if (intersectsCasa.length > 0) {
-        // 🔥 Eliminar todas as pragas e salvar ANTES de mostrar o modal
         canteiros.forEach(c => {
             if (c.userData.estado === ESTADOS.COM_PRAGA) {
                 if (c.userData.pragaElement) {
@@ -305,7 +301,6 @@
         const canteiro = intersects[0].object;
         const { estado } = canteiro.userData;
         
-        // Lógica de ferramentas (Colheita requer foice)
         if (estado === ESTADOS.BLOQUEADO) {
             notificar("Vá até a loja para comprar este terreno com LCO!", 'info');
         } else if (ferramentaAtiva === 'enxada' && estado === ESTADOS.GRAMA) {
