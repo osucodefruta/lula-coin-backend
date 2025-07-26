@@ -112,8 +112,8 @@
           renderizarCenarioSalvo();
       }
   }
-
-  // CORREÇÃO DO BUG DA PRAGA: Função de salvar agora guarda o estado da planta ANTES da praga.
+  
+  // ATUALIZAÇÃO PARA CORRIGIR O BUG DA PRAGA
   async function saveFarmState() {
       if (!farmState || Object.keys(farmState).length === 0) return;
       farmState = recursos;
@@ -134,8 +134,7 @@
           position: { x: animal.position.x, y: animal.position.y, z: animal.position.z },
           isFed: animal.div.classList.contains('alimentado'),
           produzindo: animal.produzindo,
-          hasRecurso: !!animal.recursoElement,
-          tempoParaProduzir: animal.tempoParaProduzir // Salvar o tempo restante
+          hasRecurso: !!animal.recursoElement
       }));
       
       if (window.saveTimeout) clearTimeout(window.saveTimeout);
@@ -187,44 +186,11 @@
   const tooltip = document.getElementById('tooltip');
   
   function criarCadeado(canteiro) { const div = document.createElement('div'); div.className = 'emoji-3d'; div.textContent = '🔒'; div.style.fontSize = '25px'; document.getElementById('ui-container').appendChild(div); canteiro.userData.cadeadoElement = div; }
-  function criarAnimal(tipo, x, z) { const div = document.createElement('div'); div.className = 'emoji-3d animal com-fome'; div.id = tipo + (animais.filter(a=>a.tipo===tipo).length); if (tipo === 'galinha') div.textContent = '🐓'; else if (tipo === 'vaca') div.textContent = '🐄'; else if (tipo === 'porco') div.textContent = '🐖'; div.style.left = '50%'; div.style.top = '50%'; document.getElementById('ui-container').appendChild(div); const animal = { tipo, div, position: new THREE.Vector3(x, 0, z), fome: 0, produzindo: false, recursoElement: null, tempoParaProduzir: null, intervalId: null }; animais.push(animal); return animal; }
+  function criarAnimal(tipo, x, z) { const div = document.createElement('div'); div.className = 'emoji-3d animal com-fome'; div.id = tipo + (animais.filter(a=>a.tipo===tipo).length); if (tipo === 'galinha') div.textContent = '🐓'; else if (tipo === 'vaca') div.textContent = '🐄'; else if (tipo === 'porco') div.textContent = '🐖'; div.style.left = '50%'; div.style.top = '50%'; document.getElementById('ui-container').appendChild(div); const animal = { tipo, div, position: new THREE.Vector3(x, 0, z), fome: 0, produzindo: false, recursoElement: null }; animais.push(animal); return animal; }
   function moverAnimal(animal) { const minX = curralCenterX - curralTamanho / 2 + 1; const maxX = curralCenterX + curralTamanho / 2 - 1; const minZ = curralCenterZ - curralTamanho / 2 + 1; const maxZ = curralCenterZ + curralTamanho / 2 - 1; const novoX = Math.random() * (maxX - minX) + minX; const novoZ = Math.random() * (maxZ - minZ) + minZ; animal.position.set(novoX, 0, novoZ); }
   function criarPraga(canteiro) { if (canteiro.userData.pragaElement) return; canteiro.userData.estadoOriginal = canteiro.userData.estado; canteiro.userData.estado = ESTADOS.COM_PRAGA; const pragaDiv = document.createElement('div'); pragaDiv.className = 'emoji-3d praga'; pragaDiv.textContent = '🐛'; pragaDiv.style.fontSize = '25px'; pragaDiv.addEventListener('click', (event) => { event.stopPropagation(); if (ferramentaAtiva === 'veneno-tool') { removerPraga(canteiro); } else { notificar("Selecione o veneno para remover a praga!", 'info'); } }); document.getElementById('ui-container').appendChild(pragaDiv); canteiro.userData.pragaElement = pragaDiv; notificar("Uma praga apareceu!", 'erro'); }
   function iniciarCicloCrescimento(canteiro) { const plantaConfig = PLANTAS[canteiro.userData.tipoPlanta.toUpperCase()]; if (!plantaConfig) return; if (canteiro.userData.intervalId) { clearInterval(canteiro.userData.intervalId); } if (canteiro.userData.estado === ESTADOS.PLANTADA && !canteiro.userData.tempoParaCrescer) { canteiro.userData.tempoParaCrescer = plantaConfig.tempoEstagio1; } if (canteiro.userData.estado === ESTADOS.CRESCENDO && !canteiro.userData.tempoParaAmadurecer) { canteiro.userData.tempoParaAmadurecer = plantaConfig.tempoEstagio2; } canteiro.userData.intervalId = setInterval(() => { if (canteiro.userData.estado === ESTADOS.COM_PRAGA) { return; } if (Math.random() < 0.005 && !canteiro.userData.pragaElement && (canteiro.userData.estado === ESTADOS.PLANTADA || canteiro.userData.estado === ESTADOS.CRESCENDO)) { criarPraga(canteiro); } if (canteiro.userData.estado === ESTADOS.PLANTADA) { canteiro.userData.tempoParaCrescer -= 1000; if (canteiro.userData.tempoParaCrescer <= 0) { canteiro.userData.estado = ESTADOS.CRESCENDO; canteiro.userData.plantaElement.textContent = plantaConfig.crescendo.emoji; canteiro.userData.plantaElement.style.fontSize = plantaConfig.crescendo.fontSize; canteiro.userData.tempoParaAmadurecer = plantaConfig.tempoEstagio2; canteiro.userData.tempoParaCrescer = 0; } } else if (canteiro.userData.estado === ESTADOS.CRESCENDO) { canteiro.userData.tempoParaAmadurecer -= 1000; if (canteiro.userData.tempoParaAmadurecer <= 0) { canteiro.userData.estado = ESTADOS.MADURA; canteiro.userData.plantaElement.textContent = plantaConfig.maduro.emoji; canteiro.userData.plantaElement.style.fontSize = plantaConfig.maduro.fontSize; clearInterval(canteiro.userData.intervalId); canteiro.userData.intervalId = null; } } }, 1000); }
-  function iniciarProducaoCiclo(animal) {
-      animal.produzindo = true;
-      const animalConfig = ANIMAIS[animal.tipo.toUpperCase()];
-      const moveInterval = setInterval(() => { moverAnimal(animal); }, 2500);
-      
-      if (!animal.tempoParaProduzir || animal.tempoParaProduzir <= 0) {
-          animal.tempoParaProduzir = animalConfig.tempoProducao;
-      }
-      if (animal.intervalId) clearInterval(animal.intervalId);
-      
-      animal.intervalId = setInterval(() => {
-          animal.tempoParaProduzir -= 1000;
-          
-          if (animal.tempoParaProduzir <= 0) {
-              clearInterval(animal.intervalId);
-              animal.intervalId = null;
-              clearInterval(moveInterval);
-              
-              const recursoDiv = document.createElement('div');
-              recursoDiv.className = 'emoji-3d recurso-animal';
-              recursoDiv.textContent = animalConfig.recurso.emoji;
-              recursoDiv.dataset.tipo = animal.tipo;
-              recursoDiv.style.fontSize = '25px';
-              document.getElementById('ui-container').appendChild(recursoDiv);
-              
-              animal.recursoElement = recursoDiv;
-              animal.produzindo = false;
-              animal.tempoParaProduzir = null;
-              animal.div.classList.remove('alimentado');
-              animal.div.classList.add('com-fome');
-              saveFarmState();
-          }
-      }, 1000);
-  }
+  function iniciarProducaoCiclo(animal) { animal.produzindo = true; const animalConfig = ANIMAIS[animal.tipo.toUpperCase()]; const moveInterval = setInterval(() => { moverAnimal(animal); }, 2500); setTimeout(() => { clearInterval(moveInterval); const recursoDiv = document.createElement('div'); recursoDiv.className = 'emoji-3d recurso-animal'; recursoDiv.textContent = animalConfig.recurso.emoji; recursoDiv.dataset.tipo = animal.tipo; recursoDiv.style.fontSize = '25px'; document.getElementById('ui-container').appendChild(recursoDiv); animal.recursoElement = recursoDiv; animal.produzindo = false; animal.div.classList.remove('alimentado'); animal.div.classList.add('com-fome'); saveFarmState(); }, animalConfig.tempoProducao); }
   function notificar(msg, tipo) { const n = document.createElement('div'); n.className = 'notificacao'; n.setAttribute('data-type', tipo); n.innerHTML = `<span>${msg}</span>`; document.getElementById('ui-container').appendChild(n); setTimeout(() => n.remove(), 4000); }
   function atualizarInterface() { if (!recursos || !recursos.sementes) return; document.getElementById('lco-balance').textContent = lcoBalance.toFixed(2); document.getElementById('moedas').textContent = recursos.moedas; document.getElementById('agua').textContent = recursos.agua; document.getElementById('racao').textContent = recursos.racao; document.getElementById('veneno').textContent = recursos.veneno; document.getElementById('preco-terreno').textContent = recursos.precoTerreno; atualizarInventarioSementes(); }
   function atualizarInventarioSementes() { const div = document.getElementById('inventario-sementes'); div.innerHTML = '<h3>Minhas Sementes</h3>'; let has = false; for (const tipo in recursos.sementes) { if (recursos.sementes[tipo] > 0) { has = true; const p = PLANTAS[tipo.toUpperCase()]; const i = document.createElement('div'); i.className = 'item-inventario'; i.innerHTML = `${p.emoji} ${tipo.charAt(0).toUpperCase() + tipo.slice(1)} x<span>${recursos.sementes[tipo]}</span>`; div.appendChild(i); } } if (!has) { const p = document.createElement('p'); p.textContent = 'Você não tem sementes.'; div.appendChild(p); } }
@@ -274,7 +240,7 @@
               criarPraga(canteiro);
           }
       }); }
-      if (farmState.animaisState && farmState.animaisState.length > 0) { farmState.animaisState.forEach(animalSalvo => { const animalRecriado = criarAnimal(animalSalvo.tipo, animalSalvo.position.x, animalSalvo.position.z); animalRecriado.produzindo = animalSalvo.produzindo; animalRecriado.tempoParaProduzir = animalSalvo.tempoParaProduzir; if (animalSalvo.isFed) { animalRecriado.div.classList.remove('com-fome'); animalRecriado.div.classList.add('alimentado'); } if (animalSalvo.hasRecurso) { const animalConfig = ANIMAIS[animalRecriado.tipo.toUpperCase()]; const recursoDiv = document.createElement('div'); recursoDiv.className = 'emoji-3d recurso-animal'; recursoDiv.textContent = animalConfig.recurso.emoji; recursoDiv.dataset.tipo = animalRecriado.tipo; recursoDiv.style.fontSize = '25px'; document.getElementById('ui-container').appendChild(recursoDiv); animalRecriado.recursoElement = recursoDiv; } if(animalRecriado.produzindo) { iniciarProducaoCiclo(animalRecriado); } }); }
+      if (farmState.animaisState && farmState.animaisState.length > 0) { farmState.animaisState.forEach(animalSalvo => { const animalRecriado = criarAnimal(animalSalvo.tipo, animalSalvo.position.x, animalSalvo.position.z); animalRecriado.produzindo = animalSalvo.produzindo; if (animalSalvo.isFed) { animalRecriado.div.classList.remove('com-fome'); animalRecriado.div.classList.add('alimentado'); } if (animalSalvo.hasRecurso) { const animalConfig = ANIMAIS[animalRecriado.tipo.toUpperCase()]; const recursoDiv = document.createElement('div'); recursoDiv.className = 'emoji-3d recurso-animal'; recursoDiv.textContent = animalConfig.recurso.emoji; recursoDiv.dataset.tipo = animalRecriado.tipo; recursoDiv.style.fontSize = '25px'; document.getElementById('ui-container').appendChild(recursoDiv); animalRecriado.recursoElement = recursoDiv; } if(animalRecriado.produzindo) { iniciarProducaoCiclo(animalRecriado); } }); }
   }
   
   function plantarSemente(tipoSemente) { if (!canteiroSelecionado || recursos.sementes[tipoSemente] <= 0) { return fecharModalSementes(); } const p = PLANTAS[tipoSemente.toUpperCase()]; canteiroSelecionado.userData.estado = ESTADOS.PLANTADA; canteiroSelecionado.userData.tipoPlanta = tipoSemente; if (canteiroSelecionado.userData.plantaElement) canteiroSelecionado.userData.plantaElement.remove(); const d = document.createElement('div'); d.className = 'emoji-3d planta'; d.textContent = p.broto.emoji; d.style.fontSize = p.broto.fontSize; document.getElementById('ui-container').appendChild(d); canteiroSelecionado.userData.plantaElement = d; recursos.sementes[tipoSemente]--; notificar(`${tipoSemente.charAt(0).toUpperCase() + tipoSemente.slice(1)} plantada!`, 'sucesso'); atualizarInterface(); iniciarCicloCrescimento(canteiroSelecionado); fecharModalSementes(); saveFarmState(); }
@@ -289,114 +255,24 @@
   window.addEventListener('click', (event) => { 
       if (event.target.classList.contains('animal')) { const animalDivId = event.target.id; const animalObject = animais.find(a => a.div.id === animalDivId); if (!animalObject || animalObject.produzindo || !animalObject.div.classList.contains('com-fome')) return; const animalConfig = ANIMAIS[animalObject.tipo.toUpperCase()]; if (recursos.racao >= animalConfig.custoRacao) { recursos.racao -= animalConfig.custoRacao; notificar(`${animalObject.tipo.charAt(0).toUpperCase() + animalObject.tipo.slice(1)} alimentado(a)!`, 'sucesso'); atualizarInterface(); animalObject.div.classList.remove('com-fome'); animalObject.div.classList.add('alimentado'); iniciarProducaoCiclo(animalObject); saveFarmState(); } else { notificar("Ração insuficiente!", 'erro'); } return; } 
       if (event.target.classList.contains('recurso-animal')) { const tipoAnimal = event.target.dataset.tipo; const animalConfig = ANIMAIS[tipoAnimal.toUpperCase()]; recursos.moedas += animalConfig.recurso.valor; notificar(`${animalConfig.recurso.emoji} coletado! (+${animalConfig.recurso.valor} moedas)`, 'sucesso'); atualizarInterface(); const animal = animais.find(a => a.recursoElement === event.target); if(animal) animal.recursoElement = null; event.target.remove(); saveFarmState(); return; } 
-      
-      // *** ATUALIZAÇÃO: Clicar no emoji da planta para colher ***
-      if (event.target.classList.contains('planta')) {
-        const canteiro = canteiros.find(c => c.userData.plantaElement === event.target);
-        if (canteiro && canteiro.userData.estado === ESTADOS.MADURA) {
-            colherPlanta(canteiro);
-            return;
-        }
-      }
-
       if (event.target.closest('button, .modal, .praga')) { return; }
       mouse.x = (event.clientX / window.innerWidth) * 2 - 1; mouse.y = - (event.clientY / window.innerHeight) * 2 + 1; 
       raycaster.setFromCamera(mouse, camera);
       const intersectsCasa = raycaster.intersectObjects(objetosClicaveis);
       if (intersectsCasa.length > 0) { mostrarModalConfirmacao("Deseja voltar para a sala de mineração?", () => { saveFarmState().then(() => { window.location.href = 'index.html'; }); }); return; }
       const intersects = raycaster.intersectObjects(canteiros); 
-      if (intersects.length > 0) { const canteiro = intersects[0].object; const { estado } = canteiro.userData; 
-          
-          // *** ATUALIZAÇÃO: Colheita simplificada ao clicar no canteiro ***
-          if (estado === ESTADOS.MADURA) {
-            colherPlanta(canteiro);
-          } else if (estado === ESTADOS.BLOQUEADO) { notificar("Vá até a loja para comprar este terreno com LCO!", 'info'); } 
-          else if (ferramentaAtiva === 'enxada' && estado === ESTADOS.GRAMA) { canteiro.userData.estado = ESTADOS.ARADA; canteiro.material = canteiroTerraMaterial; notificar("Canteiro arado!", 'sucesso'); saveFarmState(); } 
-          else if (ferramentaAtiva === 'regador' && estado === ESTADOS.ARADA) { if (recursos.agua > 0) { recursos.agua--; canteiro.userData.estado = ESTADOS.ARADA_AGUADA; canteiro.material = canteiroTerraMolhadaMaterial; notificar("Terra regada!", 'sucesso'); atualizarInterface(); saveFarmState(); } else { notificar("Você não tem água! Compre na loja.", 'erro'); } } 
-          else if (ferramentaAtiva === 'semente' && estado === ESTADOS.ARADA_AGUADA) { canteiroSelecionado = canteiro; mostrarModalSementes(); } 
-          else if (ferramentaAtiva === 'semente' && estado === ESTADOS.ARADA) { notificar("Você precisa regar a terra antes de plantar!", 'info'); } 
-          else if (ferramentaAtiva === 'veneno-tool' && estado === ESTADOS.COM_PRAGA) { removerPraga(canteiro); } 
-          else if (estado === ESTADOS.COM_PRAGA) { notificar("Use veneno para remover a praga!", 'info'); } 
-      } 
+      if (intersects.length > 0) { const canteiro = intersects[0].object; const { estado } = canteiro.userData; if (estado === ESTADOS.BLOQUEADO) { notificar("Vá até a loja para comprar este terreno com LCO!", 'info'); } else if (ferramentaAtiva === 'enxada' && estado === ESTADOS.GRAMA) { canteiro.userData.estado = ESTADOS.ARADA; canteiro.material = canteiroTerraMaterial; notificar("Canteiro arado!", 'sucesso'); saveFarmState(); } else if (ferramentaAtiva === 'regador' && estado === ESTADOS.ARADA) { if (recursos.agua > 0) { recursos.agua--; canteiro.userData.estado = ESTADOS.ARADA_AGUADA; canteiro.material = canteiroTerraMolhadaMaterial; notificar("Terra regada!", 'sucesso'); atualizarInterface(); saveFarmState(); } else { notificar("Você não tem água! Compre na loja.", 'erro'); } } else if (ferramentaAtiva === 'semente' && estado === ESTADOS.ARADA_AGUADA) { canteiroSelecionado = canteiro; mostrarModalSementes(); } else if (ferramentaAtiva === 'semente' && estado === ESTADOS.ARADA) { notificar("Você precisa regar a terra antes de plantar!", 'info'); } else if (ferramentaAtiva === 'foice' && estado === ESTADOS.MADURA) { colherPlanta(canteiro); } else if (ferramentaAtiva === 'veneno-tool' && estado === ESTADOS.COM_PRAGA) { removerPraga(canteiro); } else if (estado === ESTADOS.COM_PRAGA) { notificar("Use veneno para remover a praga!", 'info'); } } 
   });
   
   window.addEventListener('contextmenu', (event) => event.preventDefault()); window.addEventListener('mousedown', (event) => { if (event.button === 2) { isRightClickDragging = true; const currentPolarAngle = controls.getPolarAngle(); controls.minPolarAngle = currentPolarAngle; controls.maxPolarAngle = currentPolarAngle; } }); window.addEventListener('mouseup', (event) => { if (event.button === 2) { isRightClickDragging = false; } }); controls.addEventListener('end', () => { if (!isRightClickDragging) { controls.minPolarAngle = 0; controls.maxPolarAngle = originalMaxPolarAngle; } });
   
   function atualizarPosicoes2D() { animais.forEach(animal => { const pos = animal.position.clone().project(camera); animal.div.style.left = `${(pos.x * 0.5 + 0.5) * window.innerWidth}px`; animal.div.style.top = `${(-(pos.y * 0.5) + 0.5) * window.innerHeight}px`; if (animal.recursoElement) { const rPos = animal.position.clone(); rPos.y += 0.5; const screenPos = rPos.project(camera); animal.recursoElement.style.left = `${(screenPos.x * 0.5 + 0.5) * window.innerWidth}px`; animal.recursoElement.style.top = `${(-(screenPos.y * 0.5) + 0.5) * window.innerHeight}px`; } }); canteiros.forEach(canteiro => { const planta = canteiro.userData.plantaElement; const cadeado = canteiro.userData.cadeadoElement; const praga = canteiro.userData.pragaElement; if (planta) { const pos = canteiro.position.clone().project(camera); const yOffset = -20; planta.style.left = `${(pos.x * 0.5 + 0.5) * window.innerWidth}px`; planta.style.top = `${(-(pos.y * 0.5) + 0.5) * window.innerHeight + yOffset}px`; } if (cadeado) { const pos = canteiro.position.clone().project(camera); cadeado.style.left = `${(pos.x * 0.5 + 0.5) * window.innerWidth}px`; cadeado.style.top = `${(-(pos.y * 0.5) + 0.5) * window.innerHeight}px`; } if (praga) { const pos = canteiro.position.clone().project(camera); const yOffset = -35; praga.style.left = `${(pos.x * 0.5 + 0.5) * window.innerWidth}px`; praga.style.top = `${(-(pos.y * 0.5) + 0.5) * window.innerHeight + yOffset}px`; } }); }
   function aplicarFisicaAnimais() { const distanciaMinima = 1.0; const forcaRepulsao = 0.01; for (let i = 0; i < animais.length; i++) { for (let j = i + 1; j < animais.length; j++) { const animalA = animais[i]; const animalB = animais[j]; const vetDist = animalA.position.clone().sub(animalB.position); const distancia = vetDist.length(); if (distancia < distanciaMinima) { const deslocamento = vetDist.normalize().multiplyScalar(forcaRepulsao); animalA.position.add(deslocamento); animalB.position.sub(deslocamento); const minX = curralCenterX - curralTamanho / 2 + 0.5; const maxX = curralCenterX + curralTamanho / 2 - 0.5; const minZ = curralCenterZ - curralTamanho / 2 + 0.5; const maxZ = curralCenterZ + curralTamanho / 2 - 0.5; animalA.position.x = Math.max(minX, Math.min(maxX, animalA.position.x)); animalA.position.z = Math.max(minZ, Math.min(maxZ, animalA.position.z)); animalB.position.x = Math.max(minX, Math.min(maxX, animalB.position.x)); animalB.position.z = Math.max(minZ, Math.min(maxZ, animalB.position.z)); } } } }
-  
-  // *** ATUALIZAÇÃO: Lógica do tooltip movida e unificada aqui ***
-  window.addEventListener('mousemove', (event) => {
-      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-      tooltip.style.left = `${event.clientX + 15}px`;
-      tooltip.style.top = `${event.clientY}px`;
-
-      let tooltipShown = false;
-
-      // Checar hover em animais (elementos HTML)
-      if (event.target.classList.contains('animal')) {
-          const animal = animais.find(a => a.div === event.target);
-          if (animal && animal.produzindo && animal.tempoParaProduzir > 0) {
-              tooltip.style.display = 'block';
-              tooltip.classList.remove('alerta-praga');
-              const tempoRestante = animal.tempoParaProduzir;
-              const minutos = Math.floor(tempoRestante / 60000);
-              const segundos = Math.floor((tempoRestante % 60000) / 1000);
-              tooltip.textContent = `Produzindo: ${minutos.toString().padStart(2, '0')}:${segundos.toString().padStart(2, '0')}`;
-              tooltipShown = true;
-          }
-      }
-
-      // Se não mostrou tooltip de animal, checar plantas (objetos 3D)
-      if (!tooltipShown) {
-          raycaster.setFromCamera(mouse, camera);
-          const intersects = raycaster.intersectObjects(canteiros);
-          if (intersects.length > 0) {
-              const canteiro = intersects[0].object;
-              const { estado, tempoParaCrescer, tempoParaAmadurecer } = canteiro.userData;
-
-              if (estado === ESTADOS.COM_PRAGA) {
-                  tooltip.style.display = 'block';
-                  tooltip.classList.add('alerta-praga');
-                  tooltip.textContent = 'PRAGA! Use o veneno!';
-                  tooltipShown = true;
-              } else if (estado === ESTADOS.PLANTADA || estado === ESTADOS.CRESCENDO) {
-                  tooltip.style.display = 'block';
-                  tooltip.classList.remove('alerta-praga');
-                  let tempoRestante = estado === ESTADOS.PLANTADA ? tempoParaCrescer : tempoParaAmadurecer;
-                  if (tempoRestante > 0) {
-                      const minutos = Math.floor(tempoRestante / 60000);
-                      const segundos = Math.floor((tempoRestante % 60000) / 1000);
-                      tooltip.textContent = `Tempo: ${minutos.toString().padStart(2, '0')}:${segundos.toString().padStart(2, '0')}`;
-                  } else {
-                      tooltip.textContent = 'Pronto para colher!';
-                  }
-                  tooltipShown = true;
-              }
-          }
-      }
-      
-      if (!tooltipShown) {
-          tooltip.style.display = 'none';
-      }
-  });
-
+  window.addEventListener('mousemove', (event) => { mouse.x = (event.clientX / window.innerWidth) * 2 - 1; mouse.y = - (event.clientY / window.innerHeight) * 2 + 1; tooltip.style.left = `${event.clientX + 15}px`; tooltip.style.top = `${event.clientY}px`; });
   window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
   const clock = new THREE.Clock();
   
-  function animate() { 
-      requestAnimationFrame(animate); 
-      const deltaTime = clock.getElapsedTime(); 
-      waterMaterial.uniforms.u_time.value = deltaTime; 
-      if (animais.length > 1) { aplicarFisicaAnimais(); } 
-      
-      // A lógica do tooltip foi movida para o 'mousemove' listener para unificar o comportamento.
-      
-      controls.update(); 
-      renderer.render(scene, camera); 
-      atualizarPosicoes2D(); 
-  }
+  function animate() { requestAnimationFrame(animate); const deltaTime = clock.getElapsedTime(); waterMaterial.uniforms.u_time.value = deltaTime; if (animais.length > 1) { aplicarFisicaAnimais(); } raycaster.setFromCamera(mouse, camera); const intersects = raycaster.intersectObjects(canteiros); if (intersects.length > 0) { const canteiro = intersects[0].object; const { estado, tempoParaCrescer, tempoParaAmadurecer } = canteiro.userData; if (estado === ESTADOS.COM_PRAGA) { tooltip.style.display = 'block'; tooltip.classList.add('alerta-praga'); tooltip.textContent = 'PRAGA! Use o veneno!'; } else if (estado === ESTADOS.PLANTADA || estado === ESTADOS.CRESCENDO) { tooltip.style.display = 'block'; tooltip.classList.remove('alerta-praga'); let tempoRestante = estado === ESTADOS.PLANTADA ? tempoParaCrescer : tempoParaAmadurecer; if (tempoRestante > 0) { const minutos = Math.floor(tempoRestante / 60000); const segundos = Math.floor((tempoRestante % 60000) / 1000); tooltip.textContent = `Tempo: ${minutos.toString().padStart(2, '0')}:${segundos.toString().padStart(2, '0')}`; } else { tooltip.textContent = 'Pronto para colher!'; } } else { tooltip.style.display = 'none'; } } else { tooltip.style.display = 'none'; } controls.update(); renderer.render(scene, camera); atualizarPosicoes2D(); }
   function selecionarFerramenta(id) { if (!document.getElementById(id)) return; ferramentaAtiva = id; document.querySelectorAll('.botao-ferramenta').forEach(btn => btn.classList.remove('active')); document.getElementById(id).classList.add('active'); }
   document.querySelectorAll('.botao-ferramenta').forEach(b => b.addEventListener('click', (e) => { selecionarFerramenta(e.currentTarget.id); }));
   window.addEventListener('keydown', (event) => { switch(event.key) { case '1': selecionarFerramenta('enxada'); break; case '2': selecionarFerramenta('semente'); break; case '3': selecionarFerramenta('regador'); break; case '4': selecionarFerramenta('foice'); break; case '5': selecionarFerramenta('veneno-tool'); break; } });
