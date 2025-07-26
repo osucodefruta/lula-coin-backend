@@ -1,7 +1,6 @@
 // backend/routes/game.js
 const express = require('express');
 const router = express.Router();
-// CORREÇÃO: Trocamos o middleware antigo ('protect') pelo nosso middleware unificado.
 const authMiddleware = require('../middleware/auth'); 
 const User = require('../models/User');
 
@@ -12,46 +11,35 @@ const MINERS = [
     { id: 'miner003', name: 'ASIC Avançado', power: 20, price: 180 },
     { id: 'miner004', name: 'Super ASIC', power: 100, price: 800 },
 ];
-
 const RACKS = [
     { id: 'rack001', name: 'Rack Pequeno', slots: 2, price: 20 },
     { id: 'rack002', name: 'Rack Médio', slots: 4, price: 30 },
     { id: 'rack003', name: 'Rack Grande', slots: 6, price: 100 },
 ];
 
-// Função para validar o estado do jogo
+// Função para validar o estado do jogo (opcional, mas bom ter)
 const validateGameState = (gameState) => {
     if (!gameState) return false;
     const requiredFields = ['balance', 'inventory', 'placedRacksPerRoom'];
     return requiredFields.every(field => gameState[field] !== undefined);
 };
 
-// CORREÇÃO: Todas as rotas agora usam 'authMiddleware' em vez de 'protect'.
+// ROTA: GET /api/game/state
 router.get('/state', authMiddleware, async (req, res) => {
     try {
-        // Agora usamos req.user.id, que é fornecido pelo nosso middleware padrão.
         const user = await User.findById(req.user.id).select('-password');
         if (!user) {
             return res.status(404).json({ message: 'Usuário não encontrado' });
         }
 
-        // Inicializa o gameState se não existir
-        if (!user.gameState) {
-            user.gameState = {
-                balance: 10,
-                inventory: {
-                    miners: [],
-                    racks: []
-                },
-                placedRacksPerRoom: [Array(4).fill(null)],
-                totalPower: 0
-            };
-            await user.save();
-        }
+        // CORRIGIDO: Removemos a lógica que criava um gameState antigo.
+        // O Mongoose já cria o lulaCoinGameState com os valores padrão.
 
+        // CORRIGIDO: Enviamos o lulaCoinGameState, mas com o nome 'gameState',
+        // para que o frontend index.html não precise ser alterado.
         res.json({
             username: user.username,
-            gameState: user.gameState,
+            gameState: user.lulaCoinGameState,
             currentRoomIndex: user.currentRoomIndex || 0
         });
     } catch (err) {
@@ -69,21 +57,18 @@ router.post('/update', authMiddleware, async (req, res) => {
             return res.status(400).json({ message: 'Estado do jogo inválido.' });
         }
 
-        const user = await User.findByIdAndUpdate(
+        await User.findByIdAndUpdate(
             req.user.id,
             { 
+                // CORRIGIDO: Salva os dados recebidos no campo correto do banco de dados.
                 $set: { 
-                    gameState: gameState,
+                    lulaCoinGameState: gameState,
                     currentRoomIndex: currentRoomIndex || 0
                 } 
-            },
-            { new: true }
-        ).select('-password');
+            }
+        );
 
-        res.json({
-            message: 'Jogo salvo com sucesso!',
-            gameState: user.gameState
-        });
+        res.json({ message: 'Jogo salvo com sucesso!' });
 
     } catch (err) {
         console.error(err.message);
@@ -105,13 +90,15 @@ router.post('/buy-item', authMiddleware, async (req, res) => {
             return res.status(404).json({ message: 'Item não encontrado.' });
         }
 
-        if (user.gameState.balance < itemConfig.price) {
+        // CORRIGIDO: Verifica o saldo no local correto.
+        if (user.lulaCoinGameState.balance < itemConfig.price) {
             return res.status(400).json({ message: 'Saldo insuficiente.' });
         }
 
-        user.gameState.balance -= itemConfig.price;
+        // CORRIGIDO: Debita o saldo do local correto.
+        user.lulaCoinGameState.balance -= itemConfig.price;
 
-        const inventoryList = category === 'miners' ? user.gameState.inventory.miners : user.gameState.inventory.racks;
+        const inventoryList = category === 'miners' ? user.lulaCoinGameState.inventory.miners : user.lulaCoinGameState.inventory.racks;
         const existingItem = inventoryList.find(i => i.id === itemId);
 
         if (existingItem) {
@@ -120,12 +107,13 @@ router.post('/buy-item', authMiddleware, async (req, res) => {
             inventoryList.push({ id: itemId, quantity: 1 });
         }
         
-        user.markModified('gameState');
+        // CORRIGIDO: Informa ao Mongoose que o objeto correto foi modificado.
+        user.markModified('lulaCoinGameState');
         await user.save();
 
         res.json({
             message: `${itemConfig.name} comprado!`,
-            gameState: user.gameState
+            gameState: user.lulaCoinGameState // Envia o estado atualizado de volta
         });
     } catch (err) {
         console.error(err.message);
@@ -142,18 +130,20 @@ router.post('/buy-room', authMiddleware, async (req, res) => {
             return res.status(404).json({ message: 'Usuário não encontrado' });
         }
 
-        if (user.gameState.balance < cost) {
+        // CORRIGIDO: Verifica o saldo no local correto.
+        if (user.lulaCoinGameState.balance < cost) {
             return res.status(400).json({ message: "Saldo insuficiente!" });
         }
 
-        user.gameState.balance -= cost;
-        user.gameState.placedRacksPerRoom.push(Array(4).fill(null));
+        // CORRIGIDO: Modifica os dados no local correto.
+        user.lulaCoinGameState.balance -= cost;
+        user.lulaCoinGameState.placedRacksPerRoom.push(Array(4).fill(null));
 
-        user.markModified('gameState');
+        user.markModified('lulaCoinGameState');
         await user.save();
         
         res.json({ 
-            gameState: user.gameState, 
+            gameState: user.lulaCoinGameState, 
             message: `Sala comprada por ${cost} LCO!` 
         });
 
@@ -163,30 +153,5 @@ router.post('/buy-room', authMiddleware, async (req, res) => {
     }
 });
 
-// As rotas place-rack e place-miner foram removidas por simplicidade,
-// já que a lógica de posicionamento está no frontend e é salva via /update.
-// Se você precisar delas no futuro para validações mais complexas, podemos recriá-las.
-
-// Função auxiliar para calcular a potência total
-function calculateTotalPower(placedRacksPerRoom) {
-    let totalPower = 0;
-    if(!placedRacksPerRoom) return 0;
-    placedRacksPerRoom.forEach(room => {
-        if(!room) return;
-        room.forEach(rack => {
-            if (rack && rack.placedMiners) {
-                rack.placedMiners.forEach(miner => {
-                    if (miner) {
-                        const minerConfig = MINERS.find(m => m.id === miner.id);
-                        if (minerConfig) {
-                            totalPower += minerConfig.power;
-                        }
-                    }
-                });
-            }
-        });
-    });
-    return totalPower;
-}
 
 module.exports = router;
