@@ -150,7 +150,7 @@
   const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
   
   // Posição inicial da câmera (inclinada para baixo, no limite de zoom frontal)
-  camera.position.set(2, 10, 12); 
+  camera.position.set(2, 11, 12); 
   camera.lookAt(0, 0, 0);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -272,6 +272,27 @@
   const mouse = new THREE.Vector2();
   
   window.addEventListener('click', async (event) => { 
+      
+      // <<< INÍCIO DA ATUALIZAÇÃO >>>
+      // Verifica se o clique foi diretamente no emoji de uma planta
+      if (event.target.classList.contains('planta')) {
+          // Encontra a qual canteiro este emoji pertence
+          const canteiro = canteiros.find(c => c.userData.plantaElement === event.target);
+          if (canteiro) {
+              // Verifica se a planta está madura e se a foice está selecionada
+              if (canteiro.userData.estado === ESTADOS.MADURA && ferramentaAtiva === 'foice') {
+                  colherPlanta(canteiro);
+                  return; // Impede que o resto do código de clique seja executado
+              } 
+              // Se estiver madura mas a foice não estiver selecionada, notifica o usuário
+              else if (canteiro.userData.estado === ESTADOS.MADURA && ferramentaAtiva !== 'foice') {
+                  notificar("Selecione a foice para colher!", 'info');
+                  return; // Impede que o resto do código de clique seja executado
+              }
+          }
+      }
+      // <<< FIM DA ATUALIZAÇÃO >>>
+
       if (event.target.classList.contains('animal')) { const animalDivId = event.target.id; const animalObject = animais.find(a => a.div.id === animalDivId); if (!animalObject || animalObject.produzindo || !animalObject.div.classList.contains('com-fome')) return; const animalConfig = ANIMAIS[animalObject.tipo.toUpperCase()]; if (recursos.racao >= animalConfig.custoRacao) { recursos.racao -= animalConfig.custoRacao; notificar(`${animalObject.tipo.charAt(0).toUpperCase() + animalObject.tipo.slice(1)} alimentado(a)!`, 'sucesso'); atualizarInterface(); animalObject.div.classList.remove('com-fome'); animalObject.div.classList.add('alimentado'); iniciarProducaoCiclo(animalObject); saveFarmState(); } else { notificar("Ração insuficiente!", 'erro'); } return; } 
       if (event.target.classList.contains('recurso-animal')) { const tipoAnimal = event.target.dataset.tipo; const animalConfig = ANIMAIS[tipoAnimal.toUpperCase()]; recursos.moedas += animalConfig.recurso.valor; notificar(`${animalConfig.recurso.emoji} coletado! (+${animalConfig.recurso.valor} moedas)`, 'sucesso'); atualizarInterface(); const animal = animais.find(a => a.recursoElement === event.target); if(animal) animal.recursoElement = null; event.target.remove(); saveFarmState(); return; } 
       if (event.target.closest('button, .modal, .praga')) { return; }
