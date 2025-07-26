@@ -34,7 +34,7 @@ const UserSchema = new mongoose.Schema({
             sementes: { milho: 3, tomate: 0, girassol: 0, cenoura: 0 },
             animais: { galinha: { quantidade: 0 }, vaca: { quantidade: 0 }, porco: { quantidade: 0 } },
             precoTerreno: 250,
-            terrenosComprados: 3 // Começa com 3 terrenos desbloqueados
+            terrenosComprados: 3, // Começa com 3 terrenos desbloqueados
             canteirosState: [] // <-- ADICIONE ESTA LINHA
         }
     },
