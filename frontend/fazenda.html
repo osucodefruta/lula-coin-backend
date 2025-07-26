@@ -259,7 +259,32 @@
       mouse.x = (event.clientX / window.innerWidth) * 2 - 1; mouse.y = - (event.clientY / window.innerHeight) * 2 + 1; 
       raycaster.setFromCamera(mouse, camera);
       const intersectsCasa = raycaster.intersectObjects(objetosClicaveis);
-      if (intersectsCasa.length > 0) { mostrarModalConfirmacao("Deseja voltar para a sala de mineração?", () => { saveFarmState().then(() => { window.location.href = 'index.html'; }); }); return; }
+      if (intersectsCasa.length > 0) {
+    mostrarModalConfirmacao("Deseja voltar para a sala de mineração?", () => {
+        // 🔥 Eliminar todas as pragas de todos os canteiros
+        canteiros.forEach(c => {
+            if (c.userData.estado === ESTADOS.COM_PRAGA) {
+                if (c.userData.pragaElement) {
+                    c.userData.pragaElement.remove();
+                    c.userData.pragaElement = null;
+                }
+                // Retorna ao estado anterior (plantada ou crescendo)
+                c.userData.estado = c.userData.estadoOriginal || ESTADOS.PLANTADA;
+                c.userData.estadoOriginal = null;
+
+                // Reinicia o ciclo da planta se necessário
+                if (c.userData.tipoPlanta) {
+                    iniciarCicloCrescimento(c);
+                }
+            }
+        });
+
+        saveFarmState().then(() => {
+            window.location.href = 'index.html';
+        });
+    });
+    return;
+}
       const intersects = raycaster.intersectObjects(canteiros); 
       if (intersects.length > 0) { const canteiro = intersects[0].object; const { estado } = canteiro.userData; if (estado === ESTADOS.BLOQUEADO) { notificar("Vá até a loja para comprar este terreno com LCO!", 'info'); } else if (ferramentaAtiva === 'enxada' && estado === ESTADOS.GRAMA) { canteiro.userData.estado = ESTADOS.ARADA; canteiro.material = canteiroTerraMaterial; notificar("Canteiro arado!", 'sucesso'); saveFarmState(); } else if (ferramentaAtiva === 'regador' && estado === ESTADOS.ARADA) { if (recursos.agua > 0) { recursos.agua--; canteiro.userData.estado = ESTADOS.ARADA_AGUADA; canteiro.material = canteiroTerraMolhadaMaterial; notificar("Terra regada!", 'sucesso'); atualizarInterface(); saveFarmState(); } else { notificar("Você não tem água! Compre na loja.", 'erro'); } } else if (ferramentaAtiva === 'semente' && estado === ESTADOS.ARADA_AGUADA) { canteiroSelecionado = canteiro; mostrarModalSementes(); } else if (ferramentaAtiva === 'semente' && estado === ESTADOS.ARADA) { notificar("Você precisa regar a terra antes de plantar!", 'info'); } else if (ferramentaAtiva === 'foice' && estado === ESTADOS.MADURA) { colherPlanta(canteiro); } else if (ferramentaAtiva === 'veneno-tool' && estado === ESTADOS.COM_PRAGA) { removerPraga(canteiro); } else if (estado === ESTADOS.COM_PRAGA) { notificar("Use veneno para remover a praga!", 'info'); } } 
   });
