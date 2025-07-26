@@ -16,7 +16,7 @@ const UserSchema = new mongoose.Schema({
     lulaCoinGameState: {
         type: Object,
         default: {
-            balance: 10,
+            balance: 100,
             inventory: { miners: [], racks: [] },
             placedRacksPerRoom: [Array(4).fill(null)],
             totalPower: 0,
