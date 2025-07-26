@@ -25,19 +25,16 @@ const UserSchema = new mongoose.Schema({
         }
     },
     fazendaGameState: {
-        type: Object,
-        default: {
-            moedas: 10,
-            agua: 10,
-            racao: 10,
-            veneno: 0,
-            sementes: { milho: 3, tomate: 0, girassol: 0, cenoura: 0 },
-            animais: { galinha: { quantidade: 0 }, vaca: { quantidade: 0 }, porco: { quantidade: 0 } },
-            precoTerreno: 250,
-            terrenosComprados: 3, // Começa com 3 terrenos desbloqueados
-            canteirosState: [] // <-- ADICIONE ESTA LINHA
-        }
-    },
+    type: Object,
+    default: {
+        //...
+        sementes: { milho: 3, tomate: 0, girassol: 0, cenoura: 0 },
+        // animais: { ... }, // Linha antiga removida
+        animaisState: [], // <-- ADICIONE ESTA LINHA
+        precoTerreno: 250,
+        //...
+    }
+},
     currentRoomIndex: { type: Number, default: 0 }
 }, { timestamps: true });
 

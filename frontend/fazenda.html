@@ -73,6 +73,7 @@
 </div>
 
 <script>
+  // --- LÓGICA DO JOGO ONLINE ---
   const API_BASE_URL = 'https://lula-coin-backend.onrender.com';
   let farmState = {}; 
   let lcoBalance = 0;
@@ -113,21 +114,29 @@
       }
   }
 
-  // ATUALIZAÇÃO PARA SALVAR/CARREGAR CANTEIROS: Função de salvar agora extrai os dados dos canteiros.
+  // ATUALIZAÇÃO PARA SALVAR ANIMAIS E CANTEIROS
   async function saveFarmState() {
       if (!farmState || Object.keys(farmState).length === 0) return;
       farmState = recursos;
 
-      // Extrai os dados essenciais de cada canteiro para salvar
-      farmState.canteirosState = canteiros.map(canteiro => {
-          return {
-              estado: canteiro.userData.estado,
-              tipoPlanta: canteiro.userData.tipoPlanta,
-              tempoParaCrescer: canteiro.userData.tempoParaCrescer,
-              tempoParaAmadurecer: canteiro.userData.tempoParaAmadurecer,
-              hasPraga: !!canteiro.userData.pragaElement
-          };
-      });
+      // Extrai os dados dos canteiros
+      farmState.canteirosState = canteiros.map(canteiro => ({
+          estado: canteiro.userData.estado,
+          tipoPlanta: canteiro.userData.tipoPlanta,
+          tempoParaCrescer: canteiro.userData.tempoParaCrescer,
+          tempoParaAmadurecer: canteiro.userData.tempoParaAmadurecer,
+          hasPraga: !!canteiro.userData.pragaElement
+      }));
+
+      // Extrai os dados dos animais
+      farmState.animaisState = animais.map(animal => ({
+          tipo: animal.tipo,
+          id: animal.div.id,
+          position: { x: animal.position.x, y: animal.position.y, z: animal.position.z },
+          isFed: animal.div.classList.contains('alimentado'),
+          produzindo: animal.produzindo,
+          hasRecurso: !!animal.recursoElement
+      }));
       
       if (window.saveTimeout) clearTimeout(window.saveTimeout);
       
@@ -178,11 +187,29 @@
   const tooltip = document.getElementById('tooltip');
   
   function criarCadeado(canteiro) { const div = document.createElement('div'); div.className = 'emoji-3d'; div.textContent = '🔒'; div.style.fontSize = '25px'; document.getElementById('ui-container').appendChild(div); canteiro.userData.cadeadoElement = div; }
-  function criarAnimal(tipo, x, z) { const div = document.createElement('div'); div.className = 'emoji-3d animal com-fome'; div.id = tipo + (animais.filter(a=>a.tipo===tipo).length); if (tipo === 'galinha') div.textContent = '🐓'; else if (tipo === 'vaca') div.textContent = '🐄'; else if (tipo === 'porco') div.textContent = '🐖'; div.style.left = '50%'; div.style.top = '50%'; document.getElementById('ui-container').appendChild(div); const animal = { tipo, div, position: new THREE.Vector3(x, 0, z), fome: 0, produzindo: false, recursoElement: null }; animais.push(animal); }
+  function criarAnimal(tipo, x, z) { const div = document.createElement('div'); div.className = 'emoji-3d animal com-fome'; div.id = tipo + (animais.filter(a=>a.tipo===tipo).length); if (tipo === 'galinha') div.textContent = '🐓'; else if (tipo === 'vaca') div.textContent = '🐄'; else if (tipo === 'porco') div.textContent = '🐖'; div.style.left = '50%'; div.style.top = '50%'; document.getElementById('ui-container').appendChild(div); const animal = { tipo, div, position: new THREE.Vector3(x, 0, z), fome: 0, produzindo: false, recursoElement: null }; animais.push(animal); return animal; /* ATUALIZAÇÃO: Retorna o animal criado */ }
   function moverAnimal(animal) { const minX = curralCenterX - curralTamanho / 2 + 1; const maxX = curralCenterX + curralTamanho / 2 - 1; const minZ = curralCenterZ - curralTamanho / 2 + 1; const maxZ = curralCenterZ + curralTamanho / 2 - 1; const novoX = Math.random() * (maxX - minX) + minX; const novoZ = Math.random() * (maxZ - minZ) + minZ; animal.position.set(novoX, 0, novoZ); }
   function criarPraga(canteiro) { if (canteiro.userData.pragaElement) return; canteiro.userData.estadoOriginal = canteiro.userData.estado; canteiro.userData.estado = ESTADOS.COM_PRAGA; const pragaDiv = document.createElement('div'); pragaDiv.className = 'emoji-3d praga'; pragaDiv.textContent = '🐛'; pragaDiv.style.fontSize = '25px'; pragaDiv.addEventListener('click', (event) => { event.stopPropagation(); if (ferramentaAtiva === 'veneno-tool') { removerPraga(canteiro); } else { notificar("Selecione o veneno para remover a praga!", 'info'); } }); document.getElementById('ui-container').appendChild(pragaDiv); canteiro.userData.pragaElement = pragaDiv; notificar("Uma praga apareceu!", 'erro'); }
   function iniciarCicloCrescimento(canteiro) { const plantaConfig = PLANTAS[canteiro.userData.tipoPlanta.toUpperCase()]; if (!plantaConfig) return; if (canteiro.userData.intervalId) { clearInterval(canteiro.userData.intervalId); } if (!canteiro.userData.tempoParaCrescer) { canteiro.userData.tempoParaCrescer = plantaConfig.tempoEstagio1; } canteiro.userData.intervalId = setInterval(() => { if (canteiro.userData.estado === ESTADOS.COM_PRAGA) { return; } if (Math.random() < 0.005 && !canteiro.userData.pragaElement && (canteiro.userData.estado === ESTADOS.PLANTADA || canteiro.userData.estado === ESTADOS.CRESCENDO)) { criarPraga(canteiro); } if (canteiro.userData.estado === ESTADOS.PLANTADA) { canteiro.userData.tempoParaCrescer -= 1000; if (canteiro.userData.tempoParaCrescer <= 0) { canteiro.userData.estado = ESTADOS.CRESCENDO; canteiro.userData.plantaElement.textContent = plantaConfig.crescendo.emoji; canteiro.userData.plantaElement.style.fontSize = plantaConfig.crescendo.fontSize; canteiro.userData.tempoParaAmadurecer = plantaConfig.tempoEstagio2; } } else if (canteiro.userData.estado === ESTADOS.CRESCENDO) { canteiro.userData.tempoParaAmadurecer -= 1000; if (canteiro.userData.tempoParaAmadurecer <= 0) { canteiro.userData.estado = ESTADOS.MADURA; canteiro.userData.plantaElement.textContent = plantaConfig.maduro.emoji; canteiro.userData.plantaElement.style.fontSize = plantaConfig.maduro.fontSize; clearInterval(canteiro.userData.intervalId); canteiro.userData.intervalId = null; } } }, 1000); }
-  function iniciarProducaoCiclo(animal) { const animalData = recursos.animais[animal.tipo]; const animalConfig = ANIMAIS[animal.tipo.toUpperCase()]; animalData.produzindo = true; const moveInterval = setInterval(() => { moverAnimal(animal); }, 2500); setTimeout(() => { clearInterval(moveInterval); const recursoDiv = document.createElement('div'); recursoDiv.className = 'emoji-3d recurso-animal'; recursoDiv.textContent = animalConfig.recurso.emoji; recursoDiv.dataset.tipo = animal.tipo; recursoDiv.style.fontSize = '25px'; document.getElementById('ui-container').appendChild(recursoDiv); animal.recursoElement = recursoDiv; animalData.produzindo = false; animal.div.classList.remove('alimentado'); animal.div.classList.add('com-fome'); }, animalConfig.tempoProducao); }
+  function iniciarProducaoCiclo(animal) {
+    animal.produzindo = true; // ATUALIZAÇÃO: Marca como produzindo
+    const animalConfig = ANIMAIS[animal.tipo.toUpperCase()]; 
+    const moveInterval = setInterval(() => { moverAnimal(animal); }, 2500); 
+    setTimeout(() => { 
+        clearInterval(moveInterval); 
+        const recursoDiv = document.createElement('div'); 
+        recursoDiv.className = 'emoji-3d recurso-animal'; 
+        recursoDiv.textContent = animalConfig.recurso.emoji; 
+        recursoDiv.dataset.tipo = animal.tipo; 
+        recursoDiv.style.fontSize = '25px'; 
+        document.getElementById('ui-container').appendChild(recursoDiv); 
+        animal.recursoElement = recursoDiv; 
+        animal.produzindo = false; // ATUALIZAÇÃO: Marca que terminou de produzir
+        animal.div.classList.remove('alimentado'); 
+        animal.div.classList.add('com-fome'); 
+        saveFarmState(); // Salva o estado do animal após a produção
+    }, animalConfig.tempoProducao); 
+  }
   function notificar(msg, tipo) { const n = document.createElement('div'); n.className = 'notificacao'; n.setAttribute('data-type', tipo); n.innerHTML = `<span>${msg}</span>`; document.getElementById('ui-container').appendChild(n); setTimeout(() => n.remove(), 4000); }
   function atualizarInterface() { if (!recursos || !recursos.sementes) return; document.getElementById('lco-balance').textContent = lcoBalance.toFixed(2); document.getElementById('moedas').textContent = recursos.moedas; document.getElementById('agua').textContent = recursos.agua; document.getElementById('racao').textContent = recursos.racao; document.getElementById('veneno').textContent = recursos.veneno; document.getElementById('preco-terreno').textContent = recursos.precoTerreno; atualizarInventarioSementes(); }
   function atualizarInventarioSementes() { const div = document.getElementById('inventario-sementes'); div.innerHTML = '<h3>Minhas Sementes</h3>'; let has = false; for (const tipo in recursos.sementes) { if (recursos.sementes[tipo] > 0) { has = true; const p = PLANTAS[tipo.toUpperCase()]; const i = document.createElement('div'); i.className = 'item-inventario'; i.innerHTML = `${p.emoji} ${tipo.charAt(0).toUpperCase() + tipo.slice(1)} x<span>${recursos.sementes[tipo]}</span>`; div.appendChild(i); } } if (!has) { const p = document.createElement('p'); p.textContent = 'Você não tem sementes.'; div.appendChild(p); } }
@@ -190,9 +217,11 @@
   function mostrarModalSementes() { const o = document.getElementById('opcoes-sementes'); o.innerHTML = ''; let disp = false; for (const tipo in recursos.sementes) { if (recursos.sementes[tipo] > 0) { disp = true; const p = PLANTAS[tipo.toUpperCase()]; const d = document.createElement('div'); d.className = 'opcao-semente'; d.innerHTML = `<span>${p.maduro.emoji} ${tipo.charAt(0).toUpperCase() + tipo.slice(1)}</span><span>x${recursos.sementes[tipo]}</span>`; d.onclick = () => plantarSemente(tipo); o.appendChild(d); } } if (!disp) { o.innerHTML = '<p>Você não tem sementes.</p>'; } document.getElementById('modal-sementes').style.display = 'flex'; }
   function fecharModalSementes() { document.getElementById('modal-sementes').style.display = 'none'; canteiroSelecionado = null; }
   
-  // ATUALIZAÇÃO PARA SALVAR/CARREGAR CANTEIROS: Função de carregar agora recria o estado dos canteiros.
+  // ATUALIZAÇÃO PARA SALVAR/CARREGAR CANTEIROS E ANIMAIS
   function renderizarCenarioSalvo() {
       if (!farmState) return;
+      
+      // 1. Desbloqueia terrenos
       if (farmState.terrenosComprados) {
           for(let i = 0; i < farmState.terrenosComprados; i++) {
               if (canteiros[i] && canteiros[i].userData.estado === ESTADOS.BLOQUEADO) {
@@ -206,6 +235,7 @@
           }
       }
 
+      // 2. Recria o estado dos canteiros
       if (farmState.canteirosState && farmState.canteirosState.length > 0) {
           farmState.canteirosState.forEach((estadoSalvo, index) => {
               const canteiro = canteiros[index];
@@ -243,52 +273,82 @@
               }
           });
       }
+
+      // 3. Recria os animais salvos
+      if (farmState.animaisState && farmState.animaisState.length > 0) {
+          farmState.animaisState.forEach(animalSalvo => {
+              const animalRecriado = criarAnimal(animalSalvo.tipo, animalSalvo.position.x, animalSalvo.position.z);
+              
+              animalRecriado.produzindo = animalSalvo.produzindo;
+              if (animalSalvo.isFed) {
+                  animalRecriado.div.classList.remove('com-fome');
+                  animalRecriado.div.classList.add('alimentado');
+              }
+
+              if (animalSalvo.hasRecurso) {
+                  const animalConfig = ANIMAIS[animalRecriado.tipo.toUpperCase()];
+                  const recursoDiv = document.createElement('div');
+                  recursoDiv.className = 'emoji-3d recurso-animal';
+                  recursoDiv.textContent = animalConfig.recurso.emoji;
+                  recursoDiv.dataset.tipo = animalRecriado.tipo;
+                  recursoDiv.style.fontSize = '25px';
+                  document.getElementById('ui-container').appendChild(recursoDiv);
+                  animalRecriado.recursoElement = recursoDiv;
+              }
+
+              // Se o animal estava produzindo quando o jogo foi salvo, reinicia o ciclo
+              // NOTA: Isso não preserva o tempo restante, apenas reinicia. Preservar o tempo
+              // exigiria salvar o timestamp, o que é mais complexo.
+              if(animalRecriado.produzindo) {
+                iniciarProducaoCiclo(animalRecriado);
+              }
+          });
+      }
   }
   
   function plantarSemente(tipoSemente) { if (!canteiroSelecionado || recursos.sementes[tipoSemente] <= 0) { return fecharModalSementes(); } const p = PLANTAS[tipoSemente.toUpperCase()]; canteiroSelecionado.userData.estado = ESTADOS.PLANTADA; canteiroSelecionado.userData.tipoPlanta = tipoSemente; if (canteiroSelecionado.userData.plantaElement) canteiroSelecionado.userData.plantaElement.remove(); const d = document.createElement('div'); d.className = 'emoji-3d planta'; d.textContent = p.broto.emoji; d.style.fontSize = p.broto.fontSize; document.getElementById('ui-container').appendChild(d); canteiroSelecionado.userData.plantaElement = d; recursos.sementes[tipoSemente]--; notificar(`${tipoSemente.charAt(0).toUpperCase() + tipoSemente.slice(1)} plantada!`, 'sucesso'); atualizarInterface(); iniciarCicloCrescimento(canteiroSelecionado); fecharModalSementes(); saveFarmState(); }
   function colherPlanta(canteiro) { if (canteiro.userData.estado !== ESTADOS.MADURA) return; if (canteiro.userData.intervalId) clearInterval(canteiro.userData.intervalId); const tipo = canteiro.userData.tipoPlanta; const plantaConfig = PLANTAS[tipo.toUpperCase()]; recursos.moedas += plantaConfig.recompensa; notificar(`Você colheu ${tipo}! (+${plantaConfig.recompensa} moedas)`, 'sucesso'); if (canteiro.userData.plantaElement) canteiro.userData.plantaElement.remove(); if (canteiro.userData.pragaElement) canteiro.userData.pragaElement.remove(); canteiro.userData = { ...canteiro.userData, estado: ESTADOS.GRAMA, tipoPlanta: null, estagio: null, plantaElement: null, pragaElement: null, estadoOriginal: null, intervalId: null, tempoParaCrescer: null, tempoParaAmadurecer: null }; canteiro.material = canteiroGramaMaterial; atualizarInterface(); saveFarmState(); }
   function removerPraga(canteiro) { if (recursos.veneno > 0) { recursos.veneno--; canteiro.userData.estado = canteiro.userData.estadoOriginal; canteiro.userData.estadoOriginal = null; if (canteiro.userData.pragaElement) { canteiro.userData.pragaElement.remove(); canteiro.userData.pragaElement = null; } notificar("Praga removida!", 'sucesso'); atualizarInterface(); saveFarmState(); } else { notificar("Você não tem veneno! Compre na loja.", 'erro'); } }
   async function comprarTerrenoComLCO() { const resultado = await apiRequest('/api/fazenda/buy-land', 'POST'); if(resultado) { farmState = resultado.fazendaGameState; lcoBalance = resultado.lulaCoinGameState.balance; recursos = farmState; notificar(`Terreno comprado! Novo saldo de LCO: ${lcoBalance.toFixed(2)}`, 'sucesso'); atualizarInterface(); renderizarCenarioSalvo(); saveFarmState(); } }
-  window.comprar = (item) => { const itemUpper = item.toUpperCase(); if (itemUpper === 'TERRENO') { mostrarModalConfirmacao(`Deseja comprar Terreno por ${recursos.precoTerreno} LCO?`, comprarTerrenoComLCO); return; } const c = ITENS_LOJA[itemUpper]; if (!c) return; const precoFinal = c.preco; const nomeFinal = `${c.quantity > 1 ? c.quantity : ''} ${c.nome}`.trim(); mostrarModalConfirmacao(`Deseja comprar ${nomeFinal} por ${precoFinal} moedas?`, () => { if (recursos.moedas < precoFinal) return notificar("Moedas insuficientes!", 'erro'); recursos.moedas -= precoFinal; if (c.tipo === 'semente') { recursos.sementes[c.nome] += c.quantity; } else if (c.tipo === 'recurso') { recursos[c.nome] += c.quantity; } else if (c.tipo === 'animal') { recursos.animais[c.nome].quantidade++; const pX = curralCenterX + (Math.random() * (curralTamanho - 2) - (curralTamanho / 2 - 1)); const pZ = curralCenterZ + (Math.random() * (curralTamanho - 2) - (curralTamanho / 2 - 1)); criarAnimal(c.nome, pX, pZ); } notificar(`${nomeFinal} comprado(s)!`, 'sucesso'); atualizarInterface(); saveFarmState(); }); };
+  
+  // ATUALIZAÇÃO: Lógica de comprar animal foi ajustada
+  window.comprar = (item) => { 
+      const itemUpper = item.toUpperCase(); 
+      if (itemUpper === 'TERRENO') { mostrarModalConfirmacao(`Deseja comprar Terreno por ${recursos.precoTerreno} LCO?`, comprarTerrenoComLCO); return; } 
+      const c = ITENS_LOJA[itemUpper]; if (!c) return; 
+      const precoFinal = c.preco; 
+      const nomeFinal = `${c.quantity > 1 ? c.quantity : ''} ${c.nome}`.trim(); 
+      mostrarModalConfirmacao(`Deseja comprar ${nomeFinal} por ${precoFinal} moedas?`, () => { 
+          if (recursos.moedas < precoFinal) return notificar("Moedas insuficientes!", 'erro'); 
+          recursos.moedas -= precoFinal; 
+          if (c.tipo === 'semente') { recursos.sementes[c.nome] += c.quantity; } 
+          else if (c.tipo === 'recurso') { recursos[c.nome] += c.quantity; } 
+          else if (c.tipo === 'animal') { 
+              // A contagem não é mais necessária, pois o array 'animais' é a fonte da verdade.
+              // Apenas criamos o novo animal na cena.
+              const pX = curralCenterX + (Math.random() * (curralTamanho - 2) - (curralTamanho / 2 - 1)); 
+              const pZ = curralCenterZ + (Math.random() * (curralTamanho - 2) - (curralTamanho / 2 - 1)); 
+              criarAnimal(c.nome, pX, pZ); 
+          } 
+          notificar(`${nomeFinal} comprado(s)!`, 'sucesso'); 
+          atualizarInterface(); 
+          saveFarmState(); 
+      }); 
+  };
   
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
   
   window.addEventListener('click', (event) => { 
-      if (event.target.classList.contains('animal')) { const animalDivId = event.target.id; const animalObject = animais.find(a => a.div.id === animalDivId); if (!animalObject || recursos.animais[animalObject.tipo].produzindo || !animalObject.div.classList.contains('com-fome')) return; const animalConfig = ANIMAIS[animalObject.tipo.toUpperCase()]; if (recursos.racao >= animalConfig.custoRacao) { recursos.racao -= animalConfig.custoRacao; notificar(`${animalObject.tipo.charAt(0).toUpperCase() + animalObject.tipo.slice(1)} alimentado(a)!`, 'sucesso'); atualizarInterface(); animalObject.div.classList.remove('com-fome'); animalObject.div.classList.add('alimentado'); iniciarProducaoCiclo(animalObject); saveFarmState(); } else { notificar("Ração insuficiente!", 'erro'); } return; } 
+      if (event.target.classList.contains('animal')) { const animalDivId = event.target.id; const animalObject = animais.find(a => a.div.id === animalDivId); if (!animalObject || animalObject.produzindo || !animalObject.div.classList.contains('com-fome')) return; const animalConfig = ANIMAIS[animalObject.tipo.toUpperCase()]; if (recursos.racao >= animalConfig.custoRacao) { recursos.racao -= animalConfig.custoRacao; notificar(`${animalObject.tipo.charAt(0).toUpperCase() + animalObject.tipo.slice(1)} alimentado(a)!`, 'sucesso'); atualizarInterface(); animalObject.div.classList.remove('com-fome'); animalObject.div.classList.add('alimentado'); iniciarProducaoCiclo(animalObject); saveFarmState(); } else { notificar("Ração insuficiente!", 'erro'); } return; } 
       if (event.target.classList.contains('recurso-animal')) { const tipoAnimal = event.target.dataset.tipo; const animalConfig = ANIMAIS[tipoAnimal.toUpperCase()]; recursos.moedas += animalConfig.recurso.valor; notificar(`${animalConfig.recurso.emoji} coletado! (+${animalConfig.recurso.valor} moedas)`, 'sucesso'); atualizarInterface(); const animal = animais.find(a => a.recursoElement === event.target); if(animal) animal.recursoElement = null; event.target.remove(); saveFarmState(); return; } 
       if (event.target.closest('button, .modal, .praga')) { return; }
-      
-      mouse.x = (event.clientX / window.innerWidth) * 2 - 1; 
-      mouse.y = - (event.clientY / window.innerHeight) * 2 + 1; 
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1; mouse.y = - (event.clientY / window.innerHeight) * 2 + 1; 
       raycaster.setFromCamera(mouse, camera);
-
       const intersectsCasa = raycaster.intersectObjects(objetosClicaveis);
-      if (intersectsCasa.length > 0) {
-          mostrarModalConfirmacao("Deseja voltar para a sala de mineração?", () => {
-              saveFarmState().then(() => {
-                  window.location.href = 'index.html';
-              });
-          });
-          return;
-      }
-      
+      if (intersectsCasa.length > 0) { mostrarModalConfirmacao("Deseja voltar para a sala de mineração?", () => { saveFarmState().then(() => { window.location.href = 'index.html'; }); }); return; }
       const intersects = raycaster.intersectObjects(canteiros); 
-      if (intersects.length > 0) { 
-          const canteiro = intersects[0].object; 
-          const { estado } = canteiro.userData; 
-          if (estado === ESTADOS.BLOQUEADO) { notificar("Vá até a loja para comprar este terreno com LCO!", 'info'); } 
-          else if (ferramentaAtiva === 'enxada' && estado === ESTADOS.GRAMA) { canteiro.userData.estado = ESTADOS.ARADA; canteiro.material = canteiroTerraMaterial; notificar("Canteiro arado!", 'sucesso'); saveFarmState(); } 
-          else if (ferramentaAtiva === 'regador' && estado === ESTADOS.ARADA) {
-              if (recursos.agua > 0) { recursos.agua--; canteiro.userData.estado = ESTADOS.ARADA_AGUADA; canteiro.material = canteiroTerraMolhadaMaterial; notificar("Terra regada!", 'sucesso'); atualizarInterface(); saveFarmState(); } 
-              else { notificar("Você não tem água! Compre na loja.", 'erro'); }
-          } 
-          else if (ferramentaAtiva === 'semente' && estado === ESTADOS.ARADA_AGUADA) { canteiroSelecionado = canteiro; mostrarModalSementes(); } 
-          else if (ferramentaAtiva === 'semente' && estado === ESTADOS.ARADA) { notificar("Você precisa regar a terra antes de plantar!", 'info'); } 
-          else if (ferramentaAtiva === 'foice' && estado === ESTADOS.MADURA) { colherPlanta(canteiro); } 
-          else if (ferramentaAtiva === 'veneno-tool' && estado === ESTADOS.COM_PRAGA) { removerPraga(canteiro); } 
-          else if (estado === ESTADOS.COM_PRAGA) { notificar("Use veneno para remover a praga!", 'info'); }
-      } 
+      if (intersects.length > 0) { const canteiro = intersects[0].object; const { estado } = canteiro.userData; if (estado === ESTADOS.BLOQUEADO) { notificar("Vá até a loja para comprar este terreno com LCO!", 'info'); } else if (ferramentaAtiva === 'enxada' && estado === ESTADOS.GRAMA) { canteiro.userData.estado = ESTADOS.ARADA; canteiro.material = canteiroTerraMaterial; notificar("Canteiro arado!", 'sucesso'); saveFarmState(); } else if (ferramentaAtiva === 'regador' && estado === ESTADOS.ARADA) { if (recursos.agua > 0) { recursos.agua--; canteiro.userData.estado = ESTADOS.ARADA_AGUADA; canteiro.material = canteiroTerraMolhadaMaterial; notificar("Terra regada!", 'sucesso'); atualizarInterface(); saveFarmState(); } else { notificar("Você não tem água! Compre na loja.", 'erro'); } } else if (ferramentaAtiva === 'semente' && estado === ESTADOS.ARADA_AGUADA) { canteiroSelecionado = canteiro; mostrarModalSementes(); } else if (ferramentaAtiva === 'semente' && estado === ESTADOS.ARADA) { notificar("Você precisa regar a terra antes de plantar!", 'info'); } else if (ferramentaAtiva === 'foice' && estado === ESTADOS.MADURA) { colherPlanta(canteiro); } else if (ferramentaAtiva === 'veneno-tool' && estado === ESTADOS.COM_PRAGA) { removerPraga(canteiro); } else if (estado === ESTADOS.COM_PRAGA) { notificar("Use veneno para remover a praga!", 'info'); } } 
   });
   
   window.addEventListener('contextmenu', (event) => event.preventDefault()); window.addEventListener('mousedown', (event) => { if (event.button === 2) { isRightClickDragging = true; const currentPolarAngle = controls.getPolarAngle(); controls.minPolarAngle = currentPolarAngle; controls.maxPolarAngle = currentPolarAngle; } }); window.addEventListener('mouseup', (event) => { if (event.button === 2) { isRightClickDragging = false; } }); controls.addEventListener('end', () => { if (!isRightClickDragging) { controls.minPolarAngle = 0; controls.maxPolarAngle = originalMaxPolarAngle; } });
@@ -306,7 +366,6 @@
   document.getElementById('abrir-loja').addEventListener('click', () => { const loja = document.getElementById('loja'); loja.style.display = loja.style.display === 'none' || loja.style.display === '' ? 'flex' : 'none'; });
   document.getElementById('abrir-inventario-sementes').addEventListener('click', () => { const inv = document.getElementById('inventario-sementes'); inv.style.display = inv.style.display === 'none' || inv.style.display === '' ? 'flex' : 'none'; });
   
-  // ATUALIZAÇÃO: Lógica de inicialização do jogo
   document.addEventListener('DOMContentLoaded', () => {
       if (!localStorage.getItem('token')) {
           alert("Você precisa estar logado para jogar! Redirecionando...");
@@ -314,7 +373,6 @@
           return;
       }
       loadInitialState();
-      // Salvamento ao fechar a página (pode não funcionar em todos os navegadores)
       window.addEventListener('beforeunload', () => {
           if (farmState && Object.keys(farmState).length > 0) {
               navigator.sendBeacon(`${API_BASE_URL}/api/fazenda/update`, JSON.stringify({ newFarmState: farmState }));
