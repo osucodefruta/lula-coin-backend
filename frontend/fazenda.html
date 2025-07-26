@@ -198,7 +198,7 @@
   function mostrarModalSementes() { const o = document.getElementById('opcoes-sementes'); o.innerHTML = ''; let disp = false; for (const tipo in recursos.sementes) { if (recursos.sementes[tipo] > 0) { disp = true; const p = PLANTAS[tipo.toUpperCase()]; const d = document.createElement('div'); d.className = 'opcao-semente'; d.innerHTML = `<span>${p.maduro.emoji} ${tipo.charAt(0).toUpperCase() + tipo.slice(1)}</span><span>x${recursos.sementes[tipo]}</span>`; d.onclick = () => plantarSemente(tipo); o.appendChild(d); } } if (!disp) { o.innerHTML = '<p>Você não tem sementes.</p>'; } document.getElementById('modal-sementes').style.display = 'flex'; }
   function fecharModalSementes() { document.getElementById('modal-sementes').style.display = 'none'; canteiroSelecionado = null; }
   
-  // CORREÇÃO DO BUG DA PRAGA: Função de carregar agora recria a planta E a praga.
+  // ATUALIZAÇÃO PARA CORRIGIR O BUG DA PRAGA
   function renderizarCenarioSalvo() {
       if (!farmState) return;
       if (farmState.terrenosComprados) { for(let i = 0; i < farmState.terrenosComprados; i++) { if (canteiros[i] && canteiros[i].userData.estado === ESTADOS.BLOQUEADO) { canteiros[i].userData.estado = ESTADOS.GRAMA; canteiros[i].material = canteiroGramaMaterial; if (canteiros[i].userData.cadeadoElement) { canteiros[i].userData.cadeadoElement.remove(); canteiros[i].userData.cadeadoElement = null; } } } }
