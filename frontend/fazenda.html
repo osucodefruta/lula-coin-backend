@@ -150,18 +150,35 @@
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x87CEEB);
   const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-  camera.position.set(0, 20, 20);
+  
+  // Posição e ângulo da câmera ajustados para corresponder à imagem de referência
+  camera.position.set(8, 16, 33); 
   camera.lookAt(0, 0, 0);
+
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   document.body.appendChild(renderer.domElement);
+
   const controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true; controls.dampingFactor = 0.05; controls.minDistance = 15; controls.maxDistance = camera.position.length(); controls.enablePan = false; controls.mouseButtons.LEFT = THREE.MOUSE.PAN; controls.mouseButtons.RIGHT = THREE.MOUSE.ROTATE; 
-  const originalMaxPolarAngle = Math.PI * 0.9;
-  controls.maxPolarAngle = originalMaxPolarAngle;
-  let isRightClickDragging = false;
+  controls.enableDamping = true; 
+  controls.dampingFactor = 0.05; 
+  
+  // Desabilitar zoom e pan
+  controls.enableZoom = false;
+  controls.enablePan = false; 
+
+  // Configurar botões do mouse (rotação com botão esquerdo ou direito)
+  controls.mouseButtons.LEFT = THREE.MOUSE.ROTATE; 
+  controls.mouseButtons.RIGHT = THREE.MOUSE.ROTATE;
+
+  // Travar a câmera na distância e ângulo vertical iniciais
+  controls.update(); // Sincroniza os controles com a posição inicial da câmera
+  const initialPolarAngle = controls.getPolarAngle();
+  controls.minPolarAngle = initialPolarAngle;
+  controls.maxPolarAngle = initialPolarAngle;
+  
   const objetosClicaveis = [];
 
   // --- FUNÇÕES DE GERAÇÃO DE TEXTURA PROCEDURAL (CÓDIGO ORIGINAL) ---
@@ -287,14 +304,8 @@
       if (intersects.length > 0) {
         const canteiro = intersects[0].object;
         const { estado } = canteiro.userData;
-
-        // PRIORIDADE: Colher planta madura com um clique, independente da ferramenta
-        if (estado === ESTADOS.MADURA) {
-            colherPlanta(canteiro);
-            return; // Finaliza a ação do clique aqui
-        }
-
-        // Lógica de ferramentas
+        
+        // Lógica de ferramentas (Colheita requer foice)
         if (estado === ESTADOS.BLOQUEADO) {
             notificar("Vá até a loja para comprar este terreno com LCO!", 'info');
         } else if (ferramentaAtiva === 'enxada' && estado === ESTADOS.GRAMA) {
@@ -319,17 +330,18 @@
         } else if (ferramentaAtiva === 'semente' && estado === ESTADOS.ARADA) {
             notificar("Você precisa regar a terra antes de plantar!", 'info');
         } else if (ferramentaAtiva === 'foice' && estado === ESTADOS.MADURA) {
-            // Esta linha se tornou redundante devido à verificação prioritária acima, mas mantê-la não prejudica.
             colherPlanta(canteiro);
         } else if (ferramentaAtiva === 'veneno-tool' && estado === ESTADOS.COM_PRAGA) {
             removerPraga(canteiro);
         } else if (estado === ESTADOS.COM_PRAGA) {
             notificar("Use veneno para remover a praga!", 'info');
+        } else if (estado === ESTADOS.MADURA && ferramentaAtiva !== 'foice') {
+            notificar("Selecione a foice para colher!", 'info');
         }
       } 
   });
   
-  window.addEventListener('contextmenu', (event) => event.preventDefault()); window.addEventListener('mousedown', (event) => { if (event.button === 2) { isRightClickDragging = true; const currentPolarAngle = controls.getPolarAngle(); controls.minPolarAngle = currentPolarAngle; controls.maxPolarAngle = currentPolarAngle; } }); window.addEventListener('mouseup', (event) => { if (event.button === 2) { isRightClickDragging = false; } }); controls.addEventListener('end', () => { if (!isRightClickDragging) { controls.minPolarAngle = 0; controls.maxPolarAngle = originalMaxPolarAngle; } });
+  window.addEventListener('contextmenu', (event) => event.preventDefault());
   
   function atualizarPosicoes2D() { animais.forEach(animal => { const pos = animal.position.clone().project(camera); animal.div.style.left = `${(pos.x * 0.5 + 0.5) * window.innerWidth}px`; animal.div.style.top = `${(-(pos.y * 0.5) + 0.5) * window.innerHeight}px`; if (animal.recursoElement) { const rPos = animal.position.clone(); rPos.y += 0.5; const screenPos = rPos.project(camera); animal.recursoElement.style.left = `${(screenPos.x * 0.5 + 0.5) * window.innerWidth}px`; animal.recursoElement.style.top = `${(-(screenPos.y * 0.5) + 0.5) * window.innerHeight}px`; } }); canteiros.forEach(canteiro => { const planta = canteiro.userData.plantaElement; const cadeado = canteiro.userData.cadeadoElement; const praga = canteiro.userData.pragaElement; if (planta) { const pos = canteiro.position.clone().project(camera); const yOffset = -20; planta.style.left = `${(pos.x * 0.5 + 0.5) * window.innerWidth}px`; planta.style.top = `${(-(pos.y * 0.5) + 0.5) * window.innerHeight + yOffset}px`; } if (cadeado) { const pos = canteiro.position.clone().project(camera); cadeado.style.left = `${(pos.x * 0.5 + 0.5) * window.innerWidth}px`; cadeado.style.top = `${(-(pos.y * 0.5) + 0.5) * window.innerHeight}px`; } if (praga) { const pos = canteiro.position.clone().project(camera); const yOffset = -35; praga.style.left = `${(pos.x * 0.5 + 0.5) * window.innerWidth}px`; praga.style.top = `${(-(pos.y * 0.5) + 0.5) * window.innerHeight + yOffset}px`; } }); }
   function aplicarFisicaAnimais() { const distanciaMinima = 1.0; const forcaRepulsao = 0.01; for (let i = 0; i < animais.length; i++) { for (let j = i + 1; j < animais.length; j++) { const animalA = animais[i]; const animalB = animais[j]; const vetDist = animalA.position.clone().sub(animalB.position); const distancia = vetDist.length(); if (distancia < distanciaMinima) { const deslocamento = vetDist.normalize().multiplyScalar(forcaRepulsao); animalA.position.add(deslocamento); animalB.position.sub(deslocamento); const minX = curralCenterX - curralTamanho / 2 + 0.5; const maxX = curralCenterX + curralTamanho / 2 - 0.5; const minZ = curralCenterZ - curralTamanho / 2 + 0.5; const maxZ = curralCenterZ + curralTamanho / 2 - 0.5; animalA.position.x = Math.max(minX, Math.min(maxX, animalA.position.x)); animalA.position.z = Math.max(minZ, Math.min(maxZ, animalA.position.z)); animalB.position.x = Math.max(minX, Math.min(maxX, animalB.position.x)); animalB.position.z = Math.max(minZ, Math.min(maxZ, animalB.position.z)); } } } }
@@ -369,6 +381,11 @@
             } else {
                 tooltip.textContent = 'Pronto para colher!';
             }
+            isTooltipVisible = true;
+        } else if (estado === ESTADOS.MADURA) {
+            tooltip.style.display = 'block';
+            tooltip.classList.remove('alerta-praga');
+            tooltip.textContent = 'Pronto para colher!';
             isTooltipVisible = true;
         }
     }
