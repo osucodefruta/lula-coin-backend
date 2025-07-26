@@ -149,7 +149,7 @@
   scene.background = new THREE.Color(0x87CEEB);
   const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
   
-  // Posição e ângulo da câmera ajustados para corresponder à imagem de referência (mais próxima)
+  // Posição inicial da câmera
   camera.position.set(6, 13, 27); 
   camera.lookAt(0, 0, 0);
 
@@ -163,15 +163,19 @@
   controls.enableDamping = true; 
   controls.dampingFactor = 0.05; 
   
-  // Desabilitar zoom e pan
-  controls.enableZoom = false;
+  // Habilitar o zoom e definir os limites
+  controls.enableZoom = true;
+  controls.minDistance = 15;
+  controls.maxDistance = 40;
+
+  // Manter o pan desabilitado
   controls.enablePan = false; 
 
-  // Configurar botões do mouse (rotação com botão esquerdo ou direito)
+  // Configurar botões do mouse para rotação
   controls.mouseButtons.LEFT = THREE.MOUSE.ROTATE; 
   controls.mouseButtons.RIGHT = THREE.MOUSE.ROTATE;
 
-  // Travar a câmera na distância e ângulo vertical iniciais
+  // Travar o ângulo vertical (polar) da câmera
   controls.update(); // Sincroniza os controles com a posição inicial da câmera
   const initialPolarAngle = controls.getPolarAngle();
   controls.minPolarAngle = initialPolarAngle;
