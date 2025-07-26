@@ -35,6 +35,7 @@ const UserSchema = new mongoose.Schema({
             animais: { galinha: { quantidade: 0 }, vaca: { quantidade: 0 }, porco: { quantidade: 0 } },
             precoTerreno: 250,
             terrenosComprados: 3 // Começa com 3 terrenos desbloqueados
+            canteirosState: [] // <-- ADICIONE ESTA LINHA
         }
     },
     currentRoomIndex: { type: Number, default: 0 }
