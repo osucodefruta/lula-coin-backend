@@ -113,12 +113,15 @@
       }
   }
 
+  // CORREÇÃO DO BUG DA PRAGA: Função de salvar agora guarda o estado da planta ANTES da praga.
   async function saveFarmState() {
       if (!farmState || Object.keys(farmState).length === 0) return;
       farmState = recursos;
 
       farmState.canteirosState = canteiros.map(canteiro => ({
           estado: canteiro.userData.estado,
+          // Salva o estado ANTERIOR se houver uma praga, senão, salva o estado atual
+          estadoOriginal: canteiro.userData.estadoOriginal || canteiro.userData.estado, 
           tipoPlanta: canteiro.userData.tipoPlanta,
           tempoParaCrescer: canteiro.userData.tempoParaCrescer,
           tempoParaAmadurecer: canteiro.userData.tempoParaAmadurecer,
@@ -186,45 +189,7 @@
   function criarAnimal(tipo, x, z) { const div = document.createElement('div'); div.className = 'emoji-3d animal com-fome'; div.id = tipo + (animais.filter(a=>a.tipo===tipo).length); if (tipo === 'galinha') div.textContent = '🐓'; else if (tipo === 'vaca') div.textContent = '🐄'; else if (tipo === 'porco') div.textContent = '🐖'; div.style.left = '50%'; div.style.top = '50%'; document.getElementById('ui-container').appendChild(div); const animal = { tipo, div, position: new THREE.Vector3(x, 0, z), fome: 0, produzindo: false, recursoElement: null }; animais.push(animal); return animal; }
   function moverAnimal(animal) { const minX = curralCenterX - curralTamanho / 2 + 1; const maxX = curralCenterX + curralTamanho / 2 - 1; const minZ = curralCenterZ - curralTamanho / 2 + 1; const maxZ = curralCenterZ + curralTamanho / 2 - 1; const novoX = Math.random() * (maxX - minX) + minX; const novoZ = Math.random() * (maxZ - minZ) + minZ; animal.position.set(novoX, 0, novoZ); }
   function criarPraga(canteiro) { if (canteiro.userData.pragaElement) return; canteiro.userData.estadoOriginal = canteiro.userData.estado; canteiro.userData.estado = ESTADOS.COM_PRAGA; const pragaDiv = document.createElement('div'); pragaDiv.className = 'emoji-3d praga'; pragaDiv.textContent = '🐛'; pragaDiv.style.fontSize = '25px'; pragaDiv.addEventListener('click', (event) => { event.stopPropagation(); if (ferramentaAtiva === 'veneno-tool') { removerPraga(canteiro); } else { notificar("Selecione o veneno para remover a praga!", 'info'); } }); document.getElementById('ui-container').appendChild(pragaDiv); canteiro.userData.pragaElement = pragaDiv; notificar("Uma praga apareceu!", 'erro'); }
-
-  // CORREÇÃO DO BUG: Zerar o timer do estágio 1 ao avançar para o estágio 2.
-  function iniciarCicloCrescimento(canteiro) { 
-      const plantaConfig = PLANTAS[canteiro.userData.tipoPlanta.toUpperCase()]; 
-      if (!plantaConfig) return; 
-      if (canteiro.userData.intervalId) { clearInterval(canteiro.userData.intervalId); } 
-      if (!canteiro.userData.tempoParaCrescer && canteiro.userData.estado === ESTADOS.PLANTADA) { 
-          canteiro.userData.tempoParaCrescer = plantaConfig.tempoEstagio1; 
-      }
-      if (!canteiro.userData.tempoParaAmadurecer && canteiro.userData.estado === ESTADOS.CRESCENDO) {
-          canteiro.userData.tempoParaAmadurecer = plantaConfig.tempoEstagio2;
-      }
-      
-      canteiro.userData.intervalId = setInterval(() => { 
-          if (canteiro.userData.estado === ESTADOS.COM_PRAGA) { return; } 
-          if (Math.random() < 0.005 && !canteiro.userData.pragaElement && (canteiro.userData.estado === ESTADOS.PLANTADA || canteiro.userData.estado === ESTADOS.CRESCENDO)) { criarPraga(canteiro); } 
-          
-          if (canteiro.userData.estado === ESTADOS.PLANTADA) { 
-              canteiro.userData.tempoParaCrescer -= 1000; 
-              if (canteiro.userData.tempoParaCrescer <= 0) { 
-                  canteiro.userData.estado = ESTADOS.CRESCENDO; 
-                  canteiro.userData.plantaElement.textContent = plantaConfig.crescendo.emoji; 
-                  canteiro.userData.plantaElement.style.fontSize = plantaConfig.crescendo.fontSize; 
-                  canteiro.userData.tempoParaAmadurecer = plantaConfig.tempoEstagio2;
-                  canteiro.userData.tempoParaCrescer = 0; // <-- AQUI ESTÁ A CORREÇÃO DO BUG
-              } 
-          } else if (canteiro.userData.estado === ESTADOS.CRESCENDO) { 
-              canteiro.userData.tempoParaAmadurecer -= 1000; 
-              if (canteiro.userData.tempoParaAmadurecer <= 0) { 
-                  canteiro.userData.estado = ESTADOS.MADURA; 
-                  canteiro.userData.plantaElement.textContent = plantaConfig.maduro.emoji; 
-                  canteiro.userData.plantaElement.style.fontSize = plantaConfig.maduro.fontSize; 
-                  clearInterval(canteiro.userData.intervalId); 
-                  canteiro.userData.intervalId = null; 
-              } 
-          } 
-      }, 1000); 
-  }
-
+  function iniciarCicloCrescimento(canteiro) { const plantaConfig = PLANTAS[canteiro.userData.tipoPlanta.toUpperCase()]; if (!plantaConfig) return; if (canteiro.userData.intervalId) { clearInterval(canteiro.userData.intervalId); } if (canteiro.userData.estado === ESTADOS.PLANTADA && !canteiro.userData.tempoParaCrescer) { canteiro.userData.tempoParaCrescer = plantaConfig.tempoEstagio1; } if (canteiro.userData.estado === ESTADOS.CRESCENDO && !canteiro.userData.tempoParaAmadurecer) { canteiro.userData.tempoParaAmadurecer = plantaConfig.tempoEstagio2; } canteiro.userData.intervalId = setInterval(() => { if (canteiro.userData.estado === ESTADOS.COM_PRAGA) { return; } if (Math.random() < 0.005 && !canteiro.userData.pragaElement && (canteiro.userData.estado === ESTADOS.PLANTADA || canteiro.userData.estado === ESTADOS.CRESCENDO)) { criarPraga(canteiro); } if (canteiro.userData.estado === ESTADOS.PLANTADA) { canteiro.userData.tempoParaCrescer -= 1000; if (canteiro.userData.tempoParaCrescer <= 0) { canteiro.userData.estado = ESTADOS.CRESCENDO; canteiro.userData.plantaElement.textContent = plantaConfig.crescendo.emoji; canteiro.userData.plantaElement.style.fontSize = plantaConfig.crescendo.fontSize; canteiro.userData.tempoParaAmadurecer = plantaConfig.tempoEstagio2; canteiro.userData.tempoParaCrescer = 0; } } else if (canteiro.userData.estado === ESTADOS.CRESCENDO) { canteiro.userData.tempoParaAmadurecer -= 1000; if (canteiro.userData.tempoParaAmadurecer <= 0) { canteiro.userData.estado = ESTADOS.MADURA; canteiro.userData.plantaElement.textContent = plantaConfig.maduro.emoji; canteiro.userData.plantaElement.style.fontSize = plantaConfig.maduro.fontSize; clearInterval(canteiro.userData.intervalId); canteiro.userData.intervalId = null; } } }, 1000); }
   function iniciarProducaoCiclo(animal) { animal.produzindo = true; const animalConfig = ANIMAIS[animal.tipo.toUpperCase()]; const moveInterval = setInterval(() => { moverAnimal(animal); }, 2500); setTimeout(() => { clearInterval(moveInterval); const recursoDiv = document.createElement('div'); recursoDiv.className = 'emoji-3d recurso-animal'; recursoDiv.textContent = animalConfig.recurso.emoji; recursoDiv.dataset.tipo = animal.tipo; recursoDiv.style.fontSize = '25px'; document.getElementById('ui-container').appendChild(recursoDiv); animal.recursoElement = recursoDiv; animal.produzindo = false; animal.div.classList.remove('alimentado'); animal.div.classList.add('com-fome'); saveFarmState(); }, animalConfig.tempoProducao); }
   function notificar(msg, tipo) { const n = document.createElement('div'); n.className = 'notificacao'; n.setAttribute('data-type', tipo); n.innerHTML = `<span>${msg}</span>`; document.getElementById('ui-container').appendChild(n); setTimeout(() => n.remove(), 4000); }
   function atualizarInterface() { if (!recursos || !recursos.sementes) return; document.getElementById('lco-balance').textContent = lcoBalance.toFixed(2); document.getElementById('moedas').textContent = recursos.moedas; document.getElementById('agua').textContent = recursos.agua; document.getElementById('racao').textContent = recursos.racao; document.getElementById('veneno').textContent = recursos.veneno; document.getElementById('preco-terreno').textContent = recursos.precoTerreno; atualizarInventarioSementes(); }
@@ -233,10 +198,48 @@
   function mostrarModalSementes() { const o = document.getElementById('opcoes-sementes'); o.innerHTML = ''; let disp = false; for (const tipo in recursos.sementes) { if (recursos.sementes[tipo] > 0) { disp = true; const p = PLANTAS[tipo.toUpperCase()]; const d = document.createElement('div'); d.className = 'opcao-semente'; d.innerHTML = `<span>${p.maduro.emoji} ${tipo.charAt(0).toUpperCase() + tipo.slice(1)}</span><span>x${recursos.sementes[tipo]}</span>`; d.onclick = () => plantarSemente(tipo); o.appendChild(d); } } if (!disp) { o.innerHTML = '<p>Você não tem sementes.</p>'; } document.getElementById('modal-sementes').style.display = 'flex'; }
   function fecharModalSementes() { document.getElementById('modal-sementes').style.display = 'none'; canteiroSelecionado = null; }
   
+  // CORREÇÃO DO BUG DA PRAGA: Função de carregar agora recria a planta E a praga.
   function renderizarCenarioSalvo() {
       if (!farmState) return;
       if (farmState.terrenosComprados) { for(let i = 0; i < farmState.terrenosComprados; i++) { if (canteiros[i] && canteiros[i].userData.estado === ESTADOS.BLOQUEADO) { canteiros[i].userData.estado = ESTADOS.GRAMA; canteiros[i].material = canteiroGramaMaterial; if (canteiros[i].userData.cadeadoElement) { canteiros[i].userData.cadeadoElement.remove(); canteiros[i].userData.cadeadoElement = null; } } } }
-      if (farmState.canteirosState && farmState.canteirosState.length > 0) { farmState.canteirosState.forEach((estadoSalvo, index) => { const canteiro = canteiros[index]; if (!canteiro || canteiro.userData.estado === ESTADOS.BLOQUEADO) return; canteiro.userData.estado = estadoSalvo.estado; canteiro.userData.tipoPlanta = estadoSalvo.tipoPlanta; canteiro.userData.tempoParaCrescer = estadoSalvo.tempoParaCrescer; canteiro.userData.tempoParaAmadurecer = estadoSalvo.tempoParaAmadurecer; switch(estadoSalvo.estado) { case ESTADOS.ARADA: canteiro.material = canteiroTerraMaterial; break; case ESTADOS.ARADA_AGUADA: canteiro.material = canteiroTerraMolhadaMaterial; break; } if (estadoSalvo.tipoPlanta) { const plantaConfig = PLANTAS[estadoSalvo.tipoPlanta.toUpperCase()]; const divPlanta = document.createElement('div'); divPlanta.className = 'emoji-3d planta'; if (estadoSalvo.estado === ESTADOS.PLANTADA) { divPlanta.textContent = plantaConfig.broto.emoji; divPlanta.style.fontSize = plantaConfig.broto.fontSize; } else if (estadoSalvo.estado === ESTADOS.CRESCENDO) { divPlanta.textContent = plantaConfig.crescendo.emoji; divPlanta.style.fontSize = plantaConfig.crescendo.fontSize; } else if (estadoSalvo.estado === ESTADOS.MADURA) { divPlanta.textContent = plantaConfig.maduro.emoji; divPlanta.style.fontSize = plantaConfig.maduro.fontSize; } document.getElementById('ui-container').appendChild(divPlanta); canteiro.userData.plantaElement = divPlanta; if (estadoSalvo.estado !== ESTADOS.MADURA) { iniciarCicloCrescimento(canteiro); } } if (estadoSalvo.hasPraga) { criarPraga(canteiro); } }); }
+      if (farmState.canteirosState && farmState.canteirosState.length > 0) { farmState.canteirosState.forEach((estadoSalvo, index) => { const canteiro = canteiros[index]; if (!canteiro || canteiro.userData.estado === ESTADOS.BLOQUEADO) return; 
+          
+          canteiro.userData.estado = estadoSalvo.estado;
+          canteiro.userData.tipoPlanta = estadoSalvo.tipoPlanta;
+          canteiro.userData.tempoParaCrescer = estadoSalvo.tempoParaCrescer;
+          canteiro.userData.tempoParaAmadurecer = estadoSalvo.tempoParaAmadurecer;
+          canteiro.userData.estadoOriginal = estadoSalvo.estadoOriginal;
+
+          let estadoVisual = estadoSalvo.hasPraga ? estadoSalvo.estadoOriginal : estadoSalvo.estado;
+
+          switch(estadoVisual) {
+              case ESTADOS.ARADA: canteiro.material = canteiroTerraMaterial; break;
+              case ESTADOS.ARADA_AGUADA: canteiro.material = canteiroTerraMolhadaMaterial; break;
+          }
+
+          if (canteiro.userData.tipoPlanta) {
+              const plantaConfig = PLANTAS[canteiro.userData.tipoPlanta.toUpperCase()];
+              const divPlanta = document.createElement('div');
+              divPlanta.className = 'emoji-3d planta';
+              
+              if (estadoVisual === ESTADOS.PLANTADA) { divPlanta.textContent = plantaConfig.broto.emoji; divPlanta.style.fontSize = plantaConfig.broto.fontSize; } 
+              else if (estadoVisual === ESTADOS.CRESCENDO) { divPlanta.textContent = plantaConfig.crescendo.emoji; divPlanta.style.fontSize = plantaConfig.crescendo.fontSize; } 
+              else if (estadoVisual === ESTADOS.MADURA) { divPlanta.textContent = plantaConfig.maduro.emoji; divPlanta.style.fontSize = plantaConfig.maduro.fontSize; }
+              
+              if(divPlanta.textContent) {
+                document.getElementById('ui-container').appendChild(divPlanta);
+                canteiro.userData.plantaElement = divPlanta;
+              }
+              
+              if (estadoSalvo.estado !== ESTADOS.MADURA) {
+                  iniciarCicloCrescimento(canteiro);
+              }
+          }
+
+          if (estadoSalvo.hasPraga) {
+              criarPraga(canteiro);
+          }
+      }); }
       if (farmState.animaisState && farmState.animaisState.length > 0) { farmState.animaisState.forEach(animalSalvo => { const animalRecriado = criarAnimal(animalSalvo.tipo, animalSalvo.position.x, animalSalvo.position.z); animalRecriado.produzindo = animalSalvo.produzindo; if (animalSalvo.isFed) { animalRecriado.div.classList.remove('com-fome'); animalRecriado.div.classList.add('alimentado'); } if (animalSalvo.hasRecurso) { const animalConfig = ANIMAIS[animalRecriado.tipo.toUpperCase()]; const recursoDiv = document.createElement('div'); recursoDiv.className = 'emoji-3d recurso-animal'; recursoDiv.textContent = animalConfig.recurso.emoji; recursoDiv.dataset.tipo = animalRecriado.tipo; recursoDiv.style.fontSize = '25px'; document.getElementById('ui-container').appendChild(recursoDiv); animalRecriado.recursoElement = recursoDiv; } if(animalRecriado.produzindo) { iniciarProducaoCiclo(animalRecriado); } }); }
   }
   
