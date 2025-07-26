@@ -8,7 +8,8 @@ const authRoutes = require('./routes/auth');
 const gameRoutes = require('./routes/game');
 const rankingRoutes = require('./routes/ranking');
 const chatRoutes = require('./routes/chat');
-const damasRoutes = require('./routes/damas'); // << LINHA ADICIONADA
+const damasRoutes = require('./routes/damas');
+const fazendaRoutes = require('./routes/fazenda'); // << LINHA ADICIONADA PARA A FAZENDA
 
 const app = express();
 
@@ -60,7 +61,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/game', gameRoutes);
 app.use('/api/ranking', rankingRoutes);
 app.use('/api/chat', chatRoutes);
-app.use('/api/damas', damasRoutes); // << LINHA ADICIONADA
+app.use('/api/damas', damasRoutes);
+app.use('/api/fazenda', fazendaRoutes); // << LINHA ADICIONADA PARA A FAZENDA
 
 // --- Health Check ---
 app.get('/api/health', (req, res) => {

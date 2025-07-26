@@ -800,6 +800,7 @@
             <button class="action-btn" id="open-inventory-btn">Inventário</button>
             <button class="action-btn" id="open-chat-btn">Chat</button>
             <button class="action-btn" id="open-games-btn">Jogos</button> 
+            <button class="action-btn" id="go-to-farm-btn">Fazenda</button>
             <button class="action-btn" id="logout-btn">Sair</button>
             <button class="action-btn" id="energy-btn" disabled>
                 <div id="energy-bar"></div>
@@ -1018,6 +1019,7 @@
         const closeGamesBtn = document.getElementById('close-games-btn');
         const playDamasBtn = document.getElementById('play-damas-btn');
         const damasMatchmakingStatus = document.getElementById('damas-matchmaking-status');
+        const goToFarmBtn = document.getElementById('go-to-farm-btn'); // LÓGICA DO BOTÃO DA FAZENDA ADICIONADA
 
 
         // --- FUNÇÕES DE API ---
@@ -1780,6 +1782,10 @@
         openGamesBtn.addEventListener('click', openGames);
         closeGamesBtn.addEventListener('click', closeGames);
         playDamasBtn.addEventListener('click', joinDamasMatchmaking);
+        // LÓGICA DO BOTÃO DA FAZENDA ADICIONADA
+        goToFarmBtn.addEventListener('click', () => {
+            window.location.href = 'fazenda.html';
+        });
 
         window.addEventListener('beforeunload', () => { if (gameState) { saveGame(); } });
 

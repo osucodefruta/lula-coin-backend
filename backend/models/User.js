@@ -13,31 +13,31 @@ const UserSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    gameState: {
-        balance: { type: Number, default: 100 },
-        inventory: {
-            miners: [
-                {
-                    id: { type: String, required: true },
-                    quantity: { type: Number, default: 0 }
-                }
-            ],
-            racks: [
-                {
-                    id: { type: String, required: true },
-                    quantity: { type: Number, default: 0 }
-                }
-            ]
-        },
-        energy: { type: Number, default: 100 },
-        totalPower: { type: Number, default: 0 },
-        incomeRate: { type: Number, default: 0 },
-        placedRacksPerRoom: {
-            type: [[mongoose.Schema.Types.Mixed]],
-            default: () => [[null, null, null, null]] // Cria uma nova referência a cada usuário
+    lulaCoinGameState: {
+        type: Object,
+        default: {
+            balance: 10,
+            inventory: { miners: [], racks: [] },
+            placedRacksPerRoom: [Array(4).fill(null)],
+            totalPower: 0,
+            energy: 100,
+            lastEnergyUpdate: Date.now()
         }
-    }
+    },
+    fazendaGameState: {
+        type: Object,
+        default: {
+            moedas: 10,
+            agua: 10,
+            racao: 10,
+            veneno: 0,
+            sementes: { milho: 3, tomate: 0, girassol: 0, cenoura: 0 },
+            animais: { galinha: { quantidade: 0 }, vaca: { quantidade: 0 }, porco: { quantidade: 0 } },
+            precoTerreno: 250,
+            terrenosComprados: 3 // Começa com 3 terrenos desbloqueados
+        }
+    },
+    currentRoomIndex: { type: Number, default: 0 }
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', UserSchema);
-
