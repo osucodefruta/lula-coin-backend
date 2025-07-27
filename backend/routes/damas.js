@@ -6,34 +6,53 @@ const DamasGame = require('../models/DamasGame');
 
 let matchmakingQueue = [];
 
+// Rota para entrar na fila do jogo de damas
 router.post('/matchmaking/join', auth, async (req, res) => {
     try {
         const user = await User.findById(req.user.id);
 
-        if (user.gameState.balance < 25) {
-            return res.status(400).json({ message: "Você precisa de 25 LCO para jogar." });
+        // ✅ CORREÇÃO 1: Adicionada verificação para garantir que o usuário foi encontrado.
+        // Se 'user' for nulo ou undefined, o código para aqui e evita o erro.
+        if (!user) {
+            return res.status(404).json({ message: "Usuário da requisição não foi encontrado." });
         }
 
-        // << LÓGICA ANTI-BUG ADICIONADA >>
-        // Abandona qualquer jogo antigo que este usuário tenha deixado ativo.
-        // Isso garante que ele sempre entrará em um jogo novo.
+        // ✅ CORREÇÃO 2: Verificação segura do saldo.
+        // Garante que 'gameState' e 'balance' existem antes de comparar.
+        if (!user.gameState || typeof user.gameState.balance === 'undefined' || user.gameState.balance < 25) {
+            return res.status(400).json({ message: "Você precisa de pelo menos 25 LCO para jogar." });
+        }
+
+        // Lógica anti-bug para abandonar jogos antigos
         await DamasGame.updateMany(
             { 'players.userId': req.user.id, status: 'active' },
             { $set: { status: 'abandoned' } }
         );
         
+        // Verifica se o jogador já está na fila
         if (matchmakingQueue.find(p => p.userId.toString() === req.user.id)) {
             return res.status(200).json({ message: "Você já está na fila." });
         }
 
+        // Adiciona o jogador à fila
         matchmakingQueue.push({ userId: req.user.id, username: user.username });
 
+        // Se houver jogadores suficientes, cria a partida
         if (matchmakingQueue.length >= 2) {
             const player1Data = matchmakingQueue.shift();
             const player2Data = matchmakingQueue.shift();
 
             const player1 = await User.findById(player1Data.userId);
             const player2 = await User.findById(player2Data.userId);
+            
+            // Verificação de segurança adicional para os jogadores da fila
+            if (!player1 || !player2) {
+                console.error("Erro crítico: Um dos jogadores da fila não foi encontrado no DB.");
+                // Devolve os jogadores para a fila se um deles falhar
+                if(player1Data) matchmakingQueue.unshift(player1Data);
+                if(player2Data) matchmakingQueue.unshift(player2Data);
+                return res.status(500).json({ message: 'Erro ao formar a partida, tente novamente.'});
+            }
 
             player1.gameState.balance -= 25;
             player2.gameState.balance -= 25;
@@ -67,7 +86,8 @@ router.post('/matchmaking/join', auth, async (req, res) => {
         
     } catch (err) {
         console.error(err);
-        res.status(500).send('Erro no servidor');
+        // ✅ MELHORIA: Responder com JSON para o frontend não quebrar
+        res.status(500).json({ message: 'Erro interno no servidor.' });
     }
 });
 
@@ -80,7 +100,7 @@ router.get('/matchmaking/status', auth, async (req, res) => {
             res.json({ matchFound: false });
         }
     } catch (err) {
-        res.status(500).send('Erro no servidor');
+        res.status(500).json({ message: 'Erro interno no servidor.' });
     }
 });
 
@@ -90,7 +110,7 @@ router.get('/game/state/:id', auth, async (req, res) => {
         if (!game) return res.status(404).json({ message: 'Partida não encontrada.' });
         res.json(game);
     } catch (err) {
-        res.status(500).send('Erro no servidor');
+        res.status(500).json({ message: 'Erro interno no servidor.' });
     }
 });
 
@@ -119,7 +139,7 @@ router.post('/game/move/:id', auth, async (req, res) => {
         res.json(game);
 
     } catch (err) {
-        res.status(500).send('Erro no servidor');
+        res.status(500).json({ message: 'Erro interno no servidor.' });
     }
 });
 
@@ -140,7 +160,7 @@ router.post('/game/emoji/:id', auth, async (req, res) => {
 
     } catch (err) {
         console.error(err);
-        res.status(500).send('Erro no servidor');
+        res.status(500).json({ message: 'Erro interno no servidor.' });
     }
 });
 
