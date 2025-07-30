@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lula Coin Miner 4.8 (Realism Update)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="app" style="display: none;">
+        <header>
+            <div class="logo"><h1>Lula Coin Miner</h1></div>
+            <div class="user-profile">
+                <div class="user-avatar" id="user-avatar">L</div>
+                <div class="user-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Saldo LCO</span>
+                        <span class="stat-value"><span class="icon">$</span><span id="balance">0.00</span></span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Potência Total</span>
+                        <span class="stat-value"><span class="icon">⚡</span><span id="total-power">0 TH/s</span></span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">LCO por Hora</span>
+                        <span class="stat-value"><span class="icon">💰</span><span id="lco-per-hour">0.00</span></span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div id="room-controls" style="position: absolute; top: 80px; left: 50%; transform: translateX(-50%); z-index: 20; display: flex; gap: 10px; align-items: center;"></div>
+
+        <main class="main-content">
+            <div class="mining-room" id="mining-room">
+                <div id="global-ranking-board">
+                    <div id="ranking-header">
+                        <h2>🏆 Ranking Global (Top 5)</h2>
+                    </div>
+                    <div id="ranking-body" style="display: none;">
+                        <ol id="ranking-list"></ol>
+                    </div>
+                </div>
+
+                <div class="computer-setup">
+                    <div class="desk">
+                         <div class="desk-leg leg1"></div>
+                         <div class="desk-leg leg2"></div>
+                         <div class="desk-leg leg3"></div>
+                         <div class="desk-leg leg4"></div>
+                    </div>
+                    <div class="monitor">
+                        <div class="monitor-screen">
+                            <div class="scanline-effect"></div>
+                            <pre class="monitor-text" id="terminal-text"></pre>
+                        </div>
+                    </div>
+                    <div class="keyboard"></div>
+                    <div class="mouse"></div>
+                    <div class="cpu-box">
+                        <div class="cpu-fan-intake"></div>
+                        <div class="cpu-box-led-light"></div>
+                    </div>
+                </div>
+                <div id="rack-placement-area"></div>
+            </div>
+        </main>
+
+        <div class="stats-bar">
+            <button class="action-btn" id="open-shop-btn">Loja</button>
+            <button class="action-btn" id="open-inventory-btn">Inventário</button>
+            <button class="action-btn" id="open-chat-btn">Chat</button>
+            <button class="action-btn" id="open-games-btn">Jogos</button> 
+            <button class="action-btn" id="go-to-farm-btn">Fazenda</button>
+            <button class="action-btn" id="logout-btn">Sair</button>
+            <button class="action-btn" id="energy-btn" disabled>
+                <div id="energy-bar"></div>
+                <span id="energy-text"></span>
+            </button>
+        </div>
+
+        <div class="shop-modal" id="shop-modal">
+            <div class="shop-content">
+                <div class="shop-header">
+                    <h2 class="shop-title">Loja do Minerador</h2>
+                    <button class="close-shop-btn" id="close-shop-btn">&times;</button>
+                </div>
+                <div class="shop-categories">
+                    <button class="shop-category-btn active" data-category="miners">Mineradoras</button>
+                    <button class="shop-category-btn" data-category="racks">Racks</button>
+                </div>
+                <div class="shop-content-area" id="miners-shop-content"></div>
+                <div class="shop-content-area" id="racks-shop-content" style="display: none;"></div>
+            </div>
+        </div>
+
+        <div class="inventory-modal" id="inventory-modal">
+            <div class="inventory-content">
+                <div class="inventory-header">
+                    <h2 class="inventory-title">Meus Itens</h2>
+                    <button class="close-inventory-btn" id="close-inventory-btn">&times;</button>
+                </div>
+                <div class="inventory-categories">
+                    <button class="inventory-category-btn active" data-category="miners">Mineradoras</button>
+                    <button class="inventory-category-btn" data-category="racks">Racks</button>
+                </div>
+                <div class="inventory-content-area" id="miners-inventory-content"></div>
+                <div class="inventory-content-area" id="racks-inventory-content" style="display: none;"></div>
+            </div>
+        </div>
+        
+        <div class="chat-modal" id="chat-modal">
+            <div class="chat-content">
+                <div class="chat-header">
+                    <h2 class="chat-title">Chat Global</h2>
+                    <button class="close-chat-btn" id="close-chat-btn">&times;</button>
+                </div>
+                <div class="chat-messages-area" id="chat-messages-area">
+                    </div>
+                <div class="chat-input-area">
+                    <input type="text" id="chat-input" placeholder="Digite sua mensagem..." maxlength="200">
+                    <button id="chat-send-btn">Enviar</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="games-modal" id="games-modal">
+            <div class="games-content">
+                <div class="games-header">
+                    <h2 class="games-title">Central de Jogos</h2>
+                    <button class="close-games-btn" id="close-games-btn">&times;</button>
+                </div>
+                <div class="games-list">
+                    <div class="game-item">
+                        <h3>Damas Multiplayer</h3>
+                        <p>Aposta: 25 LCO | Prêmio: 50 LCO</p>
+                        <button id="play-damas-btn">Procurar Partida</button>
+                        <div id="damas-matchmaking-status" style="margin-top: 10px; color: var(--energy-low);"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <audio id="sell-sound" src="https://cdn.pixabay.com/download/audio/2022/03/10/audio_c394c55a5b.mp3"></audio>
+
+    <script src="js/game.js" defer></script>
+</body>
+</html>

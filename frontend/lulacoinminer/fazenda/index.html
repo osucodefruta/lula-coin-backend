@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Fazenda Alegre 3D - Online</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+
+    <div id="ui-container">
+        <div id="inventario">
+            <div class="item-inventario">LCO <span id="lco-balance">0.00</span></div>
+            <div class="item-inventario">💰 <span id="moedas">10</span></div>
+            <div class="item-inventario">💧 <span id="agua">10</span></div>
+            <div class="item-inventario">🧈 <span id="racao">10</span></div>
+            <div class="item-inventario">☠️ <span id="veneno">0</span></div>
+        </div>
+
+        <button id="abrir-inventario-sementes">📦 Inventário</button>
+        <div id="inventario-sementes"><h3>Minhas Sementes</h3></div>
+      
+        <button id="abrir-loja">🛒 Loja</button>
+        <div id="loja">
+            <h3>Loja da Fazenda</h3>
+            <div class="categoria-loja">
+                <h4>Sementes</h4>
+                <button class="botao-loja" onclick="comprar('milho')">🌽 Milho (💰5)</button>
+                <button class="botao-loja" onclick="comprar('tomate')">🍅 Tomate (💰7)</button>
+                <button class="botao-loja" onclick="comprar('girassol')">🌻 Girassol (💰10)</button>
+                <button class="botao-loja" onclick="comprar('cenoura')">🥕 Cenoura (💰8)</button>
+            </div>
+            <div class="categoria-loja">
+                <h4>Recursos</h4>
+                <button class="botao-loja" onclick="comprar('agua')">💧 Água (💰3)</button>
+                <button class="botao-loja" onclick="comprar('racao')">🧈 Ração (💰4)</button>
+                <button class="botao-loja" onclick="comprar('veneno')">☠️ Veneno (💰10)</button>
+            </div>
+            <div class="categoria-loja">
+                <h4>Animais</h4>
+                <button class="botao-loja" onclick="comprar('galinha')">🐓 Galinha (💰40)</button>
+                <button class="botao-loja" onclick="comprar('vaca')">🐄 Vaca (💰100)</button>
+                <button class="botao-loja" onclick="comprar('porco')">🐖 Porco (💰60)</button>
+            </div>
+            <div class="categoria-loja">
+                <h4>Terrenos</h4>
+                <button class="botao-loja" onclick="comprar('terreno')">🔓 Terreno (LCO <span id="preco-terreno">250</span>)</button>
+            </div>
+        </div>
+      
+        <div id="ferramentas">
+            <button class="botao-ferramenta active" id="enxada">🪓</button>
+            <button class="botao-ferramenta" id="semente">🌱</button>
+            <button class="botao-ferramenta" id="regador">💧</button>
+            <button class="botao-ferramenta" id="foice">✂️</button>
+            <button class="botao-ferramenta" id="veneno-tool">☠️</button>
+        </div>
+      
+        <div class="modal" id="modal-confirmacao">
+            <div class="modal-conteudo">
+                <p id="modal-mensagem">Deseja comprar este item?</p>
+                <div class="modal-botoes">
+                    <button class="modal-botao confirmar" id="modal-btn-confirmar">Confirmar</button>
+                    <button class="modal-botao cancelar" id="modal-btn-cancelar">Cancelar</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="modal-sementes">
+            <div class="modal-conteudo">
+                <h3>Escolha a semente</h3>
+                <div id="opcoes-sementes"></div>
+                <button class="modal-botao cancelar" onclick="fecharModalSementes()" style="margin-top: 15px;">Cancelar</button>
+            </div>
+        </div>
+
+        <div id="tooltip"></div>
+    </div>
+
+    <script src="js/game.js" defer></script>
+</body>
+</html>

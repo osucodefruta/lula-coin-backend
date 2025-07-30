@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lula Coin Miner - Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/login.css">
+</head>
+<body>
+    <div id="auth-container">
+        <div id="falling-coins-container">
+            <div class="coin-fall">L</div><div class="coin-fall">L</div><div class="coin-fall">L</div>
+            <div class="coin-fall">L</div><div class="coin-fall">L</div><div class="coin-fall">L</div>
+            <div class="coin-fall">L</div><div class="coin-fall">L</div><div class="coin-fall">L</div>
+            <div class="coin-fall">L</div>
+        </div>
+        <div class="auth-box">
+            <div id="login-form">
+                <h2>Login</h2>
+                <input type="text" id="login-username" placeholder="Usuário" required>
+                <input type="password" id="login-password" placeholder="Senha" required>
+                <button id="login-btn">Entrar</button>
+                <p class="auth-toggle">Não tem uma conta? <a id="show-register-link">Cadastre-se</a></p>
+            </div>
+            <div id="register-form" style="display: none;">
+                <h2>Registrar</h2>
+                <input type="text" id="register-username" placeholder="Usuário" required>
+                <input type="password" id="register-password" placeholder="Senha" required>
+                <button id="register-btn">Registrar</button>
+                <p class="auth-toggle">Já tem uma conta? <a id="show-login-link">Faça Login</a></p>
+            </div>
+            <div id="auth-message"></div>
+        </div>
+    </div>
+    <script src="js/auth.js"></script>
+</body>
+</html>

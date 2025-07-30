@@ -1,0 +1,46 @@
+/* Este arquivo contém todo o estilo para a interface 2D (botões, inventário, modais, etc.). */
+body { margin: 0; overflow: hidden; font-family: 'Fredoka One', cursive; }
+canvas { display: block; }
+
+#ui-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+#inventario { position: absolute; top: 20px; left: 20px; background: rgba(255, 255, 255, 0.9); padding: 10px 20px; border-radius: 50px; display: flex; flex-wrap: wrap; gap: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 10; color: #5D4037; font-size: 18px; font-weight: bold; pointer-events: auto; }
+#abrir-inventario-sementes { position: absolute; top: 90px; left: 20px; background: rgba(255, 255, 255, 0.9); padding: 10px 15px; border-radius: 50px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 10; display: flex; align-items: center; gap: 5px; border: none; font-family: 'Fredoka One', cursive; font-size: 16px; color: #5D4037; cursor: pointer; transition: all 0.2s ease-out; pointer-events: auto; }
+#abrir-inventario-sementes:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.3); }
+#inventario-sementes { position: absolute; top: 150px; left: 20px; background: rgba(255, 255, 255, 0.9); padding: 10px 20px; border-radius: 10px; display: none; flex-direction: column; gap: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 9; color: #5D4037; font-size: 16px; font-weight: bold; pointer-events: auto; max-height: 250px; overflow-y: auto; }
+.item-inventario { display: flex; align-items: center; gap: 5px; }
+#ferramentas { position: absolute; bottom: 20px; right: 20px; background: rgba(255, 255, 255, 0.9); padding: 10px; border-radius: 50px; display: flex; gap: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 10; pointer-events: auto; }
+.botao-ferramenta { width: 50px; height: 50px; border-radius: 50%; border: none; background: #A1887F; color: white; font-size: 24px; cursor: pointer; transition: all 0.2s ease-out; display: flex; justify-content: center; align-items: center; box-shadow: 0 3px 0 #795548; pointer-events: auto; }
+.botao-ferramenta.active { background: #5D4037; transform: translateY(3px); box-shadow: 0 0 0 #795548; }
+.botao-ferramenta:hover:not(.active) { transform: translateY(-3px); box-shadow: 0 6px 0 #795548; }
+#loja { position: absolute; top: 70px; right: 20px; background: rgba(255, 255, 255, 0.95); padding: 15px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 10; display: none; flex-direction: column; gap: 10px; width: 200px; max-height: 400px; overflow-y: auto; pointer-events: auto; }
+#loja h3 { margin: 0 0 10px 0; text-align: center; color: #5D4037; }
+.categoria-loja { margin-bottom: 10px; }
+.categoria-loja h4 { margin: 5px 0; color: #5D4037; border-bottom: 1px solid #8D6E63; padding-bottom: 3px; }
+.botao-loja { background: linear-gradient(to bottom, #FFD54F, #FBC02D); border: none; padding: 8px 15px; border-radius: 25px; font-weight: bold; color: #5D4037; cursor: pointer; box-shadow: 0 3px 0 #F57C00; transition: all 0.2s ease-out; font-size: 14px; display: flex; align-items: center; gap: 5px; width: 100%; margin-bottom: 5px; pointer-events: auto; }
+.botao-loja:hover { transform: translateY(-2px); box-shadow: 0 5px 0 #F57C00; }
+.botao-loja:active { transform: translateY(1px); box-shadow: 0 1px 0 #F57C00; }
+#abrir-loja { position: absolute; top: 20px; right: 20px; background: rgba(255, 255, 255, 0.9); padding: 10px 15px; border-radius: 50px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 10; display: flex; align-items: center; gap: 5px; border: none; font-family: 'Fredoka One', cursive; font-size: 16px; color: #5D4037; cursor: pointer; transition: all 0.2s ease-out; pointer-events: auto; }
+#abrir-loja:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.3); }
+.notificacao { position: absolute; top: 70px; left: 50%; transform: translateX(-50%); color: white; padding: 10px 20px; border-radius: 5px; z-index: 100; animation: fadeOut 2s forwards 2s; display: flex; align-items: center; gap: 8px; font-weight: bold; pointer-events: none; }
+.notificacao[data-type="sucesso"] { background: rgba(76, 175, 80, 0.9); }
+.notificacao[data-type="erro"] { background: rgba(244, 67, 54, 0.9); }
+.notificacao[data-type="info"] { background: rgba(0, 0, 0, 0.7); }
+@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; display: none; } }
+.emoji-3d { position: absolute; font-size: 30px; pointer-events: auto; cursor: pointer; transform: translate(-50%, -50%); text-shadow: 2px 2px 4px rgba(0,0,0,0.5); animation: float 2s ease-in-out infinite; }
+@keyframes float { 0%, 100% { transform: translate(-50%, -50%) translateY(0); } 50% { transform: translate(-50%, -50%) translateY(-10px); } }
+@keyframes wriggle { 0% { transform: translate(-50%, -55%) rotate(5deg); } 50% { transform: translate(-45%, -50%) rotate(-5deg); } 100% { transform: translate(-50%, -55%) rotate(5deg); } }
+.praga { animation: wriggle 0.8s ease-in-out infinite; }
+#modal-sementes { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(255, 255, 255, 0.95); padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); z-index: 1000; display: none; flex-direction: column; gap: 10px; max-width: 300px; pointer-events: auto; }
+#modal-sementes .modal-conteudo { background: none; padding: 0; border-radius: 0; box-shadow: none; max-width: none; }
+#modal-sementes h3 { margin: 0 0 10px 0; color: #5D4037; }
+.opcao-semente { display: flex; align-items: center; justify-content: space-between; padding: 10px; margin: 5px 0; background: #f5f5f5; border-radius: 5px; cursor: pointer; transition: all 0.2s; pointer-events: auto; }
+.opcao-semente:hover { background: #e0e0e0; }
+.opcao-semente span { font-size: 24px; }
+.modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; pointer-events: auto; }
+.modal-conteudo { background: white; padding: 20px; border-radius: 10px; max-width: 300px; text-align: center; pointer-events: auto; }
+.modal-botoes { display: flex; justify-content: center; gap: 10px; margin-top: 15px; }
+.modal-botao { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-family: 'Fredoka One', cursive; pointer-events: auto; }
+.modal-botao.confirmar { background: #4CAF50; color: white; }
+.modal-botao.cancelar { background: #f44336; color: white; }
+#tooltip { position: absolute; display: none; background: rgba(0, 0, 0, 0.75); color: white; padding: 8px 12px; border-radius: 8px; font-size: 14px; font-weight: bold; z-index: 1001; pointer-events: none; white-space: nowrap; }
+#tooltip.alerta-praga { background: rgba(211, 47, 47, 0.9); }
