@@ -720,7 +720,7 @@ document.addEventListener('DOMContentLoaded', () => {
        clearInterval(matchmakingInterval);
        damasMatchmakingStatus.textContent = 'Partida encontrada! Redirecionando...';
        // CORREÇÃO: Aponta para a PASTA /damas/
-       window.location.href = `damas/?gameId=${statusResponse.gameId}`;
+       window.location.href = `/damas/?gameId=${statusResponse.gameId}`;
    }
 }
     
@@ -785,7 +785,7 @@ document.addEventListener('DOMContentLoaded', () => {
     closeGamesBtn.addEventListener('click', closeGames);
     playDamasBtn.addEventListener('click', joinDamasMatchmaking);
     goToFarmBtn.addEventListener('click', () => {
-        window.location.href = 'fazenda/';
+        window.location.href = '/fazenda/';
     });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { cancelPlacement(); } });
     window.addEventListener('beforeunload', () => { if (gameState) { saveGame(); } });

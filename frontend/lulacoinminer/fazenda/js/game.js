@@ -16,7 +16,7 @@ const apiRequest = async (endpoint, method = 'GET', body = null) => {
     const token = localStorage.getItem('token');
     if (!token) { 
         alert("Sessão inválida. Por favor, faça o login novamente.");
-        window.location.href = 'index.html'; 
+        window.location.href = '/index.html'; 
         return null; 
     }
     const options = { method, headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } };
@@ -256,7 +256,7 @@ const tooltip = document.getElementById('tooltip');
         });
         await saveFarmState();
         mostrarModalConfirmacao("Deseja voltar para a sala de mineração?", () => {
-            window.location.href = 'index.html';
+            window.location.href = '/';
         });
         return;
       }
@@ -380,7 +380,7 @@ const tooltip = document.getElementById('tooltip');
   document.addEventListener('DOMContentLoaded', () => {
       if (!localStorage.getItem('token')) {
           alert("Você precisa estar logado para jogar! Redirecionando...");
-          window.location.href = 'index.html';
+          window.location.href = '/index.html';
           return;
       }
       loadInitialState();
