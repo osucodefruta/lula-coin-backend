@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Damas 3D - Online com Grafite (Versão Final)</title>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: sans-serif; }
+        #game-container { width: 100vw; height: 100vh; }
+        #ui-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; color: white; text-shadow: 0 0 5px black; }
+        #turn-indicator { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); padding: 10px 20px; background-color: rgba(0, 0, 0, 0.5); border-radius: 10px; font-size: 1.2em; font-weight: bold; transition: background-color 0.5s; }
+        .scoreboard { position: absolute; top: 20px; padding: 10px 15px; background-color: rgba(0, 0, 0, 0.5); border-radius: 8px; font-size: 1.5em; font-weight: bold; }
+        #score-player1 { left: 20px; }
+        #score-player2 { right: 20px; }
+        #emoji-bar { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; padding: 10px; background-color: rgba(0, 0, 0, 0.5); border-radius: 50px; pointer-events: auto; }
+        .emoji-button { font-size: 2em; cursor: pointer; transition: transform 0.2s, opacity 0.3s; }
+        .emoji-button:hover { transform: scale(1.2); }
+        .floating-emoji { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 10em; opacity: 0; animation: float-in-out 2s forwards; text-shadow: 0 0 15px rgba(0,0,0,0.7); }
+        @keyframes float-in-out {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            25% { transform: translate(-50%, -55%) scale(1.1); opacity: 1; }
+            75% { transform: translate(-50%, -60%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -70%) scale(0.5); opacity: 0; }
+        }
+        .end-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; flex-direction: column; text-align: center; font-size: 2em; pointer-events: auto; z-index: 200; }
+        .end-screen h2 { font-size: 2em; margin-bottom: 10px; }
+        .end-screen p { font-size: 0.8em; color: #fff; margin: 0; }
+        .end-screen button { padding: 15px 30px; font-size: 0.8em; cursor: pointer; border-radius: 5px; border: none; font-weight: bold; margin-top: 30px; }
+        
+        #winner-screen h2 { color: #FFD700; }
+        #winner-screen p span { color: limegreen; font-weight: bold; }
+        #winner-screen button { background-color: #00ff7f; color: #1a1a1a; }
+        
+        #loser-screen h2 { color: #ff3b3b; }
+        #loser-screen button { background-color: #555; color: #fff; }
+    </style>
+</head>
+<body>
+    <div id="game-container"></div>
+    <div id="ui-container">
+        <div id="score-player1" class="scoreboard">Player 1: <span id="p1-score">0</span></div>
+        <div id="score-player2" class="scoreboard">Player 2: <span id="p2-score">0</span></div>
+        <div id="turn-indicator">Aguardando...</div>
+        <div id="emoji-bar">
+            <span class="emoji-button" data-emoji="😊">😊</span>
+            <span class="emoji-button" data-emoji="😢">😢</span>
+            <span class="emoji-button" data-emoji="👍">👍</span>
+            <span class="emoji-button" data-emoji="👋">👋</span>
+            <span class="emoji-button" data-emoji="❤️">❤️</span>
+        </div>
+        
+        <div id="winner-screen" class="end-screen">
+            <h2 id="winner-player"></h2>
+            <p>Ganhou <span>50 LCO</span>! 🏆</p>
+            <button id="back-to-lobby-btn-winner">Voltar para a Sala de Mineração</button>
+        </div>
+
+        <div id="loser-screen" class="end-screen">
+            <h2>Você Perdeu!</h2>
+            <p>Vai minerar!</p>
+            <button id="back-to-lobby-btn-loser">Voltar para a Sala de Mineração</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+    
+    <script>
+        const LocalGameLogic = {
+            isValidMove: function(board, from, to, player, isKing) {
+                if (!board || !board[to.row] || board[to.row][to.col] !== 0) return { valid: false };
+                const moveDir = player === 1 ? -1 : 1;
+                const dr = to.row - from.row;
+                const dc = to.col - from.col;
+
+                if (!isKing) {
+                    if (Math.abs(dc) === 1 && dr === moveDir) return { valid: true, type: 'move' };
+                    if (Math.abs(dc) === 2 && Math.abs(dr) === 2) {
+                        const capturedRow = from.row + (dr / 2);
+                        const capturedCol = from.col + (dc / 2);
+                        const capturedPiece = board[capturedRow][capturedCol];
+                        if (capturedPiece !== 0 && (capturedPiece % 2 !== player % 2)) {
+                            return { valid: true, type: 'capture', captured: { row: capturedRow, col: capturedCol } };
+                        }
+                    }
+                } else {
+                    if (Math.abs(dr) !== Math.abs(dc)) return { valid: false };
+                    const stepR = Math.sign(dr); const stepC = Math.sign(dc); let capturedPiece = null; let capturedCount = 0;
+                    for (let i = 1; i < Math.abs(dr); i++) {
+                        const r = from.row + i * stepR; const c = from.col + i * stepC;
+                        const pieceOnPath = board[r][c];
+                        if (pieceOnPath !== 0) {
+                            if (pieceOnPath % 2 !== player % 2) { capturedPiece = { row: r, col: c }; capturedCount++; } 
+                            else { return { valid: false }; }
+                        }
+                    }
+                    if (capturedCount > 1) return { valid: false };
+                    if (capturedCount === 1) return { valid: true, type: 'capture', captured: capturedPiece };
+                    return { valid: true, type: 'move' };
+                }
+                return { valid: false };
+            },
+            canPieceCapture: function(board, fromRow, fromCol) {
+                const pieceType = board[fromRow][fromCol]; if (pieceType === 0) return false;
+                const isKing = pieceType > 2; const player = (pieceType === 1 || pieceType === 3) ? 1 : 2;
+                const directions = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
+                if (!isKing) {
+                    for (const [dr, dc] of directions) {
+                        const opponentRow = fromRow + dr; const opponentCol = fromCol + dc;
+                        const destRow = fromRow + dr * 2; const destCol = fromCol + dc * 2;
+                        if (destRow >= 0 && destRow < 8 && destCol >= 0 && destCol < 8) {
+                            const capturedPiece = board[opponentRow][opponentCol];
+                            if (capturedPiece !== 0 && (capturedPiece % 2 !== player % 2) && board[destRow][destCol] === 0) return true;
+                        }
+                    }
+                } else {
+                    for (const [dr, dc] of directions) {
+                        for (let i = 1; i < 8; i++) {
+                            const r = fromRow + i * dr; const c = fromCol + i * dc;
+                            if (r < 0 || r >= 8 || c < 0 || c >= 8) break;
+                            const pieceOnPath = board[r][c];
+                            if (pieceOnPath !== 0) {
+                                if (pieceOnPath % 2 !== player % 2) {
+                                    const destRow = r + dr; const destCol = c + dc;
+                                    if (destRow >= 0 && destRow < 8 && destCol >= 0 && destCol < 8 && board[destRow][destCol] === 0) return true;
+                                } break;
+                            }
+                        }
+                    }
+                }
+                return false;
+            },
+            hasAnyValidMoves: function(board, player) {
+                for(let r = 0; r < 8; r++) {
+                    for(let c = 0; c < 8; c++) {
+                        const piece = board[r][c];
+                        if (piece !== 0 && ((piece === 1 || piece === 3) ? 1 : 2) === player) {
+                            const isKing = piece > 2;
+                            const directions = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
+                            for(const [dr, dc] of directions) {
+                                if(this.isValidMove(board, {row:r, col:c}, {row: r+dr, col: c+dc}, player, isKing).valid) return true;
+                                if(this.isValidMove(board, {row:r, col:c}, {row: r+dr*2, col: c+dc*2}, player, isKing).valid) return true;
+                                if(isKing) {
+                                    for(let i=3; i<8; i++) {
+                                        if(this.isValidMove(board, {row:r, col:c}, {row: r+dr*i, col: c+dc*i}, player, isKing).valid) return true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                return false;
+            }
+        };
+    </script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const API_BASE_URL = 'https://lula-coin-backend.onrender.com';
+            const SCALE = 2.5;
+            let onlineState = { gameId: null, gameStateInterval: null, playerColor: null, myTurnNumber: null, board: [], currentTurn: null, selectedPiece: null, lastEmojiTimestamp: null, myUsername: null };
+
+            // << LINHA CORRIGIDA >> - A declaração desta variável estava faltando
+            const gameContainer = document.getElementById('game-container');
+            
+            const uiContainer = document.getElementById('ui-container');
+            const turnIndicator = document.getElementById('turn-indicator');
+            const winnerScreen = document.getElementById('winner-screen');
+            const winnerPlayer = document.getElementById('winner-player');
+            const backToLobbyBtnWinner = document.getElementById('back-to-lobby-btn-winner');
+            const loserScreen = document.getElementById('loser-screen');
+            const backToLobbyBtnLoser = document.getElementById('back-to-lobby-btn-loser');
+            
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x101010);
+            const renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            gameContainer.appendChild(renderer.domElement);
+            const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
+            camera.position.set(0, 25, 35);
+            camera.lookAt(0, 5, 0);
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableZoom = false; controls.enablePan = false; controls.maxPolarAngle = Math.PI / 2.2; controls.target.set(0, 5, 0);
+            scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.9);
+            directionalLight.position.set(20, 30, 10); directionalLight.castShadow = true; directionalLight.shadow.mapSize.width = 2048; directionalLight.shadow.mapSize.height = 2048;
+            scene.add(directionalLight);
+            
+            const apiRequest = async (endpoint, method = 'GET', body = null) => {
+                const token = localStorage.getItem('token');
+                if (!token) { window.location.href = 'index.html'; return; }
+                const options = { method, headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } };
+                if (body) { options.body = JSON.stringify(body); }
+                try {
+                    const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+                    if (response.status === 204) return { success: true };
+                    if (!response.ok) throw new Error(`Erro de rede: ${response.statusText}`);
+                    return response.json();
+                } catch (error) { console.error("Erro de API:", error); return null; }
+            };
+            function parseJwt(token) { try { return JSON.parse(atob(token.split('.')[1])); } catch (e) { return null; } }
+
+            const pieceGeo = new THREE.CylinderGeometry(0.4 * SCALE, 0.4 * SCALE, 0.15 * SCALE, 32);
+            const boardGroup = new THREE.Group();
+            const piecesGroup = new THREE.Group();
+            
+            function createPieceTexture(pieceColor, letterColor) { const c = document.createElement('canvas'); c.width=256; c.height=256; const ctx = c.getContext('2d'); ctx.fillStyle=pieceColor; ctx.fillRect(0,0,256,256); ctx.fillStyle=letterColor; ctx.font='bold 180px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('L',128,128); return new THREE.CanvasTexture(c); }
+            function generateWoodTexture() { const c = document.createElement('canvas'); c.width = 128; c.height = 128; const ctx = c.getContext('2d'); ctx.fillStyle = '#966F33'; ctx.fillRect(0, 0, 128, 128); for (let i = 0; i < 128; i += Math.random() * 10 + 5) { ctx.fillStyle = `rgba(0,0,0,${Math.random() * 0.1 + 0.05})`; ctx.fillRect(i, 0, Math.random() * 3 + 1, 128); } const t = new THREE.CanvasTexture(c); t.wrapS = THREE.RepeatWrapping; t.wrapT = THREE.RepeatWrapping; return t; }
+            function generateBrickTexture() { const c = document.createElement('canvas'); const bw = 64, bh = 24, gap = 4; c.width = (bw + gap) * 2; c.height = (bh + gap) * 4; const ctx = c.getContext('2d'); ctx.fillStyle = '#444444'; ctx.fillRect(0, 0, c.width, c.height); for (let row = 0; row < 4; row++) { for (let col = 0; col < 2; col++) { const x = col * (bw + gap); const y = row * (bh + gap); const ox = (row % 2 === 0) ? 0 : (bw + gap) / 2; const r = 160 + Math.random() * 40; const g = 70 + Math.random() * 20; const b = 40 + Math.random() * 10; ctx.fillStyle = `rgb(${r},${g},${b})`; ctx.fillRect(x - ox, y, bw, bh); ctx.fillRect(x - ox + (bw + gap), y, bw, bh); } } const t = new THREE.CanvasTexture(c); t.wrapS = THREE.RepeatWrapping; t.wrapT = THREE.RepeatWrapping; return t; }
+            function generateBannerTexture(text) { const c = document.createElement('canvas'); c.width = 1024; c.height = 256; const ctx = c.getContext('2d'); ctx.font = 'bold 120px Impact, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = 'black'; ctx.fillText(text, c.width / 2 + 5, c.height / 2 + 5); ctx.strokeStyle = 'black'; ctx.lineWidth = 15; ctx.strokeText(text, c.width / 2, c.height / 2); ctx.fillStyle = '#FFD700'; ctx.fillText(text, c.width / 2, c.height / 2); return new THREE.CanvasTexture(c); }
+
+            const redMat = new THREE.MeshStandardMaterial({ map: createPieceTexture('#c0392b', '#ecf0f1') });
+            const blueMat = new THREE.MeshStandardMaterial({ map: createPieceTexture('#2980b9', '#ecf0f1') });
+
+            function createEnvironment() {
+                const tableHeight = 6;
+                const woodTexture = generateWoodTexture();
+                const woodMaterial = new THREE.MeshStandardMaterial({ map: woodTexture });
+                const tableTop = new THREE.Mesh(new THREE.BoxGeometry(12 * SCALE, 0.5 * SCALE, 12 * SCALE), woodMaterial);
+                tableTop.position.y = tableHeight; tableTop.castShadow = true; tableTop.receiveShadow = true;
+                scene.add(tableTop);
+                const legGeo = new THREE.BoxGeometry(0.5 * SCALE, tableHeight, 0.5 * SCALE);
+                const legPositions = [{x: 5 * SCALE, z: 5 * SCALE}, {x: -5 * SCALE, z: 5 * SCALE}, {x: 5 * SCALE, z: -5 * SCALE}, {x: -5 * SCALE, z: -5 * SCALE}];
+                legPositions.forEach(pos => { const leg = new THREE.Mesh(legGeo, woodMaterial); leg.position.set(pos.x, tableHeight / 2, pos.z); leg.castShadow = true; scene.add(leg); });
+                boardGroup.position.y = tableHeight + (0.25 * SCALE);
+                piecesGroup.position.y = boardGroup.position.y;
+                scene.add(boardGroup, piecesGroup);
+                for (let r = 0; r < 8; r++) { for (let c = 0; c < 8; c++) { const isWhite = (r + c) % 2 === 0; const squareMat = new THREE.MeshStandardMaterial({ color: isWhite ? 0xffffff : 0x000000 }); const squareGeo = new THREE.BoxGeometry(1 * SCALE, 0.2 * SCALE, 1 * SCALE); const square = new THREE.Mesh(squareGeo, squareMat); square.position.set((c - 3.5) * SCALE, 0, (r - 3.5) * SCALE); square.receiveShadow = true; square.userData = { row: r, col: c, type: 'square' }; boardGroup.add(square); } }
+                const floorTexture = generateWoodTexture(); floorTexture.repeat.set(10, 10);
+                const floorMaterial = new THREE.MeshStandardMaterial({ map: floorTexture, color: 0x6F4E37 });
+                const floor = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), floorMaterial);
+                floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true;
+                scene.add(floor);
+                const brickTexture = generateBrickTexture(); brickTexture.repeat.set(20, 10);
+                const brickMaterial = new THREE.MeshStandardMaterial({ map: brickTexture });
+                const wallHeight = 100; const wallDistance = 100;
+                const wallBack = new THREE.Mesh(new THREE.PlaneGeometry(wallDistance * 2, wallHeight), brickMaterial); wallBack.position.z = -wallDistance; wallBack.position.y = wallHeight / 2; wallBack.receiveShadow = true; scene.add(wallBack);
+                const wallFront = new THREE.Mesh(new THREE.PlaneGeometry(wallDistance * 2, wallHeight), brickMaterial); wallFront.position.z = wallDistance; wallFront.position.y = wallHeight / 2; wallFront.rotation.y = Math.PI; wallFront.receiveShadow = true; scene.add(wallFront);
+                const wallLeft = new THREE.Mesh(new THREE.PlaneGeometry(wallDistance * 2, wallHeight), brickMaterial); wallLeft.position.x = -wallDistance; wallLeft.position.y = wallHeight / 2; wallLeft.rotation.y = Math.PI / 2; wallLeft.receiveShadow = true; scene.add(wallLeft);
+                const wallRight = new THREE.Mesh(new THREE.PlaneGeometry(wallDistance * 2, wallHeight), brickMaterial); wallRight.position.x = wallDistance; wallRight.position.y = wallHeight / 2; wallRight.rotation.y = -Math.PI / 2; wallRight.receiveShadow = true; scene.add(wallRight);
+                const bannerTexture = generateBannerTexture("LULACOIN");
+                const bannerMaterial = new THREE.MeshStandardMaterial({ map: bannerTexture, transparent: true });
+                const bannerGeo = new THREE.PlaneGeometry(150, 25);
+                const bannerBack = new THREE.Mesh(bannerGeo, bannerMaterial); bannerBack.position.set(0, 25, -wallDistance + 0.1); scene.add(bannerBack);
+                const bannerFront = new THREE.Mesh(bannerGeo, bannerMaterial); bannerFront.position.set(0, 25, wallDistance - 0.1); bannerFront.rotation.y = Math.PI; scene.add(bannerFront);
+                const bannerLeft = new THREE.Mesh(bannerGeo, bannerMaterial); bannerLeft.position.set(-wallDistance + 0.1, 25, 0); bannerLeft.rotation.y = Math.PI / 2; scene.add(bannerLeft);
+                const bannerRight = new THREE.Mesh(bannerGeo, bannerMaterial); bannerRight.position.set(wallDistance - 0.1, 25, 0); bannerRight.rotation.y = -Math.PI / 2; scene.add(bannerRight);
+            }
+
+            function syncSceneWithState() {
+                while(piecesGroup.children.length > 0){ piecesGroup.remove(piecesGroup.children[0]); }
+                if (!onlineState.board || onlineState.board.length === 0) return;
+                for (let row = 0; row < 8; row++) {
+                    for (let col = 0; col < 8; col++) {
+                        const pieceType = onlineState.board[row][col];
+                        if (pieceType !== 0) {
+                            const isKing = pieceType > 2;
+                            const player = (pieceType === 1 || pieceType === 3) ? 1 : 2;
+                            const pieceMesh = new THREE.Mesh(pieceGeo, player === 1 ? redMat : blueMat);
+                            pieceMesh.castShadow = true;
+                            pieceMesh.position.set((col - 3.5) * SCALE, 0.2 * SCALE, (row - 3.5) * SCALE);
+                            pieceMesh.userData = { row, col, type: 'piece', isKing };
+                            piecesGroup.add(pieceMesh);
+                            if (isKing) {
+                                const kingRingGeo = new THREE.RingGeometry(0.45 * SCALE, 0.55 * SCALE, 32);
+                                const kingRingMat = new THREE.MeshBasicMaterial({ color: 0xFFD700, side: THREE.DoubleSide });
+                                const kingRing = new THREE.Mesh(kingRingGeo, kingRingMat);
+                                kingRing.rotation.x = -Math.PI / 2;
+                                kingRing.position.y = 0.01;
+                                pieceMesh.add(kingRing);
+                                pieceMesh.userData.kingRing = kingRing;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            function updateTurnIndicator() {
+                if(winnerScreen.style.display === 'flex' || loserScreen.style.display === 'flex') { turnIndicator.style.display = 'none'; return; }
+                if (onlineState.currentTurn === onlineState.myTurnNumber) {
+                    turnIndicator.textContent = "É a sua vez!";
+                    turnIndicator.style.backgroundColor = 'rgba(0, 255, 127, 0.7)';
+                } else {
+                    turnIndicator.textContent = `Aguardando jogada do oponente...`;
+                    turnIndicator.style.backgroundColor = 'rgba(255, 165, 0, 0.7)';
+                }
+            }
+            
+            function updateScoreboards(players) {
+                const p1Data = players.find(p => p.color === 'p1');
+                const p2Data = players.find(p => p.color === 'p2');
+                if(!p1Data || !p2Data) return;
+                let p1PiecesLeft = 0; let p2PiecesLeft = 0;
+                onlineState.board.forEach(row => row.forEach(cell => {
+                    if (cell === 1 || cell === 3) p1PiecesLeft++;
+                    if (cell === 2 || cell === 4) p2PiecesLeft++;
+                }));
+                const p1Score = 12 - p2PiecesLeft;
+                const p2Score = 12 - p1PiecesLeft;
+                document.getElementById('score-player1').innerHTML = `${p1Data.username} (Vermelho): <span id="p1-score">${p1Score}</span>`;
+                document.getElementById('score-player2').innerHTML = `${p2Data.username} (Azul): <span id="p2-score">${p2Score}</span>`;
+            }
+
+            function showFloatingEmoji(emoji) { const e = document.createElement('div'); e.className = 'floating-emoji'; e.textContent = emoji; uiContainer.appendChild(e); setTimeout(() => e.remove(), 2000); }
+
+            async function getGameState() {
+                if (!onlineState.gameId) return;
+                const state = await apiRequest(`/api/damas/game/state/${onlineState.gameId}`);
+                if (state) {
+                    let boardChanged = JSON.stringify(onlineState.board) !== JSON.stringify(state.boardState);
+                    onlineState.board = state.boardState;
+                    onlineState.currentTurn = state.currentTurn;
+                    if (!onlineState.playerColor) {
+                        const myUserId = parseJwt(localStorage.getItem('token')).user.id;
+                        const myPlayerData = state.players.find(p => p.userId === myUserId);
+                        onlineState.playerColor = myPlayerData.color;
+                        onlineState.myUsername = myPlayerData.username;
+                        onlineState.myTurnNumber = onlineState.playerColor === 'p1' ? 1 : 2;
+                        if(onlineState.myTurnNumber === 1) camera.position.set(0, 25, 35); else camera.position.set(0, 25, -35);
+                        controls.update();
+                    }
+                    if (boardChanged) syncSceneWithState();
+                    updateTurnIndicator();
+                    updateScoreboards(state.players);
+                    if (state.lastEmoji && state.lastEmoji.timestamp !== onlineState.lastEmojiTimestamp) {
+                        onlineState.lastEmojiTimestamp = state.lastEmoji.timestamp;
+                        if (state.lastEmoji.sender !== onlineState.playerColor) {
+                            showFloatingEmoji(state.lastEmoji.emoji);
+                        }
+                    }
+
+                    if(state.winner) {
+                        clearInterval(onlineState.gameStateInterval);
+                        if (state.winner === onlineState.myUsername) {
+                            winnerPlayer.textContent = `${state.winner} Venceu!`;
+                            winnerScreen.style.display = 'flex';
+                        } else if (state.winner !== 'none') {
+                            loserScreen.style.display = 'flex';
+                        }
+                        updateTurnIndicator();
+                    }
+                }
+            }
+
+            async function sendMoveToServer(boardState, nextTurn, winner = null) {
+                const body = { boardState, nextTurn, winner };
+                await apiRequest(`/api/damas/game/move/${onlineState.gameId}`, 'POST', body);
+                getGameState();
+            }
+
+            async function sendEmojiToServer(emoji) { await apiRequest(`/api/damas/game/emoji/${onlineState.gameId}`, 'POST', { emoji, playerColor: onlineState.playerColor }); }
+
+            let selectedPieceMesh = null;
+            function highlightPiece(pieceMesh, selected) {
+                if(selectedPieceMesh) { selectedPieceMesh.scale.set(1, 1, 1); }
+                if(selected && pieceMesh) { pieceMesh.scale.set(1.1, 1.3, 1.1); selectedPieceMesh = pieceMesh; } 
+                else { selectedPieceMesh = null; }
+            }
+
+            const raycaster = new THREE.Raycaster();
+            const mouse = new THREE.Vector2();
+
+            function onBoardClick(event) {
+                if (winnerScreen.style.display === 'flex' || loserScreen.style.display === 'flex' || onlineState.currentTurn !== onlineState.myTurnNumber) return;
+                mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+                raycaster.setFromCamera(mouse, camera);
+
+                const objectsToIntersect = [...boardGroup.children, ...piecesGroup.children];
+                const intersects = raycaster.intersectObjects(objectsToIntersect, true);
+
+                if (intersects.length > 0) {
+                    let clickedObject = intersects[0].object;
+                    
+                    while (clickedObject && clickedObject.parent !== piecesGroup && clickedObject.parent !== boardGroup) {
+                         clickedObject = clickedObject.parent;
+                    }
+                    if (!clickedObject) return;
+
+                    const { row, col, type } = clickedObject.userData;
+
+                    if (type === 'piece') {
+                        handlePieceClick(clickedObject);
+                    } else if (type === 'square') {
+                        handleSquareClick(clickedObject);
+                    }
+                }
+            }
+
+            function handlePieceClick(clickedObject) {
+                 const { row, col } = clickedObject.userData;
+                 const pieceType = onlineState.board[row][col];
+                 const pieceOwner = (pieceType === 1 || pieceType === 3) ? 1 : 2;
+                 if (pieceOwner === onlineState.myTurnNumber) {
+                     onlineState.selectedPiece = { row, col };
+                     highlightPiece(clickedObject, true);
+                 }
+            }
+            
+            function handleSquareClick(clickedObject) {
+                if (!onlineState.selectedPiece) return;
+                const { row, col } = clickedObject.userData;
+                const pieceType = onlineState.board[onlineState.selectedPiece.row][onlineState.selectedPiece.col];
+                const isKing = pieceType > 2;
+                
+                const availableCaptures = [];
+                for(let r=0; r<8; r++){ for(let c=0; c<8; c++){
+                    const piece = onlineState.board[r][c];
+                    if(piece !== 0 && ((piece === 1 || piece === 3) ? 1 : 2) === onlineState.myTurnNumber && LocalGameLogic.canPieceCapture(onlineState.board, r, c)) {
+                        availableCaptures.push({r,c});
+                    }
+                }}
+
+                const moveInfo = LocalGameLogic.isValidMove(onlineState.board, onlineState.selectedPiece, {row, col}, onlineState.myTurnNumber, isKing);
+
+                if (availableCaptures.length > 0 && moveInfo.type !== 'capture') {
+                    turnIndicator.textContent = "Captura obrigatória!";
+                    setTimeout(() => updateTurnIndicator(), 2000);
+                    return;
+                }
+
+                if (moveInfo.valid) {
+                    let currentPiece = onlineState.board[onlineState.selectedPiece.row][onlineState.selectedPiece.col];
+                    if (currentPiece === 1 && row === 0) currentPiece = 3;
+                    if (currentPiece === 2 && row === 7) currentPiece = 4;
+                    onlineState.board[row][col] = currentPiece;
+                    onlineState.board[onlineState.selectedPiece.row][onlineState.selectedPiece.col] = 0;
+                    if (moveInfo.type === 'capture') {
+                        onlineState.board[moveInfo.captured.row][moveInfo.captured.col] = 0;
+                    }
+                    
+                    const canCaptureAgain = moveInfo.type === 'capture' && LocalGameLogic.canPieceCapture(onlineState.board, row, col);
+
+                    if (canCaptureAgain && availableCaptures.length > 0) {
+                        onlineState.selectedPiece = { row, col };
+                        syncSceneWithState();
+                        const newPieceMesh = piecesGroup.children.find(p => p.userData.row === row && p.userData.col === col);
+                        highlightPiece(newPieceMesh, true);
+                    } else {
+                        highlightPiece(null, false);
+                        onlineState.selectedPiece = null;
+                        
+                        const nextPlayer = onlineState.myTurnNumber === 1 ? 2 : 1;
+                        const p1pieces = onlineState.board.flat().filter(p => p===1 || p===3).length;
+                        const p2pieces = onlineState.board.flat().filter(p => p===2 || p===4).length;
+                        let winner = null;
+
+                        if(p2pieces === 0) { winner = 'p1'; } 
+                        else if (p1pieces === 0) { winner = 'p2'; } 
+                        else if (!LocalGameLogic.hasAnyValidMoves(onlineState.board, nextPlayer)) {
+                            winner = onlineState.playerColor;
+                        }
+                        
+                        syncSceneWithState();
+                        sendMoveToServer(onlineState.board, nextPlayer, winner);
+                    }
+                } else {
+                    onlineState.selectedPiece = null; highlightPiece(null, false);
+                }
+            }
+
+            const clock = new THREE.Clock();
+            function animate() {
+                requestAnimationFrame(animate);
+                controls.update();
+                const time = clock.getElapsedTime();
+                piecesGroup.children.forEach(piece => {
+                    if (piece.userData.isKing && piece.userData.kingRing) {
+                        const scale = 1 + Math.sin(time * 5) * 0.1;
+                        piece.userData.kingRing.scale.set(scale, scale, 1);
+                    }
+                });
+                renderer.render(scene, camera);
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            onlineState.gameId = urlParams.get('gameId');
+
+            if (!onlineState.gameId) {
+                turnIndicator.textContent = "ERRO: ID da partida não encontrado!";
+            } else {
+                createEnvironment();
+                const returnToLobby = () => { window.location.href = 'index.html'; };
+                backToLobbyBtnWinner.addEventListener('click', returnToLobby);
+                backToLobbyBtnLoser.addEventListener('click', returnToLobby);
+
+                document.querySelectorAll('.emoji-button').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const emoji = btn.dataset.emoji;
+                        showFloatingEmoji(emoji);
+                        sendEmojiToServer(emoji);
+                    });
+                });
+                gameContainer.addEventListener('click', onBoardClick);
+                
+                getGameState();
+                onlineState.gameStateInterval = setInterval(getGameState, 3000);
+                animate();
+            }
+        });
+    </script>
+</body>
+</html>

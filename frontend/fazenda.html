@@ -1,58 +1,87 @@
-// Aguarda o carregamento completo do DOM para iniciar o jogo
-document.addEventListener('DOMContentLoaded', () => {
-  // --- CONFIGURAÇÕES GLOBAIS E CONSTANTES ---
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Fazenda Alegre 3D - Online</title>
+  <style>
+    body { margin: 0; overflow: hidden; font-family: 'Fredoka One', cursive; }
+    canvas { display: block; }
+    #ui-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+    #inventario { position: absolute; top: 20px; left: 20px; background: rgba(255, 255, 255, 0.9); padding: 10px 20px; border-radius: 50px; display: flex; flex-wrap: wrap; gap: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 10; color: #5D4037; font-size: 18px; font-weight: bold; pointer-events: auto; }
+    #abrir-inventario-sementes { position: absolute; top: 90px; left: 20px; background: rgba(255, 255, 255, 0.9); padding: 10px 15px; border-radius: 50px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 10; display: flex; align-items: center; gap: 5px; border: none; font-family: 'Fredoka One', cursive; font-size: 16px; color: #5D4037; cursor: pointer; transition: all 0.2s ease-out; pointer-events: auto; }
+    #abrir-inventario-sementes:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.3); }
+    #inventario-sementes { position: absolute; top: 150px; left: 20px; background: rgba(255, 255, 255, 0.9); padding: 10px 20px; border-radius: 10px; display: none; flex-direction: column; gap: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 9; color: #5D4037; font-size: 16px; font-weight: bold; pointer-events: auto; max-height: 250px; overflow-y: auto; }
+    .item-inventario { display: flex; align-items: center; gap: 5px; }
+    #ferramentas { position: absolute; bottom: 20px; right: 20px; background: rgba(255, 255, 255, 0.9); padding: 10px; border-radius: 50px; display: flex; gap: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 10; pointer-events: auto; }
+    .botao-ferramenta { width: 50px; height: 50px; border-radius: 50%; border: none; background: #A1887F; color: white; font-size: 24px; cursor: pointer; transition: all 0.2s ease-out; display: flex; justify-content: center; align-items: center; box-shadow: 0 3px 0 #795548; pointer-events: auto; }
+    .botao-ferramenta.active { background: #5D4037; transform: translateY(3px); box-shadow: 0 0 0 #795548; }
+    .botao-ferramenta:hover:not(.active) { transform: translateY(-3px); box-shadow: 0 6px 0 #795548; }
+    #loja { position: absolute; top: 70px; right: 20px; background: rgba(255, 255, 255, 0.95); padding: 15px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 10; display: none; flex-direction: column; gap: 10px; width: 200px; max-height: 400px; overflow-y: auto; pointer-events: auto; }
+    #loja h3 { margin: 0 0 10px 0; text-align: center; color: #5D4037; }
+    .categoria-loja { margin-bottom: 10px; }
+    .categoria-loja h4 { margin: 5px 0; color: #5D4037; border-bottom: 1px solid #8D6E63; padding-bottom: 3px; }
+    .botao-loja { background: linear-gradient(to bottom, #FFD54F, #FBC02D); border: none; padding: 8px 15px; border-radius: 25px; font-weight: bold; color: #5D4037; cursor: pointer; box-shadow: 0 3px 0 #F57C00; transition: all 0.2s ease-out; font-size: 14px; display: flex; align-items: center; gap: 5px; width: 100%; margin-bottom: 5px; pointer-events: auto; }
+    .botao-loja:hover { transform: translateY(-2px); box-shadow: 0 5px 0 #F57C00; }
+    .botao-loja:active { transform: translateY(1px); box-shadow: 0 1px 0 #F57C00; }
+    #abrir-loja { position: absolute; top: 20px; right: 20px; background: rgba(255, 255, 255, 0.9); padding: 10px 15px; border-radius: 50px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 10; display: flex; align-items: center; gap: 5px; border: none; font-family: 'Fredoka One', cursive; font-size: 16px; color: #5D4037; cursor: pointer; transition: all 0.2s ease-out; pointer-events: auto; }
+    #abrir-loja:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.3); }
+    .notificacao { position: absolute; top: 70px; left: 50%; transform: translateX(-50%); color: white; padding: 10px 20px; border-radius: 5px; z-index: 100; animation: fadeOut 2s forwards 2s; display: flex; align-items: center; gap: 8px; font-weight: bold; pointer-events: none; }
+    .notificacao[data-type="sucesso"] { background: rgba(76, 175, 80, 0.9); }
+    .notificacao[data-type="erro"] { background: rgba(244, 67, 54, 0.9); }
+    .notificacao[data-type="info"] { background: rgba(0, 0, 0, 0.7); }
+    @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; display: none; } }
+    .emoji-3d { position: absolute; font-size: 30px; pointer-events: auto; cursor: pointer; transform: translate(-50%, -50%); text-shadow: 2px 2px 4px rgba(0,0,0,0.5); animation: float 2s ease-in-out infinite; }
+    @keyframes float { 0%, 100% { transform: translate(-50%, -50%) translateY(0); } 50% { transform: translate(-50%, -50%) translateY(-10px); } }
+    @keyframes wriggle { 0% { transform: translate(-50%, -55%) rotate(5deg); } 50% { transform: translate(-45%, -50%) rotate(-5deg); } 100% { transform: translate(-50%, -55%) rotate(5deg); } }
+    .praga { animation: wriggle 0.8s ease-in-out infinite; }
+    #modal-sementes { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(255, 255, 255, 0.95); padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); z-index: 1000; display: none; flex-direction: column; gap: 10px; max-width: 300px; pointer-events: auto; }
+    #modal-sementes .modal-conteudo { background: none; padding: 0; border-radius: 0; box-shadow: none; max-width: none; }
+    #modal-sementes h3 { margin: 0 0 10px 0; color: #5D4037; }
+    .opcao-semente { display: flex; align-items: center; justify-content: space-between; padding: 10px; margin: 5px 0; background: #f5f5f5; border-radius: 5px; cursor: pointer; transition: all 0.2s; pointer-events: auto; }
+    .opcao-semente:hover { background: #e0e0e0; }
+    .opcao-semente span { font-size: 24px; }
+    .modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; pointer-events: auto; }
+    .modal-conteudo { background: white; padding: 20px; border-radius: 10px; max-width: 300px; text-align: center; pointer-events: auto; }
+    .modal-botoes { display: flex; justify-content: center; gap: 10px; margin-top: 15px; }
+    .modal-botao { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-family: 'Fredoka One', cursive; pointer-events: auto; }
+    .modal-botao.confirmar { background: #4CAF50; color: white; }
+    .modal-botao.cancelar { background: #f44336; color: white; }
+    #tooltip { position: absolute; display: none; background: rgba(0, 0, 0, 0.75); color: white; padding: 8px 12px; border-radius: 8px; font-size: 14px; font-weight: bold; z-index: 1001; pointer-events: none; white-space: nowrap; }
+    #tooltip.alerta-praga { background: rgba(211, 47, 47, 0.9); }
+  </style>
+</head>
+<body>
+<script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+
+<div id="ui-container">
+  <div id="inventario">
+    <div class="item-inventario">LCO <span id="lco-balance">0.00</span></div>
+    <div class="item-inventario">💰 <span id="moedas">10</span></div>
+    <div class="item-inventario">💧 <span id="agua">10</span></div>
+    <div class="item-inventario">🧈 <span id="racao">10</span></div>
+    <div class="item-inventario">☠️ <span id="veneno">0</span></div>
+  </div>
+  <button id="abrir-inventario-sementes">📦 Inventário</button>
+  <div id="inventario-sementes"><h3>Minhas Sementes</h3></div>
+  <button id="abrir-loja">🛒 Loja</button>
+  <div id="loja"><h3>Loja da Fazenda</h3><div class="categoria-loja"><h4>Sementes</h4><button class="botao-loja" onclick="comprar('milho')">🌽 Milho (💰5)</button><button class="botao-loja" onclick="comprar('tomate')">🍅 Tomate (💰7)</button><button class="botao-loja" onclick="comprar('girassol')">🌻 Girassol (💰10)</button><button class="botao-loja" onclick="comprar('cenoura')">🥕 Cenoura (💰8)</button></div><div class="categoria-loja"><h4>Recursos</h4><button class="botao-loja" onclick="comprar('agua')">💧 Água (💰3)</button><button class="botao-loja" onclick="comprar('racao')">🧈 Ração (💰4)</button><button class="botao-loja" onclick="comprar('veneno')">☠️ Veneno (💰10)</button></div><div class="categoria-loja"><h4>Animais</h4><button class="botao-loja" onclick="comprar('galinha')">🐓 Galinha (💰40)</button><button class="botao-loja" onclick="comprar('vaca')">🐄 Vaca (💰100)</button><button class="botao-loja" onclick="comprar('porco')">🐖 Porco (💰60)</button></div><div class="categoria-loja"><h4>Terrenos</h4><button class="botao-loja" onclick="comprar('terreno')">🔓 Terreno (LCO <span id="preco-terreno">250</span>)</button></div></div>
+  <div id="ferramentas"><button class="botao-ferramenta active" id="enxada">🪓</button><button class="botao-ferramenta" id="semente">🌱</button><button class="botao-ferramenta" id="regador">💧</button><button class="botao-ferramenta" id="foice">✂️</button><button class="botao-ferramenta" id="veneno-tool">☠️</button></div>
+  <div class="modal" id="modal-confirmacao"><div class="modal-conteudo"><p id="modal-mensagem">Deseja comprar este item?</p><div class="modal-botoes"><button class="modal-botao confirmar" id="modal-btn-confirmar">Confirmar</button><button class="modal-botao cancelar" id="modal-btn-cancelar">Cancelar</button></div></div></div>
+  <div id="modal-sementes"><div class="modal-conteudo"><h3>Escolha a semente</h3><div id="opcoes-sementes"></div><button class="modal-botao cancelar" onclick="fecharModalSementes()" style="margin-top: 15px;">Cancelar</button></div></div>
+  <div id="tooltip"></div>
+</div>
+
+<script>
   const API_BASE_URL = 'https://lula-coin-backend.onrender.com';
   let farmState = {}; 
   let lcoBalance = 0;
-  let recursos = {}; 
-  let ferramentaAtiva = 'enxada', canteiroSelecionado = null, hoveredAnimal = null;
 
-  const canteiros = [];
-  const animais = [];
-  const objetosClicaveis = [];
-
-  const ESTADOS = { GRAMA: 'grama', BLOQUEADO: 'bloqueado', ARADA: 'arada', ARADA_AGUADA: 'arada_aguada', PLANTADA: 'plantada', CRESCENDO: 'crescendo', MADURA: 'madura', COM_PRAGA: 'com_praga' };
-  const PLANTAS = { MILHO: { nome: "milho", emoji: '🌽', broto: { emoji: '🌱', fontSize: '20px' }, crescendo: { emoji: '🌿', fontSize: '35px' }, maduro: { emoji: '🌽', fontSize: '45px' }, tempoEstagio1: 30000, tempoEstagio2: 30000, recompensa: 10 }, TOMATE: { nome: "tomate", emoji: '🍅', broto: { emoji: '🌱', fontSize: '20px' }, crescendo: { emoji: '🌿', fontSize: '35px' }, maduro: { emoji: '🍅', fontSize: '45px' }, tempoEstagio1: 50000, tempoEstagio2: 50000, recompensa: 15 }, GIRASSOL: { nome: "girassol", emoji: '🌻', broto: { emoji: '🌱', fontSize: '20px' }, crescendo: { emoji: '🌿', fontSize: '35px' }, maduro: { emoji: '🌻', fontSize: '45px' }, tempoEstagio1: 60000, tempoEstagio2: 60000, recompensa: 20 }, CENOURA: { nome: "cenoura", emoji: '🥕', broto: { emoji: '🌱', fontSize: '20px' }, crescendo: { emoji: '🌿', fontSize: '35px' }, maduro: { emoji: '🥕', fontSize: '45px' }, tempoEstagio1: 40000, tempoEstagio2: 40000, recompensa: 12 } };
-  const ANIMAIS = { GALINHA: { nome: "galinha", emoji: "🐓", tempoProducao: 30000, recurso: { emoji: "🥚", tipo: "ovo", valor: 5 }, custoRacao: 1 }, VACA: { nome: "vaca", emoji: "🐄", tempoProducao: 60000, recurso: { emoji: "🥛", tipo: "leite", valor: 10 }, custoRacao: 2 }, PORCO: { nome: "porco", emoji: "🐖", tempoProducao: 40000, recurso: { emoji: "🥓", tipo: "bacon", valor: 8 }, custoRacao: 1 } };
-  const ITENS_LOJA = { MILHO: { tipo: 'semente', nome: 'milho', preco: 5, quantity: 3 }, TOMATE: { tipo: 'semente', nome: 'tomate', preco: 7, quantity: 3 }, GIRASSOL: { tipo: 'semente', nome: 'girassol', preco: 10, quantity: 3 }, CENOURA: { tipo: 'semente', nome: 'cenoura', preco: 8, quantity: 3 }, AGUA: { tipo: 'recurso', nome: 'agua', preco: 3, quantity: 5 }, RACAO: { tipo: 'recurso', nome: 'racao', preco: 4, quantity: 5 }, VENENO: { tipo: 'recurso', nome: 'veneno', preco: 10, quantity: 1 }, GALINHA: { tipo: 'animal', nome: 'galinha', preco: 40, quantity: 1 }, VACA: { tipo: 'animal', nome: 'vaca', preco: 100, quantity: 1 }, PORCO: { tipo: 'animal', nome: 'porco', preco: 60, quantity: 1 }, TERRENO: { tipo: 'terreno', nome: 'terreno', preco: 250, quantity: 1 } };
-  
-  // --- ELEMENTOS DA UI ---
-  const tooltip = document.getElementById('tooltip');
-
-  // --- SETUP INICIAL DA CENA 3D (THREE.JS) ---
-  const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x87CEEB);
-  const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-  camera.position.set(2, 11, 12); 
-  camera.lookAt(0, 0, 0);
-
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  document.body.appendChild(renderer.domElement);
-
-  const controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true; 
-  controls.dampingFactor = 0.05; 
-  controls.enableZoom = false;
-  controls.enablePan = false; 
-  controls.mouseButtons.LEFT = THREE.MOUSE.ROTATE; 
-  controls.mouseButtons.RIGHT = THREE.MOUSE.ROTATE;
-  controls.update(); 
-  const initialPolarAngle = controls.getPolarAngle();
-  controls.minPolarAngle = initialPolarAngle;
-  controls.maxPolarAngle = initialPolarAngle;
-  controls.minDistance = camera.position.length();
-  controls.maxDistance = camera.position.length();
-
-  // --- COMUNICAÇÃO COM API ---
   const apiRequest = async (endpoint, method = 'GET', body = null) => {
       const token = localStorage.getItem('token');
       if (!token) { 
           alert("Sessão inválida. Por favor, faça o login novamente.");
-          // CORREÇÃO 1: Roteamento para caminho absoluto
-          window.location.href = '/'; 
+          window.location.href = 'index.html'; 
           return null; 
       }
       const options = { method, headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } };
@@ -115,22 +144,67 @@ document.addEventListener('DOMContentLoaded', () => {
       }, 500);
   }
 
-  // --- FUNÇÕES DE GERAÇÃO DE TEXTURA PROCEDURAL ---
+  // --- SETUP INICIAL ---
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x87CEEB);
+  const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+  
+  // Posição inicial da câmera (inclinada para baixo, no limite de zoom frontal)
+  camera.position.set(2, 11, 12); 
+  camera.lookAt(0, 0, 0);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  document.body.appendChild(renderer.domElement);
+
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true; 
+  controls.dampingFactor = 0.05; 
+  
+  // Desabilitar o zoom
+  controls.enableZoom = false;
+
+  // Manter o pan desabilitado
+  controls.enablePan = false; 
+
+  // Configurar botões do mouse para rotação
+  controls.mouseButtons.LEFT = THREE.MOUSE.ROTATE; 
+  controls.mouseButtons.RIGHT = THREE.MOUSE.ROTATE;
+
+  // Travar a câmera na distância e no ângulo vertical (polar)
+  controls.update(); 
+  const initialPolarAngle = controls.getPolarAngle();
+  controls.minPolarAngle = initialPolarAngle;
+  controls.maxPolarAngle = initialPolarAngle;
+  controls.minDistance = camera.position.length(); // Trava a distância
+  controls.maxDistance = camera.position.length(); // Trava a distância
+  
+  const objetosClicaveis = [];
+
+  // --- FUNÇÕES DE GERAÇÃO DE TEXTURA PROCEDURAL (CÓDIGO ORIGINAL) ---
   function gerarTexturaGrama() { const c = document.createElement('canvas'); c.width = 64; c.height = 64; const ctx = c.getContext('2d'); ctx.fillStyle = '#6ab04c'; ctx.fillRect(0, 0, 64, 64); for (let i = 0; i < 3000; i++) { const x = Math.random() * 64; const y = Math.random() * 64; const t = Math.random() * 0.4 + 0.8; ctx.fillStyle = `rgb(${106*t},${176*t},${76*t})`; ctx.fillRect(x, y, 1, 1); } const tex = new THREE.CanvasTexture(c); tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping; return tex; }
   function gerarTexturaTerra() { const c = document.createElement('canvas'); c.width = 64; c.height = 64; const ctx = c.getContext('2d'); ctx.fillStyle = '#8a5e3b'; ctx.fillRect(0, 0, 64, 64); for (let i = 0; i < 2000; i++) { const x = Math.random() * 64; const y = Math.random() * 64; const t = Math.random() * 0.3 + 0.6; ctx.fillStyle = `rgb(${138*t},${94*t},${59*t})`; ctx.fillRect(x, y, 1, 1); } const tex = new THREE.CanvasTexture(c); tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping; return tex; }
   function gerarTexturaTijolos() { const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 256; const ctx = canvas.getContext('2d'); ctx.fillStyle = '#bcaaa4'; ctx.fillRect(0, 0, 256, 256); const brickWidth = 60; const brickHeight = 25; ctx.fillStyle = '#a1887f'; ctx.strokeStyle = '#795548'; ctx.lineWidth = 2; for (let y = 0; y < canvas.height; y += brickHeight) { for (let x = 0; x < canvas.width; x += brickWidth) { let offsetX = (y / brickHeight) % 2 === 0 ? 0 : -brickWidth / 2; ctx.fillRect(x + offsetX, y, brickWidth - 2, brickHeight - 2); ctx.strokeRect(x + offsetX, y, brickWidth - 2, brickHeight - 2); } } const texture = new THREE.CanvasTexture(canvas); texture.wrapS = THREE.RepeatWrapping; texture.wrapT = THREE.RepeatWrapping; texture.repeat.set(2, 2); return texture; }
   function gerarTexturaTelhado() { const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 256; const ctx = canvas.getContext('2d'); ctx.fillStyle = '#7d1a0c'; ctx.fillRect(0, 0, 256, 256); const tileWidth = 40; const tileHeight = 20; ctx.fillStyle = '#a94444'; ctx.strokeStyle = '#5a0800'; ctx.lineWidth = 2; for (let y = 0; y < canvas.height; y += tileHeight / 2) { for (let x = 0; x < canvas.width; x += tileWidth) { let offsetX = (y / (tileHeight / 2)) % 2 === 0 ? 0 : tileWidth / 2; ctx.beginPath(); ctx.moveTo(x + offsetX, y); ctx.lineTo(x + offsetX + tileWidth / 2, y + tileHeight / 2); ctx.lineTo(x + offsetX, y + tileHeight); ctx.lineTo(x + offsetX - tileWidth / 2, y + tileHeight / 2); ctx.closePath(); ctx.fill(); ctx.stroke(); } } const texture = new THREE.CanvasTexture(canvas); texture.wrapS = THREE.RepeatWrapping; texture.wrapT = THREE.RepeatWrapping; texture.repeat.set(8, 8); return texture; }
   function gerarTexturaSuperficieAgua() { const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 256; const ctx = canvas.getContext('2d'); const imageData = ctx.createImageData(256, 256); const data = imageData.data; function noise(x, y) { let n = Math.sin(x * 3) + Math.cos(y * 4) + Math.sin((x + y) * 5); return (n / 3.0) * 0.5 + 0.5; } function fractalNoise(x, y) { let value = 0.0; let frequency = 0.02; let amplitude = 0.5; for (let i = 0; i < 5; i++) { value += noise(x * frequency, y * frequency) * amplitude; frequency *= 2.0; amplitude *= 0.5; } return value; } for (let x = 0; x < 256; x++) { for (let y = 0; y < 256; y++) { const value = Math.pow(fractalNoise(x, y), 2.0) * 255; const index = (y * 256 + x) * 4; data[index] = value; data[index + 1] = value; data[index + 2] = value; data[index + 3] = 255; } } ctx.putImageData(imageData, 0, 0); const texture = new THREE.CanvasTexture(canvas); texture.wrapS = THREE.RepeatWrapping; texture.wrapT = THREE.RepeatWrapping; return texture; }
 
-  // --- CRIAÇÃO DO CENÁRIO ---
+  // --- MATERIAIS, ILUMINAÇÃO, CENÁRIO, ETC (CÓDIGO ORIGINAL) ---
   const texturaGrama = gerarTexturaGrama(); const texturaTerra = gerarTexturaTerra(); const canteiroGramaMaterial = new THREE.MeshStandardMaterial({ map: texturaGrama }); const canteiroTerraMaterial = new THREE.MeshStandardMaterial({ map: texturaTerra }); const canteiroTerraMolhadaMaterial = new THREE.MeshStandardMaterial({ map: texturaTerra, color: 0x654321 }); const canteiroBloqueadoMaterial = new THREE.MeshStandardMaterial({ color: 0xffd700 }); scene.add(new THREE.AmbientLight(0xffffff, 0.6)); const directionalLight = new THREE.DirectionalLight(0xffffff, 1); directionalLight.position.set(15, 25, 20); directionalLight.castShadow = true; directionalLight.shadow.mapSize.set(2048, 2048); directionalLight.shadow.camera.near = 0.5; directionalLight.shadow.camera.far = 100; directionalLight.shadow.camera.left = -40; directionalLight.shadow.camera.right = 40; directionalLight.shadow.camera.top = 40; directionalLight.shadow.camera.bottom = -40; scene.add(directionalLight); function criarCercaGenerica(comprimento, altura, rotacao) { const c = new THREE.Mesh(new THREE.BoxGeometry(comprimento, altura, 0.2), new THREE.MeshStandardMaterial({ color: 0x8B4513 })); c.rotation.y = rotacao; c.castShadow = true; return c; } function criarArvore(x, z) { const g = new THREE.Group(); const t = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.3, 1.5, 12), new THREE.MeshStandardMaterial({ color: 0x663300 })); t.position.y = 0.75; t.castShadow = true; g.add(t); const m = new THREE.MeshStandardMaterial({ color: 0x228B22, roughness: 0.8 }); const f1 = new THREE.Mesh(new THREE.ConeGeometry(1.2, 2, 8), m); f1.position.y = 2.2; f1.castShadow = true; g.add(f1); const f2 = new THREE.Mesh(new THREE.ConeGeometry(0.9, 1.5, 8), m); f2.position.y = 2.9; f2.castShadow = true; g.add(f2); g.position.set(x, 0, z); scene.add(g); } function criarPedra(x, z) { const p = new THREE.Mesh(new THREE.IcosahedronGeometry(Math.random() * 0.3 + 0.3, 0), new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.9 })); p.position.set(x, 0.15, z); p.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI); p.scale.set(Math.random() * 0.5 + 0.8, Math.random() * 0.5 + 0.8, Math.random() * 0.5 + 0.8); p.castShadow = true; scene.add(p); } function criarHasteCurral(x, y, z) { const h = new THREE.Mesh(new THREE.BoxGeometry(0.15, 1, 0.15), new THREE.MeshStandardMaterial({ color: 0x8B4513 })); h.position.set(x, y + 0.5, z); h.castShadow = true; scene.add(h); } function criarTabuaCurral(x, y, z, c, r) { const t = new THREE.Mesh(new THREE.BoxGeometry(c, 0.2, 0.15), new THREE.MeshStandardMaterial({ color: 0x8B4513 })); t.position.set(x, y, z); t.rotation.y = r; t.castShadow = true; scene.add(t); }
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(500, 500), new THREE.MeshStandardMaterial({ map: texturaGrama })); ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground); const offsetCentro = 5;
   function criarCasaDetalhada(x, z) { const casaGroup = new THREE.Group(); const corpoCasa = new THREE.Mesh( new THREE.BoxGeometry(4, 3, 4), new THREE.MeshStandardMaterial({ map: gerarTexturaTijolos() }) ); corpoCasa.position.y = 1.5; corpoCasa.castShadow = true; corpoCasa.userData.name = "casa_clicavel"; casaGroup.add(corpoCasa); objetosClicaveis.push(corpoCasa); const telhado = new THREE.Mesh( new THREE.ConeGeometry(3.2, 2, 4), new THREE.MeshStandardMaterial({ map: gerarTexturaTelhado() }) ); telhado.position.y = 4; telhado.rotation.y = Math.PI / 4; telhado.castShadow = true; telhado.userData.name = "casa_clicavel"; casaGroup.add(telhado); objetosClicaveis.push(telhado); const portaGroup = new THREE.Group(); const porta = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.5, 0.1), new THREE.MeshStandardMaterial({ color: 0x4d2600 })); const macaneta = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 8), new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 1, roughness: 0.5 })); macaneta.position.set(-0.3, 0, 0.06); const fechadura = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.15, 0.1), new THREE.MeshStandardMaterial({ color: 0x808080, metalness: 0.8, roughness: 0.6 })); fechadura.position.set(-0.3, 0.2, 0.06); portaGroup.add(porta, macaneta, fechadura); portaGroup.position.set(0, 0.75, 2.0); porta.userData.name = "casa_clicavel"; objetosClicaveis.push(porta); casaGroup.add(portaGroup); const janelaGroup = new THREE.Group(); const janela = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 0.1), new THREE.MeshStandardMaterial({ color: 0x87CEEB, transparent: true, opacity: 0.7 })); const divH = new THREE.Mesh(new THREE.BoxGeometry(1, 0.05, 0.05), new THREE.MeshStandardMaterial({ color: 0x5D4037 })); const divV = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1, 0.05), new THREE.MeshStandardMaterial({ color: 0x5D4037 })); janelaGroup.add(janela, divH, divV); janelaGroup.position.set(1.2, 1.8, 2.0); janela.userData.name = "casa_clicavel"; objetosClicaveis.push(janela); casaGroup.add(janelaGroup); casaGroup.position.set(x, 0, z); scene.add(casaGroup); }
   criarCasaDetalhada(-offsetCentro, -offsetCentro);
   criarArvore(-offsetCentro - 4.5, -offsetCentro);
-  const canteiroStartX = offsetCentro; const canteiroStartZ = -offsetCentro; for (let i = 0; i < 4; i++) { for (let j = 0; j < 3; j++) { const c = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.3, 1.5), canteiroGramaMaterial); c.position.set(canteiroStartX - 3 + i * 2, 0.15, canteiroStartZ - 2 + j * 2); c.castShadow = true; scene.add(c); const e = canteiros.length < 3 ? 'grama' : 'bloqueado'; c.userData = { estado: e, tipoPlanta: null, estagio: null, plantaElement: null, pragaElement: null, cadeadoElement: null, estadoOriginal: null, intervalId: null }; if (e === 'bloqueado') { c.material = canteiroBloqueadoMaterial; criarCadeado(c); } canteiros.push(c); }} const surfaceTexture = gerarTexturaSuperficieAgua(); const waterUniforms = { u_time: { value: 0.0 }, u_colorA: { value: new THREE.Color('#005175')}, u_colorB: { value: new THREE.Color('#00ffff')},  u_surfaceTexture: { value: surfaceTexture } }; const waterMaterial = new THREE.ShaderMaterial({ uniforms: waterUniforms, vertexShader: `varying vec3 v_worldPosition; varying vec2 v_uv; void main() { vec4 modelPosition = modelMatrix * vec4(position, 1.0); v_worldPosition = modelPosition.xyz; v_uv = uv; gl_Position = projectionMatrix * viewMatrix * modelPosition; }`, fragmentShader: `uniform float u_time; uniform vec3 u_colorA; uniform vec3 u_colorB; uniform sampler2D u_surfaceTexture; varying vec3 v_worldPosition; varying vec2 v_uv; void main() { float wave1 = sin(v_worldPosition.x * 1.0 + u_time * 0.9) * 0.5 + 0.5; float wave2 = cos(v_worldPosition.z * 1.5 + u_time * 0.6) * 0.5 + 0.5; float mix_strength = (wave1 + wave2) * 0.5; vec3 baseColor = mix(u_colorA, u_colorB, mix_strength); vec2 uv_scroll1 = v_uv * 2.5 + vec2(u_time * 0.04, u_time * 0.02); vec2 uv_scroll2 = v_uv * 2.5 + vec2(-u_time * 0.03, u_time * 0.05); float surface_noise = texture2D(u_surfaceTexture, uv_scroll1).r * 0.5 + texture2D(u_surfaceTexture, uv_scroll2).r * 0.5; vec3 surfaceColor = vec3(surface_noise); vec3 finalColor = baseColor + surfaceColor * 0.4; gl_FragColor = vec4(finalColor, 1.0); }`, transparent: false }); const lagoX = -offsetCentro; const lagoZ = offsetCentro; const lago = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 0.3, 64), waterMaterial); lago.position.set(lagoX, -0.1, lagoZ); lago.receiveShadow = true; scene.add(lago); const lagoBorda = new THREE.Mesh(new THREE.RingGeometry(3, 3.5, 32), new THREE.MeshStandardMaterial({ map: texturaTerra })); lagoBorda.rotation.x = -Math.PI / 2; lagoBorda.position.set(lagoX, 0.01, lagoZ); scene.add(lagoBorda); const numPedras = 15; const raioLago = 3.8; for (let i = 0; i < numPedras; i++) { const a = (i / numPedras) * Math.PI * 2; const x = lagoX + raioLago * Math.cos(a) + (Math.random() - 0.5); const z = lagoZ + raioLago * Math.sin(a) + (Math.random() - 0.5); criarPedra(x, z); } const curralCenterX = offsetCentro; const curralCenterZ = offsetCentro; const curralTamanho = 6; for (let i = 0; i < curralTamanho / 2; i++) { criarHasteCurral(curralCenterX - curralTamanho / 2 + i * 2, 0, curralCenterZ - curralTamanho / 2); } criarTabuaCurral(curralCenterX, 0.4, curralCenterZ - curralTamanho / 2, curralTamanho, 0); criarTabuaCurral(curralCenterX, 0.8, curralCenterZ - curralTamanho / 2, curralTamanho, 0); for (let i = 0; i < curralTamanho / 2; i++) { criarHasteCurral(curralCenterX - curralTamanho / 2 + i * 2, 0, curralCenterZ + curralTamanho / 2); } criarTabuaCurral(curralCenterX, 0.4, curralCenterZ + curralTamanho / 2, curralTamanho, 0); criarTabuaCurral(curralCenterX, 0.8, curralCenterZ + curralTamanho / 2, curralTamanho, 0); for (let i = 0; i < curralTamanho / 2; i++) { criarHasteCurral(curralCenterX - curralTamanho / 2, 0, curralCenterZ - curralTamanho / 2 + i * 2); } criarTabuaCurral(curralCenterX - curralTamanho / 2, 0.4, curralCenterZ, curralTamanho, Math.PI / 2); criarTabuaCurral(curralCenterX - curralTamanho / 2, 0.8, curralCenterZ, curralTamanho, Math.PI / 2); for (let i = 0; i < curralTamanho / 2; i++) { criarHasteCurral(curralCenterX + curralTamanho / 2, 0, curralCenterZ - curralTamanho / 2 + i * 2); } criarTabuaCurral(curralCenterX + curralTamanho / 2, 0.4, curralCenterZ, curralTamanho, Math.PI / 2); criarTabuaCurral(curralCenterX + curralTamanho / 2, 0.8, curralCenterZ, curralTamanho, Math.PI / 2); const cercaExterna = new THREE.Group(); const tamanhoFazenda = 30; const cF = criarCercaGenerica(tamanhoFazenda, 1.5, 0); cF.position.set(0, 0.75, -tamanhoFazenda/2); cercaExterna.add(cF); const cT = criarCercaGenerica(tamanhoFazenda, 1.5, 0); cT.position.set(0, 0.75, tamanhoFazenda/2); cercaExterna.add(cT); const cE = criarCercaGenerica(tamanhoFazenda, 1.5, Math.PI/2); cE.position.set(-tamanhoFazenda/2, 0.75, 0); cercaExterna.add(cE); const cD = criarCercaGenerica(tamanhoFazenda, 1.5, Math.PI/2); cD.position.set(tamanhoFazenda/2, 0.75, 0); cercaExterna.add(cD); scene.add(cercaExterna); function criarFloresta() { const numArvores = 300; const areaFloresta = 100; const limiteFazenda = tamanhoFazenda / 2; for (let i = 0; i < numArvores; i++) { const angulo = Math.random() * Math.PI * 2; const raio = limiteFazenda + 10 + Math.random() * (areaFloresta - limiteFazenda - 10); const x = Math.cos(angulo) * raio; const z = Math.sin(angulo) * raio; criarArvore(x, z); } } criarFloresta();
+  const canteiros = []; const canteiroStartX = offsetCentro; const canteiroStartZ = -offsetCentro; for (let i = 0; i < 4; i++) { for (let j = 0; j < 3; j++) { const c = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.3, 1.5), canteiroGramaMaterial); c.position.set(canteiroStartX - 3 + i * 2, 0.15, canteiroStartZ - 2 + j * 2); c.castShadow = true; scene.add(c); const e = canteiros.length < 3 ? 'grama' : 'bloqueado'; c.userData = { estado: e, tipoPlanta: null, estagio: null, plantaElement: null, pragaElement: null, cadeadoElement: null, estadoOriginal: null, intervalId: null }; if (e === 'bloqueado') { c.material = canteiroBloqueadoMaterial; criarCadeado(c); } canteiros.push(c); }} const surfaceTexture = gerarTexturaSuperficieAgua(); const waterUniforms = { u_time: { value: 0.0 }, u_colorA: { value: new THREE.Color('#005175')}, u_colorB: { value: new THREE.Color('#00ffff')},  u_surfaceTexture: { value: surfaceTexture } }; const waterMaterial = new THREE.ShaderMaterial({ uniforms: waterUniforms, vertexShader: `varying vec3 v_worldPosition; varying vec2 v_uv; void main() { vec4 modelPosition = modelMatrix * vec4(position, 1.0); v_worldPosition = modelPosition.xyz; v_uv = uv; gl_Position = projectionMatrix * viewMatrix * modelPosition; }`, fragmentShader: `uniform float u_time; uniform vec3 u_colorA; uniform vec3 u_colorB; uniform sampler2D u_surfaceTexture; varying vec3 v_worldPosition; varying vec2 v_uv; void main() { float wave1 = sin(v_worldPosition.x * 1.0 + u_time * 0.9) * 0.5 + 0.5; float wave2 = cos(v_worldPosition.z * 1.5 + u_time * 0.6) * 0.5 + 0.5; float mix_strength = (wave1 + wave2) * 0.5; vec3 baseColor = mix(u_colorA, u_colorB, mix_strength); vec2 uv_scroll1 = v_uv * 2.5 + vec2(u_time * 0.04, u_time * 0.02); vec2 uv_scroll2 = v_uv * 2.5 + vec2(-u_time * 0.03, u_time * 0.05); float surface_noise = texture2D(u_surfaceTexture, uv_scroll1).r * 0.5 + texture2D(u_surfaceTexture, uv_scroll2).r * 0.5; vec3 surfaceColor = vec3(surface_noise); vec3 finalColor = baseColor + surfaceColor * 0.4; gl_FragColor = vec4(finalColor, 1.0); }`, transparent: false }); const lagoX = -offsetCentro; const lagoZ = offsetCentro; const lago = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 0.3, 64), waterMaterial); lago.position.set(lagoX, -0.1, lagoZ); lago.receiveShadow = true; scene.add(lago); const lagoBorda = new THREE.Mesh(new THREE.RingGeometry(3, 3.5, 32), new THREE.MeshStandardMaterial({ map: texturaTerra })); lagoBorda.rotation.x = -Math.PI / 2; lagoBorda.position.set(lagoX, 0.01, lagoZ); scene.add(lagoBorda); const numPedras = 15; const raioLago = 3.8; for (let i = 0; i < numPedras; i++) { const a = (i / numPedras) * Math.PI * 2; const x = lagoX + raioLago * Math.cos(a) + (Math.random() - 0.5); const z = lagoZ + raioLago * Math.sin(a) + (Math.random() - 0.5); criarPedra(x, z); } const curralCenterX = offsetCentro; const curralCenterZ = offsetCentro; const curralTamanho = 6; for (let i = 0; i < curralTamanho / 2; i++) { criarHasteCurral(curralCenterX - curralTamanho / 2 + i * 2, 0, curralCenterZ - curralTamanho / 2); } criarTabuaCurral(curralCenterX, 0.4, curralCenterZ - curralTamanho / 2, curralTamanho, 0); criarTabuaCurral(curralCenterX, 0.8, curralCenterZ - curralTamanho / 2, curralTamanho, 0); for (let i = 0; i < curralTamanho / 2; i++) { criarHasteCurral(curralCenterX - curralTamanho / 2 + i * 2, 0, curralCenterZ + curralTamanho / 2); } criarTabuaCurral(curralCenterX, 0.4, curralCenterZ + curralTamanho / 2, curralTamanho, 0); criarTabuaCurral(curralCenterX, 0.8, curralCenterZ + curralTamanho / 2, curralTamanho, 0); for (let i = 0; i < curralTamanho / 2; i++) { criarHasteCurral(curralCenterX - curralTamanho / 2, 0, curralCenterZ - curralTamanho / 2 + i * 2); } criarTabuaCurral(curralCenterX - curralTamanho / 2, 0.4, curralCenterZ, curralTamanho, Math.PI / 2); criarTabuaCurral(curralCenterX - curralTamanho / 2, 0.8, curralCenterZ, curralTamanho, Math.PI / 2); for (let i = 0; i < curralTamanho / 2; i++) { criarHasteCurral(curralCenterX + curralTamanho / 2, 0, curralCenterZ - curralTamanho / 2 + i * 2); } criarTabuaCurral(curralCenterX + curralTamanho / 2, 0.4, curralCenterZ, curralTamanho, Math.PI / 2); criarTabuaCurral(curralCenterX + curralTamanho / 2, 0.8, curralCenterZ, curralTamanho, Math.PI / 2); const cercaExterna = new THREE.Group(); const tamanhoFazenda = 30; const cF = criarCercaGenerica(tamanhoFazenda, 1.5, 0); cF.position.set(0, 0.75, -tamanhoFazenda/2); cercaExterna.add(cF); const cT = criarCercaGenerica(tamanhoFazenda, 1.5, 0); cT.position.set(0, 0.75, tamanhoFazenda/2); cercaExterna.add(cT); const cE = criarCercaGenerica(tamanhoFazenda, 1.5, Math.PI/2); cE.position.set(-tamanhoFazenda/2, 0.75, 0); cercaExterna.add(cE); const cD = criarCercaGenerica(tamanhoFazenda, 1.5, Math.PI/2); cD.position.set(tamanhoFazenda/2, 0.75, 0); cercaExterna.add(cD); scene.add(cercaExterna); function criarFloresta() { const numArvores = 300; const areaFloresta = 100; const limiteFazenda = tamanhoFazenda / 2; for (let i = 0; i < numArvores; i++) { const angulo = Math.random() * Math.PI * 2; const raio = limiteFazenda + 10 + Math.random() * (areaFloresta - limiteFazenda - 10); const x = Math.cos(angulo) * raio; const z = Math.sin(angulo) * raio; criarArvore(x, z); } } criarFloresta();
 
   // --- LÓGICA DO JOGO ---
+  const animais = []; const ESTADOS = { GRAMA: 'grama', BLOQUEADO: 'bloqueado', ARADA: 'arada', ARADA_AGUADA: 'arada_aguada', PLANTADA: 'plantada', CRESCENDO: 'crescendo', MADURA: 'madura', COM_PRAGA: 'com_praga' };
+  let recursos = {}; 
+  const PLANTAS = { MILHO: { nome: "milho", emoji: '🌽', broto: { emoji: '🌱', fontSize: '20px' }, crescendo: { emoji: '🌿', fontSize: '35px' }, maduro: { emoji: '🌽', fontSize: '45px' }, tempoEstagio1: 30000, tempoEstagio2: 30000, recompensa: 10 }, TOMATE: { nome: "tomate", emoji: '🍅', broto: { emoji: '🌱', fontSize: '20px' }, crescendo: { emoji: '🌿', fontSize: '35px' }, maduro: { emoji: '🍅', fontSize: '45px' }, tempoEstagio1: 50000, tempoEstagio2: 50000, recompensa: 15 }, GIRASSOL: { nome: "girassol", emoji: '🌻', broto: { emoji: '🌱', fontSize: '20px' }, crescendo: { emoji: '🌿', fontSize: '35px' }, maduro: { emoji: '🌻', fontSize: '45px' }, tempoEstagio1: 60000, tempoEstagio2: 60000, recompensa: 20 }, CENOURA: { nome: "cenoura", emoji: '🥕', broto: { emoji: '🌱', fontSize: '20px' }, crescendo: { emoji: '🌿', fontSize: '35px' }, maduro: { emoji: '🥕', fontSize: '45px' }, tempoEstagio1: 40000, tempoEstagio2: 40000, recompensa: 12 } }; const ANIMAIS = { GALINHA: { nome: "galinha", emoji: "🐓", tempoProducao: 30000, recurso: { emoji: "🥚", tipo: "ovo", valor: 5 }, custoRacao: 1 }, VACA: { nome: "vaca", emoji: "🐄", tempoProducao: 60000, recurso: { emoji: "🥛", tipo: "leite", valor: 10 }, custoRacao: 2 }, PORCO: { nome: "porco", emoji: "🐖", tempoProducao: 40000, recurso: { emoji: "🥓", tipo: "bacon", valor: 8 }, custoRacao: 1 } }; const ITENS_LOJA = { MILHO: { tipo: 'semente', nome: 'milho', preco: 5, quantity: 3 }, TOMATE: { tipo: 'semente', nome: 'tomate', preco: 7, quantity: 3 }, GIRASSOL: { tipo: 'semente', nome: 'girassol', preco: 10, quantity: 3 }, CENOURA: { tipo: 'semente', nome: 'cenoura', preco: 8, quantity: 3 }, AGUA: { tipo: 'recurso', nome: 'agua', preco: 3, quantity: 5 }, RACAO: { tipo: 'recurso', nome: 'racao', preco: 4, quantity: 5 }, VENENO: { tipo: 'recurso', nome: 'veneno', preco: 10, quantity: 1 }, GALINHA: { tipo: 'animal', nome: 'galinha', preco: 40, quantity: 1 }, VACA: { tipo: 'animal', nome: 'vaca', preco: 100, quantity: 1 }, PORCO: { tipo: 'animal', nome: 'porco', preco: 60, quantity: 1 }, TERRENO: { tipo: 'terreno', nome: 'terreno', preco: 250, quantity: 1 } };
+  let ferramentaAtiva = 'enxada', canteiroSelecionado = null, hoveredAnimal = null;
+  const tooltip = document.getElementById('tooltip');
+  
   function criarCadeado(canteiro) { const div = document.createElement('div'); div.className = 'emoji-3d'; div.textContent = '🔒'; div.style.fontSize = '25px'; document.getElementById('ui-container').appendChild(div); canteiro.userData.cadeadoElement = div; }
   function criarAnimal(tipo, x, z) { const div = document.createElement('div'); div.className = 'emoji-3d animal com-fome'; div.id = tipo + (animais.filter(a=>a.tipo===tipo).length); if (tipo === 'galinha') div.textContent = '🐓'; else if (tipo === 'vaca') div.textContent = '🐄'; else if (tipo === 'porco') div.textContent = '🐖'; div.style.left = '50%'; div.style.top = '50%'; document.getElementById('ui-container').appendChild(div); const animal = { tipo, div, position: new THREE.Vector3(x, 0, z), fome: 0, produzindo: false, recursoElement: null, tempoProducaoRestante: null, productionInterval: null }; div.addEventListener('mouseover', () => { hoveredAnimal = animal; }); div.addEventListener('mouseout', () => { hoveredAnimal = null; }); animais.push(animal); return animal; }
   function moverAnimal(animal) { const minX = curralCenterX - curralTamanho / 2 + 1; const maxX = curralCenterX + curralTamanho / 2 - 1; const minZ = curralCenterZ - curralTamanho / 2 + 1; const maxZ = curralCenterZ + curralTamanho / 2 - 1; const novoX = Math.random() * (maxX - minX) + minX; const novoZ = Math.random() * (maxZ - minZ) + minZ; animal.position.set(novoX, 0, novoZ); }
@@ -192,52 +266,32 @@ document.addEventListener('DOMContentLoaded', () => {
   function colherPlanta(canteiro) { if (canteiro.userData.estado !== ESTADOS.MADURA) return; if (canteiro.userData.intervalId) clearInterval(canteiro.userData.intervalId); const tipo = canteiro.userData.tipoPlanta; const plantaConfig = PLANTAS[tipo.toUpperCase()]; recursos.moedas += plantaConfig.recompensa; notificar(`Você colheu ${tipo}! (+${plantaConfig.recompensa} moedas)`, 'sucesso'); if (canteiro.userData.plantaElement) canteiro.userData.plantaElement.remove(); if (canteiro.userData.pragaElement) canteiro.userData.pragaElement.remove(); canteiro.userData = { ...canteiro.userData, estado: ESTADOS.GRAMA, tipoPlanta: null, estagio: null, plantaElement: null, pragaElement: null, estadoOriginal: null, intervalId: null, tempoParaCrescer: null, tempoParaAmadurecer: null }; canteiro.material = canteiroGramaMaterial; atualizarInterface(); saveFarmState(); }
   function removerPraga(canteiro) { if (recursos.veneno > 0) { recursos.veneno--; canteiro.userData.estado = canteiro.userData.estadoOriginal; canteiro.userData.estadoOriginal = null; if (canteiro.userData.pragaElement) { canteiro.userData.pragaElement.remove(); canteiro.userData.pragaElement = null; } notificar("Praga removida!", 'sucesso'); atualizarInterface(); saveFarmState(); } else { notificar("Você não tem veneno! Compre na loja.", 'erro'); } }
   async function comprarTerrenoComLCO() { const resultado = await apiRequest('/api/fazenda/buy-land', 'POST'); if(resultado) { farmState = resultado.fazendaGameState; lcoBalance = resultado.lulaCoinGameState.balance; recursos = farmState; notificar(`Terreno comprado! Novo saldo de LCO: ${lcoBalance.toFixed(2)}`, 'sucesso'); atualizarInterface(); renderizarCenarioSalvo(); saveFarmState(); } }
+  window.comprar = (item) => { const itemUpper = item.toUpperCase(); if (itemUpper === 'TERRENO') { mostrarModalConfirmacao(`Deseja comprar Terreno por ${recursos.precoTerreno} LCO?`, comprarTerrenoComLCO); return; } const c = ITENS_LOJA[itemUpper]; if (!c) return; const precoFinal = c.preco; const nomeFinal = `${c.quantity > 1 ? c.quantity : ''} ${c.nome}`.trim(); mostrarModalConfirmacao(`Deseja comprar ${nomeFinal} por ${precoFinal} moedas?`, () => { if (recursos.moedas < precoFinal) return notificar("Moedas insuficientes!", 'erro'); recursos.moedas -= precoFinal; if (c.tipo === 'semente') { recursos.sementes[c.nome] += c.quantity; } else if (c.tipo === 'recurso') { recursos[c.nome] += c.quantity; } else if (c.tipo === 'animal') { const pX = curralCenterX + (Math.random() * (curralTamanho - 2) - (curralTamanho / 2 - 1)); const pZ = curralCenterZ + (Math.random() * (curralTamanho - 2) - (curralTamanho / 2 - 1)); criarAnimal(c.nome, pX, pZ); } notificar(`${nomeFinal} comprado(s)!`, 'sucesso'); atualizarInterface(); saveFarmState(); }); };
   
-  // CORREÇÃO 2: Função 'comprar' refatorada para não ser global
-  function comprar(item) { 
-    const itemUpper = item.toUpperCase(); 
-    if (itemUpper === 'TERRENO') { 
-        mostrarModalConfirmacao(`Deseja comprar Terreno por ${recursos.precoTerreno} LCO?`, comprarTerrenoComLCO); 
-        return; 
-    } 
-    const c = ITENS_LOJA[itemUpper]; 
-    if (!c) return; 
-    const precoFinal = c.preco; 
-    const nomeFinal = `${c.quantity > 1 ? c.quantity : ''} ${c.nome}`.trim(); 
-    mostrarModalConfirmacao(`Deseja comprar ${nomeFinal} por ${precoFinal} moedas?`, () => { 
-        if (recursos.moedas < precoFinal) return notificar("Moedas insuficientes!", 'erro'); 
-        recursos.moedas -= precoFinal; 
-        if (c.tipo === 'semente') { recursos.sementes[c.nome] += c.quantity; } 
-        else if (c.tipo === 'recurso') { recursos[c.nome] += c.quantity; } 
-        else if (c.tipo === 'animal') { 
-            const pX = curralCenterX + (Math.random() * (curralTamanho - 2) - (curralTamanho / 2 - 1)); 
-            const pZ = curralCenterZ + (Math.random() * (curralTamanho - 2) - (curralTamanho / 2 - 1)); 
-            criarAnimal(c.nome, pX, pZ); 
-        } 
-        notificar(`${nomeFinal} comprado(s)!`, 'sucesso'); 
-        atualizarInterface(); 
-        saveFarmState(); 
-    }); 
-  };
-  
-  // --- INTERAÇÃO E EVENTOS ---
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
   
   window.addEventListener('click', async (event) => { 
+      
+      // <<< INÍCIO DA ATUALIZAÇÃO >>>
+      // Verifica se o clique foi diretamente no emoji de uma planta
       if (event.target.classList.contains('planta')) {
+          // Encontra a qual canteiro este emoji pertence
           const canteiro = canteiros.find(c => c.userData.plantaElement === event.target);
           if (canteiro) {
+              // Verifica se a planta está madura e se a foice está selecionada
               if (canteiro.userData.estado === ESTADOS.MADURA && ferramentaAtiva === 'foice') {
                   colherPlanta(canteiro);
-                  return; 
+                  return; // Impede que o resto do código de clique seja executado
               } 
+              // Se estiver madura mas a foice não estiver selecionada, notifica o usuário
               else if (canteiro.userData.estado === ESTADOS.MADURA && ferramentaAtiva !== 'foice') {
                   notificar("Selecione a foice para colher!", 'info');
-                  return;
+                  return; // Impede que o resto do código de clique seja executado
               }
           }
       }
+      // <<< FIM DA ATUALIZAÇÃO >>>
 
       if (event.target.classList.contains('animal')) { const animalDivId = event.target.id; const animalObject = animais.find(a => a.div.id === animalDivId); if (!animalObject || animalObject.produzindo || !animalObject.div.classList.contains('com-fome')) return; const animalConfig = ANIMAIS[animalObject.tipo.toUpperCase()]; if (recursos.racao >= animalConfig.custoRacao) { recursos.racao -= animalConfig.custoRacao; notificar(`${animalObject.tipo.charAt(0).toUpperCase() + animalObject.tipo.slice(1)} alimentado(a)!`, 'sucesso'); atualizarInterface(); animalObject.div.classList.remove('com-fome'); animalObject.div.classList.add('alimentado'); iniciarProducaoCiclo(animalObject); saveFarmState(); } else { notificar("Ração insuficiente!", 'erro'); } return; } 
       if (event.target.classList.contains('recurso-animal')) { const tipoAnimal = event.target.dataset.tipo; const animalConfig = ANIMAIS[tipoAnimal.toUpperCase()]; recursos.moedas += animalConfig.recurso.valor; notificar(`${animalConfig.recurso.emoji} coletado! (+${animalConfig.recurso.valor} moedas)`, 'sucesso'); atualizarInterface(); const animal = animais.find(a => a.recursoElement === event.target); if(animal) animal.recursoElement = null; event.target.remove(); saveFarmState(); return; } 
@@ -262,8 +316,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         await saveFarmState();
         mostrarModalConfirmacao("Deseja voltar para a sala de mineração?", () => {
-            // CORREÇÃO 1: Roteamento para caminho absoluto
-            window.location.href = '/';
+            window.location.href = 'index.html';
         });
         return;
       }
@@ -309,19 +362,25 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   
   window.addEventListener('contextmenu', (event) => event.preventDefault());
+  
+  function atualizarPosicoes2D() { animais.forEach(animal => { const pos = animal.position.clone().project(camera); animal.div.style.left = `${(pos.x * 0.5 + 0.5) * window.innerWidth}px`; animal.div.style.top = `${(-(pos.y * 0.5) + 0.5) * window.innerHeight}px`; if (animal.recursoElement) { const rPos = animal.position.clone(); rPos.y += 0.5; const screenPos = rPos.project(camera); animal.recursoElement.style.left = `${(screenPos.x * 0.5 + 0.5) * window.innerWidth}px`; animal.recursoElement.style.top = `${(-(screenPos.y * 0.5) + 0.5) * window.innerHeight}px`; } }); canteiros.forEach(canteiro => { const planta = canteiro.userData.plantaElement; const cadeado = canteiro.userData.cadeadoElement; const praga = canteiro.userData.pragaElement; if (planta) { const pos = canteiro.position.clone().project(camera); const yOffset = -20; planta.style.left = `${(pos.x * 0.5 + 0.5) * window.innerWidth}px`; planta.style.top = `${(-(pos.y * 0.5) + 0.5) * window.innerHeight + yOffset}px`; } if (cadeado) { const pos = canteiro.position.clone().project(camera); cadeado.style.left = `${(pos.x * 0.5 + 0.5) * window.innerWidth}px`; cadeado.style.top = `${(-(pos.y * 0.5) + 0.5) * window.innerHeight}px`; } if (praga) { const pos = canteiro.position.clone().project(camera); const yOffset = -35; praga.style.left = `${(pos.x * 0.5 + 0.5) * window.innerWidth}px`; praga.style.top = `${(-(pos.y * 0.5) + 0.5) * window.innerHeight + yOffset}px`; } }); }
+  function aplicarFisicaAnimais() { const distanciaMinima = 1.0; const forcaRepulsao = 0.01; for (let i = 0; i < animais.length; i++) { for (let j = i + 1; j < animais.length; j++) { const animalA = animais[i]; const animalB = animais[j]; const vetDist = animalA.position.clone().sub(animalB.position); const distancia = vetDist.length(); if (distancia < distanciaMinima) { const deslocamento = vetDist.normalize().multiplyScalar(forcaRepulsao); animalA.position.add(deslocamento); animalB.position.sub(deslocamento); const minX = curralCenterX - curralTamanho / 2 + 0.5; const maxX = curralCenterX + curralTamanho / 2 - 0.5; const minZ = curralCenterZ - curralTamanho / 2 + 0.5; const maxZ = curralCenterZ + curralTamanho / 2 - 0.5; animalA.position.x = Math.max(minX, Math.min(maxX, animalA.position.x)); animalA.position.z = Math.max(minZ, Math.min(maxZ, animalA.position.z)); animalB.position.x = Math.max(minX, Math.min(maxX, animalB.position.x)); animalB.position.z = Math.max(minZ, Math.min(maxZ, animalB.position.z)); } } } }
   window.addEventListener('mousemove', (event) => { mouse.x = (event.clientX / window.innerWidth) * 2 - 1; mouse.y = - (event.clientY / window.innerHeight) * 2 + 1; tooltip.style.left = `${event.clientX + 15}px`; tooltip.style.top = `${event.clientY}px`; });
   window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
-  
-  // --- LOOP DE ANIMAÇÃO ---
   const clock = new THREE.Clock();
+  
   function animate() {
     requestAnimationFrame(animate);
     const deltaTime = clock.getElapsedTime();
     waterMaterial.uniforms.u_time.value = deltaTime;
-    if (animais.length > 1) { aplicarFisicaAnimais(); }
+    if (animais.length > 1) {
+        aplicarFisicaAnimais();
+    }
     raycaster.setFromCamera(mouse, camera);
 
     let isTooltipVisible = false;
+
+    // Lógica de tooltip para canteiros
     const intersects = raycaster.intersectObjects(canteiros);
     if (intersects.length > 0) {
         const canteiro = intersects[0].object;
@@ -351,6 +410,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Lógica de tooltip para animais
     if (hoveredAnimal && hoveredAnimal.produzindo && hoveredAnimal.tempoProducaoRestante > 0) {
         const tempoRestante = hoveredAnimal.tempoProducaoRestante;
         const minutos = Math.floor(tempoRestante / 60000);
@@ -361,54 +421,36 @@ document.addEventListener('DOMContentLoaded', () => {
         isTooltipVisible = true;
     }
 
-    if (!isTooltipVisible) { tooltip.style.display = 'none'; }
+    // Oculta o tooltip se nada estiver em foco
+    if (!isTooltipVisible) {
+        tooltip.style.display = 'none';
+    }
 
     controls.update();
     renderer.render(scene, camera);
     atualizarPosicoes2D();
   }
 
-  function atualizarPosicoes2D() { animais.forEach(animal => { const pos = animal.position.clone().project(camera); animal.div.style.left = `${(pos.x * 0.5 + 0.5) * window.innerWidth}px`; animal.div.style.top = `${(-(pos.y * 0.5) + 0.5) * window.innerHeight}px`; if (animal.recursoElement) { const rPos = animal.position.clone(); rPos.y += 0.5; const screenPos = rPos.project(camera); animal.recursoElement.style.left = `${(screenPos.x * 0.5 + 0.5) * window.innerWidth}px`; animal.recursoElement.style.top = `${(-(screenPos.y * 0.5) + 0.5) * window.innerHeight}px`; } }); canteiros.forEach(canteiro => { const planta = canteiro.userData.plantaElement; const cadeado = canteiro.userData.cadeadoElement; const praga = canteiro.userData.pragaElement; if (planta) { const pos = canteiro.position.clone().project(camera); const yOffset = -20; planta.style.left = `${(pos.x * 0.5 + 0.5) * window.innerWidth}px`; planta.style.top = `${(-(pos.y * 0.5) + 0.5) * window.innerHeight + yOffset}px`; } if (cadeado) { const pos = canteiro.position.clone().project(camera); cadeado.style.left = `${(pos.x * 0.5 + 0.5) * window.innerWidth}px`; cadeado.style.top = `${(-(pos.y * 0.5) + 0.5) * window.innerHeight}px`; } if (praga) { const pos = canteiro.position.clone().project(camera); const yOffset = -35; praga.style.left = `${(pos.x * 0.5 + 0.5) * window.innerWidth}px`; praga.style.top = `${(-(pos.y * 0.5) + 0.5) * window.innerHeight + yOffset}px`; } }); }
-  function aplicarFisicaAnimais() { const distanciaMinima = 1.0; const forcaRepulsao = 0.01; for (let i = 0; i < animais.length; i++) { for (let j = i + 1; j < animais.length; j++) { const animalA = animais[i]; const animalB = animais[j]; const vetDist = animalA.position.clone().sub(animalB.position); const distancia = vetDist.length(); if (distancia < distanciaMinima) { const deslocamento = vetDist.normalize().multiplyScalar(forcaRepulsao); animalA.position.add(deslocamento); animalB.position.sub(deslocamento); const minX = curralCenterX - curralTamanho / 2 + 0.5; const maxX = curralCenterX + curralTamanho / 2 - 0.5; const minZ = curralCenterZ - curralTamanho / 2 + 0.5; const maxZ = curralCenterZ + curralTamanho / 2 - 0.5; animalA.position.x = Math.max(minX, Math.min(maxX, animalA.position.x)); animalA.position.z = Math.max(minZ, Math.min(maxZ, animalA.position.z)); animalB.position.x = Math.max(minX, Math.min(maxX, animalB.position.x)); animalB.position.z = Math.max(minZ, Math.min(maxZ, animalB.position.z)); } } } }
-
-  // --- INICIALIZAÇÃO E EVENT LISTENERS DA UI ---
   function selecionarFerramenta(id) { if (!document.getElementById(id)) return; ferramentaAtiva = id; document.querySelectorAll('.botao-ferramenta').forEach(btn => btn.classList.remove('active')); document.getElementById(id).classList.add('active'); }
-  
   document.querySelectorAll('.botao-ferramenta').forEach(b => b.addEventListener('click', (e) => { selecionarFerramenta(e.currentTarget.id); }));
   window.addEventListener('keydown', (event) => { switch(event.key) { case '1': selecionarFerramenta('enxada'); break; case '2': selecionarFerramenta('semente'); break; case '3': selecionarFerramenta('regador'); break; case '4': selecionarFerramenta('foice'); break; case '5': selecionarFerramenta('veneno-tool'); break; } });
   document.getElementById('abrir-loja').addEventListener('click', () => { const loja = document.getElementById('loja'); loja.style.display = loja.style.display === 'none' || loja.style.display === '' ? 'flex' : 'none'; });
   document.getElementById('abrir-inventario-sementes').addEventListener('click', () => { const inv = document.getElementById('inventario-sementes'); inv.style.display = inv.style.display === 'none' || inv.style.display === '' ? 'flex' : 'none'; });
   
-  // CORREÇÃO 2: Adiciona event listeners para os botões da loja
-  document.querySelectorAll('.botao-loja').forEach(button => {
-    button.addEventListener('click', () => {
-      const item = button.dataset.item;
-      if (item) {
-        comprar(item);
+  document.addEventListener('DOMContentLoaded', () => {
+      if (!localStorage.getItem('token')) {
+          alert("Você precisa estar logado para jogar! Redirecionando...");
+          window.location.href = 'index.html';
+          return;
       }
-    });
+      loadInitialState();
+      window.addEventListener('beforeunload', () => {
+          if (farmState && Object.keys(farmState).length > 0) {
+              navigator.sendBeacon(`${API_BASE_URL}/api/fazenda/update`, JSON.stringify({ newFarmState: farmState }));
+          }
+      });
+      animate();
   });
-
-  // CORREÇÃO 2: Adiciona event listener para o botão de fechar modal de sementes
-  document.getElementById('fechar-modal-sementes-btn').addEventListener('click', fecharModalSementes);
-
-  // --- PONTO DE ENTRADA PRINCIPAL ---
-  if (!localStorage.getItem('token')) {
-      alert("Você precisa estar logado para jogar! Redirecionando...");
-      // CORREÇÃO 1: Roteamento para caminho absoluto
-      window.location.href = '/';
-      return;
-  }
-  
-  loadInitialState();
-  
-  window.addEventListener('beforeunload', () => {
-      if (farmState && Object.keys(farmState).length > 0) {
-          // Usando sendBeacon para garantir que a requisição seja enviada mesmo com a página fechando
-          navigator.sendBeacon(`${API_BASE_URL}/api/fazenda/update`, JSON.stringify({ newFarmState: farmState }));
-      }
-  });
-
-  animate();
-});
-
+</script>
+</body>
+</html>
