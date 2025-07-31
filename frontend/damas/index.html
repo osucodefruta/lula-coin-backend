@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Damas 3D - Online com Grafite</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Link para a folha de estilos CSS externa -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Contêiner principal para o jogo -->
+    <div id="game-container"></div>
+
+    <!-- Contêiner para a interface do usuário (UI) -->
+    <div id="ui-container">
+        <div id="score-player1" class="scoreboard">Player 1: <span id="p1-score">0</span></div>
+        <div id="score-player2" class="scoreboard">Player 2: <span id="p2-score">0</span></div>
+        <div id="turn-indicator">Aguardando...</div>
+        <div id="emoji-bar">
+            <span class="emoji-button" data-emoji="😊">😊</span>
+            <span class="emoji-button" data-emoji="😢">😢</span>
+            <span class="emoji-button" data-emoji="👍">👍</span>
+            <span class="emoji-button" data-emoji="👋">👋</span>
+            <span class="emoji-button" data-emoji="❤️">❤️</span>
+        </div>
+        
+        <!-- Tela de Vitória -->
+        <div id="winner-screen" class="end-screen">
+            <h2 id="winner-player"></h2>
+            <p>Ganhou <span>50 LCO</span>! 🏆</p>
+            <button id="back-to-lobby-btn-winner">Voltar para a Sala de Mineração</button>
+        </div>
+
+        <!-- Tela de Derrota -->
+        <div id="loser-screen" class="end-screen">
+            <h2>Você Perdeu!</h2>
+            <p>Vai minerar!</p>
+            <button id="back-to-lobby-btn-loser">Voltar para a Sala de Mineração</button>
+        </div>
+    </div>
+
+    <!-- Scripts CDN para Three.js e OrbitControls -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+    
+    <!-- Link para o arquivo JavaScript do jogo -->
+    <script src="js/game.js" defer></script>
+</body>
+</html>
+
